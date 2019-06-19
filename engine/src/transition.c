@@ -72,7 +72,8 @@ void tr_draw(Transition* tr, Graphics* g) {
     uint8 a = (uint8)(t*255.0f);
 
     // Fill screen with the given color
-    g_clear_screen_rgba(g, 
-        tr->fadeColor.r, tr->fadeColor.g, tr->fadeColor.b, 
-        a);
+    g_move_to(g, 0, 0);
+    g_fill_rect(g, 0, 0, g->canvasScale.x, g->canvasScale.y,
+        rgba(tr->fadeColor.r, tr->fadeColor.g, tr->fadeColor.b, 
+        a) );
 }

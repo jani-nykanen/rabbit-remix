@@ -15,22 +15,6 @@ Color rgba(uint8 r, uint8 g, uint8 b, uint8 a) {
 }
 
 
-// Apply transformation
-static void apply_transform(Graphics *g, 
-    float* dx, float* dy, float* dw, float* dh) {
-
-    // Apply translation
-    *dx += g->translation.x;
-    *dy += g->translation.y;
-
-    // Apply scale
-    *dx = (*dx)*g->scale;
-    *dy = (*dy)*g->scale;
-    *dw = (*dw)*g->scale;
-    *dh = (*dh)*g->scale;
-}
-
-
 // Create a graphics component
 Graphics* create_graphics(SDL_Window* window, Config* conf) {
 
@@ -60,12 +44,17 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     init_bitmap_loader(g->rend);
 
     // Read view target size
-    g->viewTarget.x = conf_get_param_int(conf, "viewport_width", 1280);
-    g->viewTarget.y = conf_get_param_int(conf, "viewport_height", 720);
+    g->canvasTarget.x = conf_get_param_int(conf, "canvas_width", 256);
+    g->canvasTarget.y = conf_get_param_int(conf, "canvas_height", 192);
 
-    // Set defaults
-    g->viewSize = g->viewTarget;
-    g->viewTopLeft = point(0, 0);
+    // Create texture
+    g->canvas = create_bitmap((uint16)g->canvasTarget.x, 
+        (uint16)g->canvasTarget.y, true);
+    if(g->canvas == NULL) {
+
+        dispose_graphics(g);
+        return NULL;
+    }
 
     // Resize
     int w, h;
@@ -85,6 +74,11 @@ void dispose_graphics(Graphics* g) {
     if(g == NULL) return;
 
     SDL_DestroyRenderer(g->rend);
+    if(g->canvas != NULL) {
+
+        destroy_bitmap(g->canvas);
+    }
+
     free(g);
 }
 
@@ -106,75 +100,28 @@ void g_reset_blend_color(Graphics* g) {
 // Resize event
 void g_resize(Graphics* g, int w, int h) {
 
-    float newAspect = (float)w / (float)h;
-    float targetAspect = (float)g->viewTarget.x / (float)g->viewTarget.y;
+    int newAspect = (int)w / (int)h;
+    int targetAspect = (int)g->canvasTarget.x / (int)g->canvasTarget.y;
+    int mod = 0;
 
     // If the same aspect ratio or wider
     if(newAspect >= targetAspect) {
 
-        g->viewSize.x = (int)((float)h*targetAspect);
-        g->viewSize.y = h;
-
-        g->viewTopLeft.x = w/2 - g->viewSize.x/2;
-        g->viewTopLeft.y = 0;
-
-        g->defaultScale = (float)h / (float)g->viewTarget.y;
+        mod =  h / g->canvasTarget.y;
     }
     else {
 
-        g->viewSize.x = w;
-        g->viewSize.y = (int)(((float)w)/targetAspect);
-
-        g->viewTopLeft.x = 0;
-        g->viewTopLeft.y = h/2 - g->viewSize.y/2;
-
-        g->defaultScale = (float)w / (float)g->viewTarget.x;
+        mod =  w / g->canvasTarget.x;
     }
-    
-    // Store view
-    g->viewRect = (SDL_Rect){
-        g->viewTopLeft.x, g->viewTopLeft.y, 
-        g->viewSize.x, g->viewSize.y
-    };
+
+    g->canvasScale.x = mod * g->canvasTarget.x;
+    g->canvasScale.y = mod * g->canvasTarget.y;
+
+    g->canvasPos.x = w/2 - g->canvasScale.x/2;
+    g->canvasPos.y = h/2 - g->canvasScale.y/2;
+
     // Store window size
     g->windowSize = point(w, h);
-}
-
-
-// Use viewport
-void g_use_viewport(Graphics* g) {
-    
-    // Set viewport & scale
-    SDL_RenderSetViewport(g->rend, &g->viewRect);   
-
-    g->scale = g->defaultScale;
-    // SDL_RenderSetScale(g->rend, g->scale, g->scale);
-}
-
-
-// Reset viewport
-void g_reset_viewport(Graphics* g) {
-
-    SDL_RenderSetViewport(g->rend, NULL);
-
-    // Reset scale & translation
-    g->scale = 1;
-    g->translation = point(0, 0);
-}
-
-
-// Reset view
-void g_reset_view(Graphics* g) {
-
-    g_move_to(g, 0, 0);
-    g->scale = g->defaultScale;
-}
-
-
-// Center view
-void g_center_view(Graphics* g) {
-
-    g_move_to(g, g->viewTarget.x/2, g->viewTarget.y/2);
 }
 
 
@@ -194,41 +141,39 @@ void g_move_to(Graphics* g, int dx, int dy) {
 }
 
 
-// Refresh
-void g_refresh(Graphics* g) {
+// Toggle canvas target
+void g_toggle_canvas_target(Graphics* g, bool state) {
 
-    SDL_RenderPresent(g->rend);
+    SDL_SetRenderTarget(g->rend, state ? g->canvas->tex : NULL);
 }
 
 
-// Clear background
-void g_clear_background(Graphics* gr, uint8 r, uint8 g, uint8 b) {
+// Refresh
+void g_refresh(Graphics* g) {
 
-    SDL_SetRenderDrawColor(gr->rend, r, g, b, 255);
-    SDL_RenderClear(gr->rend);
+    g_set_blend_color(g, rgb(255, 255, 255));
+
+    // Draw the canvas
+    g_draw_scaled_bitmap(g, g->canvas, 
+        g->canvasPos.x, g->canvasPos.y,
+        g->canvasScale.x, g->canvasScale.y, FlipNone);
+
+    // Render the frame
+    SDL_RenderPresent(g->rend);
 }
 
 
 // Clear screen
 void g_clear_screen(Graphics* gr, uint8 r, uint8 g, uint8 b) {
 
-    g_clear_screen_rgba(gr, r, g, b, 255);
-}
-void g_clear_screen_rgba(Graphics* gr, uint8 r, uint8 g, uint8 b, uint8 a) {
-
-    // Set color
-    SDL_SetRenderDrawColor(gr->rend, r, g, b, a);
-    // Draw a filled rectangle
-    SDL_Rect dest = (SDL_Rect) {
-        0, 0, gr->viewSize.x, gr->viewSize.y
-    };
-    SDL_RenderFillRect(gr->rend, &dest);
+    SDL_SetRenderDrawColor(gr->rend, r, g, b, 255);
+    SDL_RenderClear(gr->rend);
 }
 
 
 // Draw a bitmap
 void g_draw_bitmap(Graphics* g, Bitmap* bmp, 
-    float dx, float dy, int flip) {
+    int dx, int dy, int flip) {
 
     g_draw_scaled_bitmap_region(g, bmp,
         0, 0, bmp->width, bmp->height, 
@@ -239,7 +184,7 @@ void g_draw_bitmap(Graphics* g, Bitmap* bmp,
 
 // Draw a scaled bitmap
 void g_draw_scaled_bitmap(Graphics* g, Bitmap* bmp, 
-   float dx, float dy, float dw, float dh, int flip) {
+   int dx, int dy, int dw, int dh, int flip) {
 
     g_draw_scaled_bitmap_region(g, bmp,
         0, 0, bmp->width, bmp->height, 
@@ -250,7 +195,7 @@ void g_draw_scaled_bitmap(Graphics* g, Bitmap* bmp,
 // Draw a bitmap region
 void g_draw_bitmap_region(Graphics* g, Bitmap* bmp, 
     int sx, int sy, int sw, int sh, 
-    float dx, float dy, int flip) {
+    int dx, int dy, int flip) {
 
     g_draw_scaled_bitmap_region(g, bmp, sx, sy, sw, sh,
         dx, dy, sw, sh, flip);
@@ -260,7 +205,7 @@ void g_draw_bitmap_region(Graphics* g, Bitmap* bmp,
 // Draw a scaled bitmap region
 void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp, 
     int sx, int sy, int sw, int sh, 
-    float dx, float dy, float dw, float dh,
+    int dx, int dy, int dw, int dh,
     int flip) {
 
     // Apply blend color
@@ -268,42 +213,33 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
         g->blendColor.r, g->blendColor.g, g->blendColor.b);
     SDL_SetTextureAlphaMod(bmp->tex, g->blendColor.a);
 
-    // Set transform
-    apply_transform(g, &dx, &dy, &dw, &dh);
-    dx -= bmp->center.x*g->scale;
-    dy -= bmp->center.y*g->scale;
-
     // Set source & destination
     SDL_Rect src = (SDL_Rect){sx, sy, sw, sh};
-    SDL_Rect dst = (SDL_Rect){(int)dx, (int)dy, (int)dw, (int)dh};
-    SDL_Point p = (SDL_Point){
-        (int)bmp->center.x*g->scale, 
-        (int)bmp->center.y*g->scale
-    };
+    SDL_Rect dst = (SDL_Rect){dx, dy, dw, dh};
 
     // Draw
     SDL_RenderCopyEx(g->rend, bmp->tex, &src, &dst,
-            bmp->angle, &p, (SDL_RendererFlip)flip);
+            0.0, NULL, (SDL_RendererFlip)flip);
 }
 
 
 // Draw scaled text
-void g_draw_scaled_text(Graphics* g, Bitmap* bmp, const char* text,
-    float dx, float dy, float xoff, float yoff, float scalex, float scaley, 
+void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
+    int dx, int dy, int xoff, int yoff, 
     bool center) {
 
     int cw = (bmp->width) / 16;
     int ch = cw;
     int len = strlen(text);
 
-    float x = dx;
-    float y = dy;
+    int x = dx;
+    int y = dy;
     unsigned char c;
 
     // Center the text
     if (center)
     {
-        dx -= ((len + 1) / 2.0f * (cw + xoff) * scalex);
+        dx -= ((len + 1) / 2.0f * (cw + xoff));
         x = dx;
     }
 
@@ -317,34 +253,31 @@ void g_draw_scaled_text(Graphics* g, Bitmap* bmp, const char* text,
         if (c == '\n')
         {
             x = dx;
-            y += (yoff + ch) * scaley;
+            y += (yoff + ch);
             continue;
         }
 
         sx = c % 16;
         sy = (c / 16);
         // Draw character
-        g_draw_scaled_bitmap_region(g, 
+        g_draw_bitmap_region(g, 
             bmp, sx * cw, sy * ch, cw, ch,
-            x, y,
-            cw * scalex, ch * scaley, FlipNone);
+            x, y, FlipNone);
 
-        x += (cw + xoff) * scalex;
+        x += (cw + xoff);
     } 
 }
 
 
 // Fill a rectangle
-void g_fill_rect(Graphics* g, float dx, float dy, 
-    float dw, float dh, Color c) {
+void g_fill_rect(Graphics* g, int dx, int dy, 
+    int dw, int dh, Color c) {
 
     SDL_SetRenderDrawColor(g->rend, c.r, c.g, c.b, c.a);
 
-    apply_transform(g, &dx, &dy, &dw, &dh);
-
     // Draw a filled rectangle
     SDL_Rect dest = (SDL_Rect) {
-        (int)dx, (int)dy, (int)dw, (int)dh
+        dx, dy, dw, dh
     };
     SDL_RenderFillRect(g->rend, &dest);
 }

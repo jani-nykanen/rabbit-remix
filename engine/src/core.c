@@ -138,19 +138,14 @@ static void core_update(Core* c, uint32 delta) {
 // Draw
 static void core_draw(Core* c) {
 
-    g_reset_viewport(c->g);
-
-    // Clear to black
-    g_clear_background(c->g, 0, 0, 0);
-
-    // Set user viewport
-    g_use_viewport(c->g);
+    g_toggle_canvas_target(c->g, true);
 
     // Draw active scenes
     scenes_draw_active(&c->sceneMan, c->g);
-
     // Draw transition
     tr_draw(&c->tr, c->g);
+
+    g_toggle_canvas_target(c->g, false);
 }
 
 
@@ -280,6 +275,7 @@ static void core_loop(Core* c) {
     uint32 newTime = oldTime;
 
     int updateCount = 0;
+    bool redraw = false;
     while(c->running) {
 
         // Update events
@@ -293,6 +289,8 @@ static void core_loop(Core* c) {
 
         // Check if enough time passed
         while(timeSum >= frameWait) {
+
+            redraw = true;
 
             // Update frame
             core_update(c, frameWait);
@@ -309,10 +307,16 @@ static void core_loop(Core* c) {
             timeSum -= frameWait; 
         }
 
-        // Draw
-        core_draw(c);
+        if(redraw) {
 
-        // Refresh frame
+            // Draw
+            core_draw(c);
+            redraw = false;
+        }
+
+        // Clear to black
+        g_clear_screen(c->g, 0, 0, 0);
+        // Refresh frame (and draw the canvas)
         g_refresh(c->g);
     }
 }

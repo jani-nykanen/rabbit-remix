@@ -23,10 +23,6 @@ typedef struct {
     uint16 width;
     uint16 height;
 
-    // Rendering properties
-    Point center;
-    float angle;
-
 } Bitmap;
 
 // Initialize bitmap loader
@@ -34,6 +30,9 @@ void init_bitmap_loader(SDL_Renderer* rend);
 
 // Load a bitmap
 Bitmap* load_bitmap(const char* path, bool linearFiltering);
+
+// Create a bitmap
+Bitmap* create_bitmap(uint16 width, uint16 height, bool target);
 
 // Destroy a bitmap
 void destroy_bitmap(Bitmap* bmp);

@@ -81,9 +81,36 @@ Bitmap* load_bitmap(const char* path, bool linearFiltering) {
     // Dispose the surface
     SDL_FreeSurface(surf);
 
-    // Initialize properites
-    bmp->center = point(0, 0);
-    bmp->angle = 0.0f;
+    return bmp;
+}
+
+
+// Create a bitmap
+Bitmap* create_bitmap(uint16 width, uint16 height, bool target) {
+
+    // Allocate memory
+    Bitmap* bmp = (Bitmap*)malloc(sizeof(Bitmap));
+    if(bmp == NULL) {
+
+        ERR_MEM_ALLOC;
+        return NULL;
+    }
+
+    // Set dimensions
+    bmp->width = width;
+    bmp->height = height;
+
+    // Create texture
+    bmp->tex = SDL_CreateTexture(rendRef, 
+        SDL_PIXELFORMAT_RGBA8888,
+        target ? SDL_TEXTUREACCESS_TARGET : SDL_TEXTUREACCESS_STATIC, 
+        width, height);
+    if(bmp->tex == NULL) {
+
+        err_throw_no_param("Failed to create a texture!");
+        free(bmp);
+        return NULL;
+    }
 
     return bmp;
 }
