@@ -15,10 +15,10 @@ int main(int argc, char** argv) {
 
     // Create core
     Core* c = create_core();
-    if(c == NULL) return 1;
+    if (c == NULL) return 1;
 
     // Parse configuration file
-    if(conf_parse_text_file(&c->conf, "game.conf")) {
+    if (conf_parse_text_file(&c->conf, "game.conf")) {
 
         printf("Error: %s\n", get_error());
     }

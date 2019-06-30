@@ -24,7 +24,7 @@ int pad_add_button(Gamepad* vpad,
     const char* name, int key, int joybutton) {
 
     // Check if room
-    if(vpad->buttonCount == MAX_BUTTON_COUNT) {
+    if (vpad->buttonCount == MAX_BUTTON_COUNT) {
 
         err_throw_no_param("Gamepad buttons full.");
         return -1;
@@ -49,19 +49,19 @@ State pad_get_button_state(Gamepad* vpad, const char* bname) {
     Button* b = NULL;
     for(; i < vpad->buttonCount; ++ i) {
 
-        if(strcmp(bname, vpad->buttons[i].name) == 0) {
+        if (strcmp(bname, vpad->buttons[i].name) == 0) {
 
             b = &vpad->buttons[i];
             break;
         }
     }
-    if(b == NULL)
+    if (b == NULL)
         return StateUp;
 
 
     // Check keyboard first, then joystick
     State s = input_get_key_state(vpad->input, b->key);
-    if(s == StateUp)
+    if (s == StateUp)
         s = input_get_joy_state(vpad->input, b->joybutton);
 
     return s;
@@ -80,23 +80,23 @@ void pad_update(Gamepad* vpad) {
     vpad->stick.y = vpad->input->joystick.y;
 
     // If too small a movement, check keyboard
-    if(hypotf(vpad->stick.x, vpad->stick.y) < EPS) {
+    if (hypotf(vpad->stick.x, vpad->stick.y) < EPS) {
 
         // Emulate analogue stick with arrow keys
-        if(input_get_key_state(vpad->input, (int)SDL_SCANCODE_RIGHT)
+        if (input_get_key_state(vpad->input, (int)SDL_SCANCODE_RIGHT)
             == StateDown) {
             vpad->stick.x = 1;
         }
-        else if(input_get_key_state(vpad->input, (int)SDL_SCANCODE_LEFT)
+        else if (input_get_key_state(vpad->input, (int)SDL_SCANCODE_LEFT)
             == StateDown) {
             vpad->stick.x = -1;
         }
 
-        if(input_get_key_state(vpad->input, (int)SDL_SCANCODE_DOWN)
+        if (input_get_key_state(vpad->input, (int)SDL_SCANCODE_DOWN)
             == StateDown) {
             vpad->stick.y = 1;
         }
-        else if(input_get_key_state(vpad->input, (int)SDL_SCANCODE_UP)
+        else if (input_get_key_state(vpad->input, (int)SDL_SCANCODE_UP)
             == StateDown) {
             vpad->stick.y = -1;
         }
@@ -117,7 +117,7 @@ int pad_parse_text_file(Gamepad* vpad, const char* path) {
 
     // Create a word reader
     WordReader* wr = create_word_reader(path);
-    if(wr == NULL) {
+    if (wr == NULL) {
 
         return -1;
     }
@@ -130,11 +130,11 @@ int pad_parse_text_file(Gamepad* vpad, const char* path) {
     int key, button;
     while(wr_read_next(wr)) {
 
-        if(c == 0) {
+        if (c == 0) {
 
             snprintf(name, WR_WORD_LENGTH, "%s", wr->word);
         }
-        else if(c == 1) {
+        else if (c == 1) {
 
             snprintf(keystr, WR_WORD_LENGTH, "%s", wr->word);
         }

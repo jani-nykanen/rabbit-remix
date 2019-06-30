@@ -10,7 +10,7 @@ WordReader* create_word_reader(const char* path) {
 
     // Allocate memory
     WordReader* wr = (WordReader*)malloc(sizeof(WordReader));
-    if(wr == NULL) {
+    if (wr == NULL) {
 
         ERR_MEM_ALLOC;
         return NULL;
@@ -18,7 +18,7 @@ WordReader* create_word_reader(const char* path) {
 
     // Open the file
     wr->f = fopen(path, "r");
-    if(wr->f == NULL) {
+    if (wr->f == NULL) {
 
         err_throw_param_1("Failed to open a file in ", path);
         free(wr);
@@ -47,40 +47,40 @@ int wr_read_next(WordReader* wr) {
         // Get next character
         c = fgetc(wr->f);
         whitespace = (c == ' ' || c == '\t' || c == '\n');
-        if(c == EOF) {
+        if (c == EOF) {
 
             // Null-terminate
-            if(wr->wordLength < WR_WORD_LENGTH-1) {
+            if (wr->wordLength < WR_WORD_LENGTH-1) {
 
                 wr->word[wr->wordLength] = '\0';
             }
 
             return 0;
         }
-        else if(comment) {
+        else if (comment) {
             
-            if(c == '\n')
+            if (c == '\n')
                 comment = false;
 
             continue;
         }
         // If comment, wait until a newline
-        else if(c == '#') {
+        else if (c == '#') {
 
             comment = true;
         }
         // Quatation?
-        else if(c == '"') {
+        else if (c == '"') {
 
             quotation = !quotation;
-            if(!quotation && wr->wordLength > 0)
+            if (!quotation && wr->wordLength > 0)
                 break;
             
         }
         // Whitespace, stop
-        else if(whitespace && !quotation) {
+        else if (whitespace && !quotation) {
             
-            if(wr->wordLength > 0) {
+            if (wr->wordLength > 0) {
                 
                 // Null-terminate the string
                 wr->word[wr->wordLength ++ ] = '\0';
@@ -91,7 +91,7 @@ int wr_read_next(WordReader* wr) {
         else {
 
             wr->word[wr->wordLength ++ ] = c;
-            if(wr->wordLength == WR_WORD_LENGTH-1) {
+            if (wr->wordLength == WR_WORD_LENGTH-1) {
 
                 wr->word[wr->wordLength] = '\0';
                 break;
@@ -100,7 +100,7 @@ int wr_read_next(WordReader* wr) {
     }
 
     // Null-terminate
-    if(wr->wordLength < WR_WORD_LENGTH-1) {
+    if (wr->wordLength < WR_WORD_LENGTH-1) {
 
         wr->word[wr->wordLength] = '\0';
     }

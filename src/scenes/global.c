@@ -24,7 +24,7 @@ static void global_update(void* e, float tm) {
     EventManager* evMan = (EventManager*)e;
 
     // Terminate
-    if(input_get_key_state(evMan->input, 
+    if (input_get_key_state(evMan->input, 
         (int)SDL_SCANCODE_LCTRL) == StateDown &&
         input_get_key_state(evMan->input, 
         (int)SDL_SCANCODE_Q) == StatePressed) {
@@ -33,7 +33,7 @@ static void global_update(void* e, float tm) {
     }
 
     // Fullscreen
-    if( (input_get_key_state(evMan->input, 
+    if ( (input_get_key_state(evMan->input, 
         (int)SDL_SCANCODE_LALT) == StateDown &&
         input_get_key_state(evMan->input, 
         (int)SDL_SCANCODE_RETURN) == StatePressed) ||

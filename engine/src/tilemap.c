@@ -21,10 +21,10 @@ static int find_word(FILE* f, const char* find) {
     char c;
     while((c = fgetc(f)) != EOF) {
 
-        if(c == find[bufferPointer]) {
+        if (c == find[bufferPointer]) {
 
             ++ bufferPointer;
-            if(bufferPointer == len) {
+            if (bufferPointer == len) {
 
                 return pos-len;
             }
@@ -51,9 +51,9 @@ static void get_attribute(FILE* f, int off, char* buf) {
 
     while((c = fgetc(f)) != EOF) {
 
-        if((-- wait) > 0) continue;
+        if ((-- wait) > 0) continue;
 
-        if(c == '"') {
+        if (c == '"') {
 
             buf[pos ++] = '\0';
             break;
@@ -75,25 +75,25 @@ static void parse_csv(FILE* f, int off, char terminate, int* buffer) {
     int len = 0;
     while((c = fgetc(f)) != EOF) {
 
-        if((-- wait) > 0) continue;
+        if ((-- wait) > 0) continue;
 
         // Store value
-        if(c == ',' && len > 0) {
+        if (c == ',' && len > 0) {
 
             cbuf[len] = '\0';
             buffer[pointer ++] = (int)strtol(cbuf, NULL, 10);
             len = 0;
         }
         // Ending character reached
-        else if(c == terminate) {
+        else if (c == terminate) {
 
-            if(len > 0)
+            if (len > 0)
                 buffer[pointer] = (int)strtol(cbuf, NULL, 10);
 
             break;
         }
         // Number character
-        else if(c >= '0' && c <= '9') {
+        else if (c >= '0' && c <= '9') {
 
             cbuf[len ++] = c;
         }
@@ -106,7 +106,7 @@ Tilemap* load_tilemap(const char* path) {
 
     // Allocate memory
     Tilemap* t = (Tilemap*)malloc(sizeof(Tilemap));
-    if(t == NULL) {
+    if (t == NULL) {
 
         ERR_MEM_ALLOC;
         return NULL;
@@ -114,7 +114,7 @@ Tilemap* load_tilemap(const char* path) {
 
     // Open file
     FILE* f = fopen(path, "r");
-    if(f == NULL) {
+    if (f == NULL) {
 
         err_throw_param_1("Failed to open a file in ", path);
         free(t);
@@ -123,7 +123,7 @@ Tilemap* load_tilemap(const char* path) {
 
     // Get width
     int p = find_word(f, "width");
-    if(p == -1) {
+    if (p == -1) {
 
         err_throw_param_1("Could not find a 'width' param in ", path);
         free(t);
@@ -135,7 +135,7 @@ Tilemap* load_tilemap(const char* path) {
 
     // Get height
     p = find_word(f, "height");
-    if(p == -1) {
+    if (p == -1) {
 
         err_throw_param_1("Could not find a 'height' param in ", path);
         free(t);
@@ -152,7 +152,7 @@ Tilemap* load_tilemap(const char* path) {
 
         // Allocate memory for the new layer
         t->layers[t->layerCount] = (int*)malloc(sizeof(int)*t->width*t->height);
-        if(t->layers[t->layerCount] == NULL) {
+        if (t->layers[t->layerCount] == NULL) {
 
             ERR_MEM_ALLOC;
             for(i = 0; i < t->layerCount-1; ++ i)
@@ -171,7 +171,7 @@ Tilemap* load_tilemap(const char* path) {
     rewind(f);
     p = find_word(f, "name=\"name\" value");
     t->name[0] = '\0';
-    if(p != -1) {
+    if (p != -1) {
 
         get_attribute(f, 3, t->name);
     }
@@ -186,7 +186,7 @@ Tilemap* load_tilemap(const char* path) {
 // Destroy a tilemap
 void destroy_tilemap(Tilemap* t) {
 
-    if(t == NULL) return;
+    if (t == NULL) return;
 
     // Free layers
     int i = 0;

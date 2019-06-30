@@ -28,7 +28,7 @@ static int game_on_load(AssetManager* a) {
 static void game_update(void* e, float tm) {
 
     EventManager* evMan = (EventManager*)e;
-    if(evMan->tr->active) return;
+    if (evMan->tr->active) return;
 
 }
 
@@ -36,7 +36,7 @@ static void game_update(void* e, float tm) {
 // Draw
 static void game_draw(Graphics* g) {
     
-    g_clear_screen(g, 170, 170, 170);
+    g_draw_static(g);
 
     g_draw_text(g, bmpFont, "HELLO WORLD!", 2, 2, 0, 0, false);
 }

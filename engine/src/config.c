@@ -21,7 +21,7 @@ Config create_config() {
 // Add a param
 int conf_add_param(Config* c, const char* key, const char* value) {
 
-    if(c->paramCount >= CONF_MAX_PARAM_COUNT) {
+    if (c->paramCount >= CONF_MAX_PARAM_COUNT) {
 
         err_throw_no_param("Configuration object is full.");
         return -1;
@@ -45,7 +45,7 @@ char* conf_get_param(Config *c, const char* key, const char* def) {
     int i = 0;
     for(; i < c->paramCount; ++ i) {
 
-        if(strcmp(c->params[i].key, key) == 0)
+        if (strcmp(c->params[i].key, key) == 0)
             return c->params[i].value;
     }
 
@@ -57,7 +57,7 @@ char* conf_get_param(Config *c, const char* key, const char* def) {
 int conf_get_param_int(Config* c, const char* key, int def) {
 
     char* str = conf_get_param(c, key, NULL);
-    if(str == NULL) return def;
+    if (str == NULL) return def;
 
     return (int)strtol(str, NULL, 10);
 }
@@ -68,7 +68,7 @@ int conf_parse_text_file(Config* c, const char* path) {
 
     // Create a word reader
     WordReader* wr = create_word_reader(path);
-    if(wr == NULL) {
+    if (wr == NULL) {
 
         return -1;
     }
@@ -80,7 +80,7 @@ int conf_parse_text_file(Config* c, const char* path) {
     while(wr_read_next(wr)) {
 
         // Store params to the configuration
-        if(wr->wordLength > 0) {
+        if (wr->wordLength > 0) {
 
             snprintf(
                 m ? key : value, m ? KVPAIR_KEY_LENGTH : KVPAIR_VALUE_LENGTH,
@@ -88,7 +88,7 @@ int conf_parse_text_file(Config* c, const char* path) {
             );
             m = !m;
 
-            if(m)
+            if (m)
                 conf_add_param(c, key, value);
         }
     }

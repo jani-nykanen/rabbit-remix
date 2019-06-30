@@ -33,15 +33,15 @@ void tr_activate(Transition* tr, Mode mode,
 // Update transition
 void tr_update(Transition* tr, float tm) {
 
-    if(!tr->active) return;
+    if (!tr->active) return;
 
     // Update timer
     tr->timer -= tr->speed * tm;
-    if(tr->timer <= 0.0f) {
+    if (tr->timer <= 0.0f) {
 
-        if(tr->mode == FadeIn) {
+        if (tr->mode == FadeIn) {
 
-            if(tr->callback != NULL) {
+            if (tr->callback != NULL) {
 
                 tr->callback();
             }
@@ -61,19 +61,14 @@ void tr_update(Transition* tr, float tm) {
 // Draw transition
 void tr_draw(Transition* tr, Graphics* g) {
 
-    if(!tr->active) return;
+    if (!tr->active) return;
 
     // Compute fade value
     float t = 1.0f / TR_INITIAL_TIME * tr->timer;
-    if(tr->mode == FadeIn) {
+    if (tr->mode == FadeIn) {
 
         t = 1.0f - t;
     }
-    uint8 a = (uint8)(t*255.0f);
-
-    // Fill screen with the given color
-    g_move_to(g, 0, 0);
-    g_fill_rect(g, 0, 0, g->canvasScale.x, g->canvasScale.y,
-        rgba(tr->fadeColor.r, tr->fadeColor.g, tr->fadeColor.b, 
-        a) );
+    
+    // TODO
 }

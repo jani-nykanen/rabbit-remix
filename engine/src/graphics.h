@@ -41,7 +41,7 @@ typedef struct {
     SDL_Renderer* rend;
 
     // Canvas target size
-    Point canvasTarget;
+    Point csize;
     // Window size
     Point windowSize;
 
@@ -49,7 +49,9 @@ typedef struct {
     Point canvasPos;
     Point canvasScale;
     // Canvas bitmap
-    Bitmap* canvas;
+    SDL_Texture* canvas;
+    // Canvas pixels
+    uint8* pdata;
 
     // Translation
     Point translation;
@@ -65,11 +67,6 @@ Graphics* create_graphics(SDL_Window* window, Config* conf);
 // Dispose graphics
 void dispose_graphics(Graphics* g);
 
-// Set global color
-void g_set_blend_color(Graphics* g, Color c);
-// Reset blend color
-void g_reset_blend_color(Graphics* g);
-
 // Resize event
 void g_resize(Graphics* g, int w, int h);
 
@@ -78,13 +75,15 @@ void g_translate(Graphics* g, int tx, int ty);
 // Move to
 void g_move_to(Graphics* g, int dx, int dy);
 
-// Toggle canvas target
-void g_toggle_canvas_target(Graphics* g, bool state);
+// Pass data to the canvas
+void g_update_pixel_data(Graphics* g);
 // Refresh & draw the canvas
 void g_refresh(Graphics* g);
 
 // Clear screen
-void g_clear_screen(Graphics* gr, uint8 r, uint8 g, uint8 b);
+void g_clear_screen(Graphics* g, uint8 c);
+// Draw some static
+void g_draw_static(Graphics* g);
 
 // Draw a bitmap
 void g_draw_bitmap(Graphics* g, Bitmap* bmp, 

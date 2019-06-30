@@ -23,7 +23,7 @@ int scenes_add(SceneManager* sman,
     const char* name, Scene s, 
     bool makeActive, bool makeGlobal) {
     
-    if(sman->sceneCount >= MAX_SCENE_COUNT) {
+    if (sman->sceneCount >= MAX_SCENE_COUNT) {
 
         err_throw_no_param("Scene manager is full.");
         return -1;
@@ -36,10 +36,10 @@ int scenes_add(SceneManager* sman,
     ++ sman->sceneCount;
 
     // Make active or global
-    if(makeActive)
+    if (makeActive)
         sman->active = &sman->scenes[sman->sceneCount -1];
 
-    else if(makeGlobal)
+    else if (makeGlobal)
         sman->global = &sman->scenes[sman->sceneCount -1];
 
     return 0;
@@ -52,10 +52,10 @@ void scenes_change(SceneManager* sman, const char* name, void* param) {
     int i = 0;
     for(; i < sman->sceneCount; ++ i) {
 
-        if(strcmp(name, sman->sceneNames[i]) == 0) {
+        if (strcmp(name, sman->sceneNames[i]) == 0) {
 
             sman->active = &sman->scenes[i];
-            if(sman->active->onChange != NULL)
+            if (sman->active->onChange != NULL)
                 sman->active->onChange(param);
 
             return;
@@ -70,9 +70,9 @@ int scenes_init(SceneManager* sman, void* evMan) {
     int i = 0;
     for(; i < sman->sceneCount; ++ i) {
 
-        if(sman->scenes[i].init != NULL) {
+        if (sman->scenes[i].init != NULL) {
 
-            if(sman->scenes[i].init(evMan) == -1) {
+            if (sman->scenes[i].init(evMan) == -1) {
 
                 return -1;
             }
@@ -88,9 +88,9 @@ int scenes_on_load(SceneManager* sman, AssetManager* assets) {
     int i = 0;
     for(; i < sman->sceneCount; ++ i) {
 
-        if(sman->scenes[i].onLoad != NULL) {
+        if (sman->scenes[i].onLoad != NULL) {
 
-            if(sman->scenes[i].onLoad(assets) == -1) {
+            if (sman->scenes[i].onLoad(assets) == -1) {
 
                 return -1;
             }
@@ -105,11 +105,11 @@ void scenes_update_active(SceneManager* sman,
     void* evMan, float tm) {
 
     // Update active
-    if(sman->active != NULL && sman->active->update != NULL)
+    if (sman->active != NULL && sman->active->update != NULL)
         sman->active->update((void*)evMan, tm);
 
     // Update global
-    if(sman->active != sman->global && 
+    if (sman->active != sman->global && 
         sman->global != NULL && 
         sman->global->update != NULL)
         sman->global->update((void*)evMan, tm);
@@ -120,11 +120,11 @@ void scenes_update_active(SceneManager* sman,
 void scenes_draw_active(SceneManager* sman, Graphics* g) {
 
     // Draw active
-    if(sman->active != NULL && sman->active->draw != NULL)
+    if (sman->active != NULL && sman->active->draw != NULL)
         sman->active->draw(g);
 
     // Draw global
-    if(sman->active != sman->global && 
+    if (sman->active != sman->global && 
         sman->global != NULL && 
         sman->global->draw != NULL)
         sman->global->draw(g);
@@ -137,7 +137,7 @@ void scenes_dispose(SceneManager* sman)  {
     int i = 0;
     for(; i < sman->sceneCount; ++ i) {
 
-        if(sman->scenes[i].dispose != NULL) {
+        if (sman->scenes[i].dispose != NULL) {
 
             sman->scenes[i].dispose();
         }

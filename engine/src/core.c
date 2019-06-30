@@ -10,7 +10,7 @@
 static int core_init_SDL(Core* c) {
 
     // Initialize
-    if(SDL_Init(SDL_INIT_EVERYTHING) == -1) {
+    if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 
         err_throw_param_1("SDL2 ERROR: ", SDL_GetError());
         return -1;
@@ -28,7 +28,7 @@ static int core_init_SDL(Core* c) {
             SDL_WINDOWPOS_CENTERED, 
             width, height, 
             SDL_WINDOW_RESIZABLE);
-    if(c->window == NULL) {
+    if (c->window == NULL) {
 
         err_throw_param_1("SDL2 ERROR: ", SDL_GetError());
         return -1;
@@ -45,21 +45,21 @@ static int core_init_SDL(Core* c) {
 static int core_init(Core* c) {
 
     // Initialize SDL2
-    if(core_init_SDL(c) == -1) {
+    if (core_init_SDL(c) == -1) {
 
         return -1;
     }
 
     // Create graphics
     c->g = create_graphics(c->window, &c->conf);
-    if(c->g == NULL) {
+    if (c->g == NULL) {
 
         return -1;
     }
 
     // Fullscreen
     c->fullscreen = false;
-    if(conf_get_param_int(&c->conf, "window_fullscreen", 0) == 1) {
+    if (conf_get_param_int(&c->conf, "window_fullscreen", 0) == 1) {
 
         core_toggle_fullscreen(c);
     }
@@ -72,23 +72,23 @@ static int core_init(Core* c) {
     c->evMan = create_event_manager((void*)c,
         &c->input, &c->vpad, &c->sceneMan,
         c->assets, &c->tr);
-    if(c->assets == NULL) {
+    if (c->assets == NULL) {
 
         return -1;
     }
 
     // Read "gamepad" configuration
     char* kconfPath = conf_get_param(&c->conf, "key_conf_path", NULL);
-    if(kconfPath != NULL) {
+    if (kconfPath != NULL) {
         
-        if(pad_parse_text_file(&c->vpad, kconfPath) == -1) {
+        if (pad_parse_text_file(&c->vpad, kconfPath) == -1) {
 
             return -1;
         }
     }
 
     // Initialize scenes
-    if(scenes_init(&c->sceneMan, (void*)&c->evMan) == -1) {
+    if (scenes_init(&c->sceneMan, (void*)&c->evMan) == -1) {
 
         return -1;
     }
@@ -96,16 +96,16 @@ static int core_init(Core* c) {
     // Load assets
     // TODO: In another thread?
     char* assetPath = conf_get_param(&c->conf, "asset_path", NULL);
-    if(assetPath != NULL) {
+    if (assetPath != NULL) {
 
-        if(assets_parse_text_file(c->assets, assetPath) == -1) {
+        if (assets_parse_text_file(c->assets, assetPath) == -1) {
 
             return -1;
         }
     }
 
     // Call "on load"
-    if(scenes_on_load(&c->sceneMan, c->assets) == -1) {
+    if (scenes_on_load(&c->sceneMan, c->assets) == -1) {
 
         return -1;
     }
@@ -138,14 +138,13 @@ static void core_update(Core* c, uint32 delta) {
 // Draw
 static void core_draw(Core* c) {
 
-    g_toggle_canvas_target(c->g, true);
-
     // Draw active scenes
     scenes_draw_active(&c->sceneMan, c->g);
     // Draw transition
     tr_draw(&c->tr, c->g);
 
-    g_toggle_canvas_target(c->g, false);
+    // Update canvas
+    g_update_pixel_data(c->g);
 }
 
 
@@ -178,7 +177,7 @@ static void core_events(Core* c) {
         // Window event (resize etc)
         case SDL_WINDOWEVENT:
             // Resize
-            if(e.window.windowID == SDL_GetWindowID(c->window) 
+            if (e.window.windowID == SDL_GetWindowID(c->window) 
                 && e.window.event == SDL_WINDOWEVENT_RESIZED) {
                 
                    // Resize event for graphics
@@ -204,10 +203,10 @@ static void core_events(Core* c) {
             case SDL_JOYAXISMOTION: 
             {
                     int axis = 0;
-                    if(e.jaxis.axis == 0)
+                    if (e.jaxis.axis == 0)
                         axis = 0;
 
-                    else if(e.jaxis.axis == 1)
+                    else if (e.jaxis.axis == 1)
                         axis = 1;
                     else 
                         break;
@@ -224,23 +223,23 @@ static void core_events(Core* c) {
                 Vector2 stick = vec2(0, 0);
 
                 // Check all the possible cases
-                if(v == SDL_HAT_LEFTUP || v == SDL_HAT_LEFT 
+                if (v == SDL_HAT_LEFTUP || v == SDL_HAT_LEFT 
                 || v == SDL_HAT_LEFTDOWN) {
 
                     stick.x = -1.0f;
                 }
-                else if(v == SDL_HAT_RIGHTUP || v == SDL_HAT_RIGHT 
+                else if (v == SDL_HAT_RIGHTUP || v == SDL_HAT_RIGHT 
                 || v == SDL_HAT_RIGHTDOWN){
 
                     stick.x = 1.0f;
                 }
 
-                if(v == SDL_HAT_LEFTUP || v == SDL_HAT_UP 
+                if (v == SDL_HAT_LEFTUP || v == SDL_HAT_UP 
                 || v == SDL_HAT_RIGHTUP) {
 
                     stick.y = -1.0f;
                 }
-                else if(v == SDL_HAT_LEFTDOWN || v == SDL_HAT_DOWN 
+                else if (v == SDL_HAT_LEFTDOWN || v == SDL_HAT_DOWN 
                 || v == SDL_HAT_RIGHTDOWN) {
 
                     stick.y = 1.0f;
@@ -297,7 +296,7 @@ static void core_loop(Core* c) {
 
             // Make sure we won't be updating the frame
             // too many times
-            if(++ updateCount >= MAX_UPDATE_COUNT) {
+            if (++ updateCount >= MAX_UPDATE_COUNT) {
 
                 timeSum = 0;
                 break;
@@ -307,15 +306,13 @@ static void core_loop(Core* c) {
             timeSum -= frameWait; 
         }
 
-        if(redraw) {
+        if (redraw) {
 
             // Draw
             core_draw(c);
             redraw = false;
         }
 
-        // Clear to black
-        g_clear_screen(c->g, 0, 0, 0);
         // Refresh frame (and draw the canvas)
         g_refresh(c->g);
     }
@@ -338,7 +335,7 @@ static void core_destroy(Core* c) {
 void core_run(Core* c) {
 
     // Initialize
-    if(core_init(c) == -1) {
+    if (core_init(c) == -1) {
 
         printf("Fatal error: %s.\n", get_error());
     }
@@ -372,7 +369,7 @@ Core* create_core() {
 
     // Allocate memory
     Core* c = (Core*)malloc(sizeof(Core));
-    if(c == NULL) {
+    if (c == NULL) {
 
         ERR_MEM_ALLOC;
         return NULL;

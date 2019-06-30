@@ -20,7 +20,7 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
 
     // Allocate memory
     Graphics* g = (Graphics*)malloc(sizeof(Graphics));
-    if(g == NULL) {
+    if (g == NULL) {
 
         ERR_MEM_ALLOC;
         return NULL;
@@ -34,7 +34,7 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
             SDL_RENDERER_ACCELERATED  |
             SDL_RENDERER_PRESENTVSYNC |
             SDL_RENDERER_TARGETTEXTURE);
-    if(g->rend == NULL) {
+    if (g->rend == NULL) {
 
         err_throw_no_param("Failed to create a renderer.");
         return NULL;
@@ -44,15 +44,28 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     init_bitmap_loader(g->rend);
 
     // Read view target size
-    g->canvasTarget.x = conf_get_param_int(conf, "canvas_width", 256);
-    g->canvasTarget.y = conf_get_param_int(conf, "canvas_height", 192);
+    g->csize.x = conf_get_param_int(conf, "canvas_width", 256);
+    g->csize.y = conf_get_param_int(conf, "canvas_height", 192);
 
-    // Create texture
-    g->canvas = create_bitmap((uint16)g->canvasTarget.x, 
-        (uint16)g->canvasTarget.y, true);
-    if(g->canvas == NULL) {
+    // Create the canvas texture
+    g->canvas = 
+        SDL_CreateTexture(g->rend, 
+        SDL_PIXELFORMAT_RGB332, 
+        SDL_TEXTUREACCESS_STREAMING, 
+        g->csize.x, 
+        g->csize.y);
+    if (g->canvas == NULL) {
 
-        dispose_graphics(g);
+        err_throw_param_1("Failed to create a texture: ", SDL_GetError());
+        return NULL;
+    }
+
+    // Create canvas data
+    g->pdata = (uint8*)malloc(sizeof(uint8)*g->csize.x*g->csize.y);
+    if (g->pdata == NULL) {
+
+        free(g);
+        ERR_MEM_ALLOC;
         return NULL;
     }
 
@@ -61,9 +74,6 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     SDL_GetWindowSize(window, &w, &h);
     g_resize(g, w, h);
 
-    // Enable blending for primitives
-    SDL_SetRenderDrawBlendMode(g->rend, SDL_BLENDMODE_BLEND);
-
     return g;
 }
 
@@ -71,29 +81,13 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
 // Dispose graphics
 void dispose_graphics(Graphics* g) {
 
-    if(g == NULL) return;
+    if (g == NULL) return;
 
     SDL_DestroyRenderer(g->rend);
-    if(g->canvas != NULL) {
+    SDL_DestroyTexture(g->canvas);
 
-        destroy_bitmap(g->canvas);
-    }
-
+    free(g->pdata);
     free(g);
-}
-
-
-// Set global color
-void g_set_blend_color(Graphics* g, Color c) {
-
-    g->blendColor = c;
-}
-
-
-// Reset blend color
-void g_reset_blend_color(Graphics* g) {
-
-    g_set_blend_color(g, rgb(255, 255, 255));
 }
 
 
@@ -101,21 +95,21 @@ void g_reset_blend_color(Graphics* g) {
 void g_resize(Graphics* g, int w, int h) {
 
     int newAspect = (int)w / (int)h;
-    int targetAspect = (int)g->canvasTarget.x / (int)g->canvasTarget.y;
+    int targetAspect = (int)g->csize.x / (int)g->csize.y;
     int mod = 0;
 
     // If the same aspect ratio or wider
-    if(newAspect >= targetAspect) {
+    if (newAspect >= targetAspect) {
 
-        mod =  h / g->canvasTarget.y;
+        mod =  h / g->csize.y;
     }
     else {
 
-        mod =  w / g->canvasTarget.x;
+        mod =  w / g->csize.x;
     }
 
-    g->canvasScale.x = mod * g->canvasTarget.x;
-    g->canvasScale.y = mod * g->canvasTarget.y;
+    g->canvasScale.x = mod * g->csize.x;
+    g->canvasScale.y = mod * g->csize.y;
 
     g->canvasPos.x = w/2 - g->canvasScale.x/2;
     g->canvasPos.y = h/2 - g->canvasScale.y/2;
@@ -141,22 +135,27 @@ void g_move_to(Graphics* g, int dx, int dy) {
 }
 
 
-// Toggle canvas target
-void g_toggle_canvas_target(Graphics* g, bool state) {
-
-    SDL_SetRenderTarget(g->rend, state ? g->canvas->tex : NULL);
+// Pass data to the canvas
+void g_update_pixel_data(Graphics* g) {
+    
+    SDL_UpdateTexture(g->canvas, NULL, g->pdata, g->csize.x);
 }
 
 
 // Refresh
 void g_refresh(Graphics* g) {
 
-    g_set_blend_color(g, rgb(255, 255, 255));
+    // Clear background
+    SDL_SetRenderDrawColor(g->rend, 0, 0, 0, 255);
+    SDL_RenderClear(g->rend);
 
-    // Draw the canvas
-    g_draw_scaled_bitmap(g, g->canvas, 
+    // Set source & destination
+    SDL_Rect dst = (SDL_Rect) { 
         g->canvasPos.x, g->canvasPos.y,
-        g->canvasScale.x, g->canvasScale.y, FlipNone);
+        g->canvasScale.x, g->canvasScale.y
+    };
+    // Draw canvas
+    SDL_RenderCopy(g->rend, g->canvas, NULL, &dst);
 
     // Render the frame
     SDL_RenderPresent(g->rend);
@@ -164,10 +163,24 @@ void g_refresh(Graphics* g) {
 
 
 // Clear screen
-void g_clear_screen(Graphics* gr, uint8 r, uint8 g, uint8 b) {
+void g_clear_screen(Graphics* g, uint8 c) {
 
-    SDL_SetRenderDrawColor(gr->rend, r, g, b, 255);
-    SDL_RenderClear(gr->rend);
+    int32 i = 0;
+    for(; i < g->csize.x*g->csize.y; ++ i) {
+
+        g->pdata[i] = c;
+    }
+}
+
+
+// Draw some static
+void g_draw_static(Graphics* g) {
+
+    int32 i = 0;
+    for(; i < g->csize.x*g->csize.y; ++ i) {
+
+        g->pdata[i] = (rand() % 2 == 0) ? 255 : 0;
+    }
 }
 
 
@@ -208,18 +221,7 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
     int dx, int dy, int dw, int dh,
     int flip) {
 
-    // Apply blend color
-    SDL_SetTextureColorMod(bmp->tex, 
-        g->blendColor.r, g->blendColor.g, g->blendColor.b);
-    SDL_SetTextureAlphaMod(bmp->tex, g->blendColor.a);
-
-    // Set source & destination
-    SDL_Rect src = (SDL_Rect){sx, sy, sw, sh};
-    SDL_Rect dst = (SDL_Rect){dx, dy, dw, dh};
-
-    // Draw
-    SDL_RenderCopyEx(g->rend, bmp->tex, &src, &dst,
-            0.0, NULL, (SDL_RendererFlip)flip);
+    // ...
 }
 
 
@@ -237,8 +239,8 @@ void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
     unsigned char c;
 
     // Center the text
-    if (center)
-    {
+    if (center) {
+
         dx -= ((len + 1) / 2.0f * (cw + xoff));
         x = dx;
     }
@@ -273,11 +275,5 @@ void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
 void g_fill_rect(Graphics* g, int dx, int dy, 
     int dw, int dh, Color c) {
 
-    SDL_SetRenderDrawColor(g->rend, c.r, c.g, c.b, c.a);
-
-    // Draw a filled rectangle
-    SDL_Rect dest = (SDL_Rect) {
-        dx, dy, dw, dh
-    };
-    SDL_RenderFillRect(g->rend, &dest);
+    // ...
 }
