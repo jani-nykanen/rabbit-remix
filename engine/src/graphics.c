@@ -260,40 +260,30 @@ void g_draw_static(Graphics* g) {
 
 // Draw a bitmap
 void g_draw_bitmap(Graphics* g, Bitmap* bmp, 
-    int dx, int dy, int flip) {
+    int dx, int dy, bool flip) {
 
     g_draw_scaled_bitmap_region(g, bmp,
         0, 0, bmp->width, bmp->height, 
-        dx, dy, bmp->width, bmp->height, 
+        dx, dy, 
         flip);
-}
-
-
-// Draw a scaled bitmap
-void g_draw_scaled_bitmap(Graphics* g, Bitmap* bmp, 
-   int dx, int dy, int dw, int dh, int flip) {
-
-    g_draw_scaled_bitmap_region(g, bmp,
-        0, 0, bmp->width, bmp->height, 
-        dx, dy, dw, dh, flip);
 }
 
 
 // Draw a bitmap region
 void g_draw_bitmap_region(Graphics* g, Bitmap* bmp, 
     int sx, int sy, int sw, int sh, 
-    int dx, int dy, int flip) {
+    int dx, int dy, bool flip) {
 
     g_draw_scaled_bitmap_region(g, bmp, sx, sy, sw, sh,
-        dx, dy, sw, sh, flip);
+        dx, dy, flip);
 }
 
 
 // Draw a scaled bitmap region
 void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp, 
     int sx, int sy, int sw, int sh, 
-    int dx, int dy, int dw, int dh,
-    int flip) {
+    int dx, int dy,
+    bool flip) {
 
     int x, y;
     uint64 offset;
@@ -331,6 +321,58 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
         }
         boff += bmp->width-sw*dir;
         offset += g->csize.x-sw;
+    }
+}
+
+
+// Draw a bitmap
+void g_draw_bitmap_fast(Graphics* g, Bitmap* bmp, 
+    int dx, int dy) {
+
+    g_draw_scaled_bitmap_region_fast(g, bmp,
+        0, 0, bmp->width, bmp->height, 
+        dx, dy);
+}
+
+
+// Draw a bitmap region
+void g_draw_bitmap_region_fast(Graphics* g, Bitmap* bmp, 
+    int sx, int sy, int sw, int sh, 
+    int dx, int dy) {
+
+    g_draw_scaled_bitmap_region_fast(g, bmp, sx, sy, sw, sh,
+        dx, dy);
+}
+
+
+// Draw a scaled bitmap region fast
+void g_draw_scaled_bitmap_region_fast(Graphics* g, Bitmap* bmp, 
+    int sx, int sy, int sw, int sh, 
+    int dx, int dy) {
+
+    int x, y;
+    uint64 offset;
+    int boff;
+    int pixel;
+
+    if (bmp == NULL) return;
+
+    // Translate
+    dx += g->translation.x;
+    dy += g->translation.y;
+
+    // Clip
+    if (!clip(g, &sx, &sy, &sw, &sh, &dx, &dy, false))
+        return;
+
+    // Draw pixels
+    offset = g->csize.x*dy + dx;
+    boff = bmp->width*sy + sx +1;
+    for (y = dy; y < dy+sh; ++ y) {
+
+        memcpy(g->pdata + offset, bmp->data + boff, sw);
+        offset += g->csize.x;
+        boff += bmp->width;
     }
 }
 

@@ -87,19 +87,27 @@ void g_draw_static(Graphics* g);
 
 // Draw a bitmap
 void g_draw_bitmap(Graphics* g, Bitmap* bmp, 
-    int dx, int dy, int flip);
-// Draw a scaled bitmap
-void g_draw_scaled_bitmap(Graphics* g, Bitmap* bmp, 
-   int dx, int dy, int dw, int dh, int flip);
+    int dx, int dy, bool flip);
 // Draw a bitmap region
 void g_draw_bitmap_region(Graphics* g, Bitmap* bmp, 
     int sx, int sy, int sw, int sh, 
-    int dx, int dy, int flip);
+    int dx, int dy, bool flip);
 // Draw a scaled bitmap region
 void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp, 
     int sx, int sy, int sw, int sh, 
-    int dx, int dy, int dw, int dh,
-    int flip);
+    int dx, int dy, bool flip);
+
+// Draw a bitmap fast
+void g_draw_bitmap_fast(Graphics* g, Bitmap* bmp, 
+    int dx, int dy);
+// Draw a bitmap region fast
+void g_draw_bitmap_region_fast(Graphics* g, Bitmap* bmp, 
+    int sx, int sy, int sw, int sh, 
+    int dx, int dy);
+// Draw a scaled bitmap region fast
+void g_draw_scaled_bitmap_region_fast(Graphics* g, Bitmap* bmp, 
+    int sx, int sy, int sw, int sh, 
+    int dx, int dy);
 
 // Draw scaled text
 void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
