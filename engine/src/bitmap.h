@@ -13,6 +13,9 @@
 
 #include <stdbool.h>
 
+// Alpha color
+#define ALPHA 170
+
 // Bitmap type
 typedef struct {
 

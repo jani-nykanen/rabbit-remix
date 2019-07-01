@@ -38,6 +38,7 @@ static void game_draw(Graphics* g) {
     
     g_draw_static(g);
 
+    g_fill_rect(g, 1, 1, 12*8, 10, 0b11100000);
     g_draw_text(g, bmpFont, "HELLO WORLD!", 2, 2, 0, 0, false);
 }
 

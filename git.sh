@@ -1,4 +1,5 @@
 #!/bin/sh
+make clean_all
 git add engine
 git add src
 git add game.conf

@@ -15,6 +15,80 @@ Color rgba(uint8 r, uint8 g, uint8 b, uint8 a) {
 }
 
 
+// Clip a rectangle
+static bool clip_rect(Graphics* g, int* x, int* y, 
+    int* w, int* h) {
+
+    // Left
+    if(*x < 0) {
+
+        *w -= 0 - (*x);
+        *x = 0;
+    }
+    // Right
+    if(*x+*w >= g->csize.x) {
+
+        *w -= (*x+*w) - (0 + g->csize.x);
+    }
+
+    // Top
+    if(*y < 0) {
+
+        *h -= 0 - (*y);
+        *y = 0;
+    }
+    // Bottom
+    if(*y+*h >= g->csize.y) {
+
+        *h -= (*y+*h) - (0 + g->csize.y);
+    }
+
+    return *w > 0 && *h > 0;
+}
+
+
+// Clip (general)
+static bool clip(Graphics* g, int* sx, int* sy, int* sw, int* sh, 
+    int* dx, int* dy, bool flip) {
+
+    int ow, oh;
+
+    // Left
+    ow = *sw;
+    if(*dx < 0) {
+
+        *sw -= 0 - (*dx);
+        if(!flip)
+            *sx += ow-*sw;
+
+        *dx = 0;
+    }
+    // Right
+    if(*dx+*sw >= g->csize.x) {
+
+         *sw -= (*dx+*sw) - (0 + g->csize.x); 
+         if(flip)
+            *sx += ow-*sw;
+    }
+
+    // Top
+    oh = *sh;
+    if(*dy < 0) {
+
+        *sh -= 0 - (*dy);
+        *sy += oh-*sh;
+        *dy = 0;
+    }
+    // Bottom
+    if(*dy+*sh >= g->csize.y) {
+
+        *sh -= (*dy+*sh) - (0 + g->csize.y);
+    }
+
+    return *sw > 0 && *sh > 0;
+}
+
+
 // Create a graphics component
 Graphics* create_graphics(SDL_Window* window, Config* conf) {
 
@@ -157,7 +231,7 @@ void g_refresh(Graphics* g) {
     // Draw canvas
     SDL_RenderCopy(g->rend, g->canvas, NULL, &dst);
 
-    // Render the frame
+    // Render the g->pdata
     SDL_RenderPresent(g->rend);
 }
 
@@ -221,7 +295,43 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
     int dx, int dy, int dw, int dh,
     int flip) {
 
-    // ...
+    int x, y;
+    uint64 offset;
+    int boff;
+    int pixel;
+    int dir = flip ? -1 : 1;
+
+    if (bmp == NULL) return;
+
+    // Translate
+    dx += g->translation.x;
+    dy += g->translation.y;
+
+    // Clip
+    if(!clip(g, &sx, &sy, &sw, &sh, &dx, &dy, flip))
+        return;
+
+    // Draw pixels
+    offset = g->csize.x*dy + dx;
+    boff = bmp->width*sy + sx + (flip ? (sw-1) : 0);
+    for(y = 0; y < sh; ++ y) {
+
+        for(x = 0; x < sw; ++ x) {
+
+            pixel = bmp->data[boff];
+            // Check if not alpha pixel
+            // (i.e not transparent)
+            if (pixel != ALPHA) {
+
+                g->pdata[offset] = pixel;
+            }
+
+            boff += dir;
+            ++ offset;
+        }
+        boff += bmp->width-sw*dir;
+        offset += g->csize.x-sw;
+    }
 }
 
 
@@ -273,7 +383,23 @@ void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
 
 // Fill a rectangle
 void g_fill_rect(Graphics* g, int dx, int dy, 
-    int dw, int dh, Color c) {
+    int dw, int dh, uint8 col) {
 
-    // ...
+    int y;
+    uint64 offset;
+
+    dx += g->translation.x;
+    dy += g->translation.y;
+
+    // Clip
+    if (!clip_rect(g, &dx, &dy, &dw, &dh))
+        return;
+
+    // Draw
+    offset = g->csize.x*dy + dx;
+    for(y = dy; y < dy+dh; ++ y) {
+
+        memset(g->pdata + offset, col, dw);
+        offset += (int64) g->csize.x;
+    }
 }

@@ -1,5 +1,5 @@
 #
-# Project "Fungus 2" makefile
+# Makefile
 # (c) 2019 Jani Nykänen
 
 # ------------------------------------------------------- #
@@ -14,7 +14,7 @@ OBJ := $(patsubst %.c, %.o, $(SRC))
 LD_FLAGS :=  lib/libengine.a -lSDL2 -lm -I ./include
 CC_FLAGS :=  -Iinclude -Wall #-O3
 
-all: fungus clean
+all: game clean
 
 clean:
 	find ./src -type f -name '*.o' -delete
@@ -22,11 +22,11 @@ clean:
 %.o: %.c
 	$(CC) -c -o $@ $< -I./include
 
-fungus: $(OBJ)
+game: $(OBJ)
 	gcc $(CC_FLAGS) -o $@ $^ $(LD_FLAGS)
 
 run:
-	./fungus
+	./game
 
 # ------------------------------------------------------- #
 
@@ -45,12 +45,28 @@ libengine.a: $(ENGINE_OBJ)
 clean_engine:
 	find ./engine -type f -name '*.o' -delete
 
-install: libengine.a
+install:
+	make install_debug
+	rm libengine.a
+	make clean_engine
+
+install_debug: libengine.a
 	install -d ./lib/
 	install -m 644 libengine.a ./lib/
 	install -d ./include/engine/
 	install -m 644 $(wildcard engine/src/*.h) ./include/engine/
-	rm libengine.a
-	make clean_engine
 
 # ------------------------------------------------------- #
+
+#
+# Other
+#
+test:
+	make install_debug
+	make game
+	make run
+
+clean_all:
+	make clean
+	rm libengine.a
+	make clean_engine

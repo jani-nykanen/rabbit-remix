@@ -22,7 +22,6 @@ void init_bitmap_loader(SDL_Renderer* rend) {
 // Load a bitmap
 Bitmap* load_bitmap(const char* path, bool dither) {
 
-    const Uint8 ALPHA = 170;
     const float DIVISOR = 36.428f;
     const int DIVISOR2 = 85;
 

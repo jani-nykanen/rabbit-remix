@@ -108,6 +108,6 @@ void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
 
 // Fill a rectangle
 void g_fill_rect(Graphics* g, int dx, int dy, 
-    int dw, int dh, Color c);
+    int dw, int dh, uint8 col);
 
 #endif // __GRAPHICS__

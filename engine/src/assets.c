@@ -24,7 +24,7 @@ enum {
 // Load a bitmap and add it to the
 // assets
 int assets_add_bitmap(AssetManager* a, const char* name, const char* path, 
-    bool linearFiltering) {
+    bool dithering) {
 
     if (a->assetCount == MAX_ASSET_COUNT) {
 
@@ -33,7 +33,7 @@ int assets_add_bitmap(AssetManager* a, const char* name, const char* path,
     }
 
     // Load
-    Bitmap* b = load_bitmap(path, linearFiltering);
+    Bitmap* b = load_bitmap(path, dithering);
     if (b == NULL) {
 
         return -1;
@@ -138,7 +138,7 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
     char name [WR_WORD_LENGTH]; 
 
     // Render flags
-    bool linearFiltering = false;
+    bool dithering = false;
 
     while(wr_read_next(wr)) {
 
@@ -167,7 +167,7 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
             {
             // Bitmap
             case TypeBitmap:
-                if (assets_add_bitmap(a, name, wr->word, linearFiltering) == -1) {
+                if (assets_add_bitmap(a, name, wr->word, dithering) == -1) {
 
                     return -1;
                 }
@@ -184,9 +184,9 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
             // Flag
             case TypeFlag:
 
-                if (strcmp(name, "linear_filter") == 0) {
+                if (strcmp(name, "dither") == 0) {
 
-                    linearFiltering = (int)(strtol(wr->word,NULL,10)) == 1;
+                    dithering = (int)(strtol(wr->word,NULL,10)) == 1;
                 }
 
                 break;
