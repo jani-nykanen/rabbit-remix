@@ -2,6 +2,10 @@
 
 #include "bitmap.h"
 #include "err.h"
+#include "mathext.h"
+
+// Fixed point math precision
+static const int FIXED_PREC = 256;
 
 
 // Color constructors
@@ -86,6 +90,47 @@ static bool clip(Graphics* g, int* sx, int* sy, int* sw, int* sh,
     }
 
     return *sw > 0 && *sh > 0;
+}
+
+
+// Draw half a triangle
+static void draw_triangle_half(Graphics * g,
+    int midx, int midy, int endMid, int endy, 
+    int stepx, int stepy, int dx, int dend, 
+    int x1, int y1, 
+    uint8 col) {
+
+    int sx = midx * FIXED_PREC;
+    int ex = endMid * FIXED_PREC;
+
+    int x, y;
+    uint64 offset;
+
+    int signx = stepx > 0 ? 1 : -1;
+    int signy = stepy > 0 ? 1 : -1;
+
+    int endx;
+
+    // Draw horizontal lines
+    for (y = midy; y*signy <= endy*signy; y += stepy) {
+
+        x = sx / FIXED_PREC;
+        offset = y * g->csize.x + x;
+
+        endx = ex / FIXED_PREC;
+        for (; x*signx <= endx*signx; x += stepx) {
+
+            // Check if inside the canvas
+            if (x >= 0 && x < g->csize.x && y >= 0 && y < g->csize.y) {
+                
+                g->pdata[offset] = col;
+            }
+            offset += stepx;
+        }
+
+        sx += dx;
+        ex -= dend;
+    }
 }
 
 
@@ -367,7 +412,7 @@ void g_draw_scaled_bitmap_region_fast(Graphics* g, Bitmap* bmp,
 
     // Draw pixels
     offset = g->csize.x*dy + dx;
-    boff = bmp->width*sy + sx +1;
+    boff = bmp->width*sy + sx;
     for (y = dy; y < dy+sh; ++ y) {
 
         memcpy(g->pdata + offset, bmp->data + boff, sw);
@@ -443,5 +488,104 @@ void g_fill_rect(Graphics* g, int dx, int dy,
 
         memset(g->pdata + offset, col, dw);
         offset += (int64) g->csize.x;
+    }
+}
+
+
+// Draw a triangle
+void g_draw_triangle(Graphics* g, 
+    int x1, int y1, 
+    int x2, int y2, 
+    int x3, int y3, 
+    uint8 col) {
+
+    // Sort points
+    Point points[3];
+    points[0] = point(x1, y1);
+    points[1] = point(x2, y2);
+    points[2] = point(x3, y3);
+    sort_points_3(points);
+
+    // If not in the screen, do not draw
+    if (points[0].y >= g->csize.y-1 || points[2].y < 0 ||
+        min_int32_3(x1, x2, x3) >= g->csize.x-1 || 
+        max_int32_3(x1, x2 ,x3) < 0) {
+
+        return;
+    }
+
+    // Calculate horizontal step(s)
+    int dx1, dx2, dend;
+    if (points[1].y != points[0].y)
+        dx1 = -(points[1].x - points[0].x)*FIXED_PREC / 
+               (points[1].y - points[0].y);
+    else
+        dx1 = 0;
+
+    if (points[1].y != points[2].y)
+        dx2 =  (points[1].x - points[2].x)*FIXED_PREC / 
+               (points[1].y - points[2].y);
+    else 
+        dx2 = 0;
+    
+    dend = (points[2].x - points[0].x)*FIXED_PREC / 
+           (points[2].y - points[0].y);
+
+    // "End middle" is the y coordinate in the "end line" (i.e
+    //  where every rendered line ends)
+    int endMid = points[0].x + 
+        (dend * (points[1].y - points[0].y)) 
+        / FIXED_PREC;
+    
+    // Set horizontal step
+    int stepx = points[1].x < endMid ? 1 : -1;
+    
+    // Draw the upper half
+    if (points[1].y != points[0].y) {
+        
+        draw_triangle_half(g,
+            points[1].x,points[1].y, endMid, 
+            max_int32_2(points[0].y, -1), stepx, -1, 
+            dx1, dend, x1, y1, col);
+    }
+
+    // Draw the bottom half
+    if (points[1].y != points[2].y) {
+
+        draw_triangle_half(g, 
+            points[1].x,points[1].y, endMid, 
+            min_int32_2(points[2].y, g->csize.y), stepx, 1, 
+            dx2, -dend, x1, y1, col);
+    }
+}
+
+
+// Draw a line
+void g_draw_line(Graphics* g, int x1, int y1, 
+    int x2, int y2, uint8 col) {
+
+    // Bresenham's line algorithm
+    int dx = abs(x2-x1), sx = x1<x2 ? 1 : -1;
+    int dy = abs(y2-y1), sy = y1<y2 ? 1 : -1; 
+    int err = (dx>dy ? dx : -dy)/2, e2;
+     
+    while(true) {
+
+        if (!(y1 >= g->csize.y-1 || y1 < 0 ||
+            x1 >= g->csize.x-1 || x1 < 0 )) {
+
+            g->pdata[y1 * g->csize.x + x1] = col;
+        }
+        
+        if (x1 == x2 && y1 == y2) 
+            break;
+
+        e2 = err;
+        if (e2 >-dx) { 
+            err -= dy; x1 += sx; 
+        }
+        if (e2 < dy) { 
+            err += dx; y1 += sy; 
+        }
     }
 }

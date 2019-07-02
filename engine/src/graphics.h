@@ -118,4 +118,15 @@ void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
 void g_fill_rect(Graphics* g, int dx, int dy, 
     int dw, int dh, uint8 col);
 
+// Draw a triangle
+void g_draw_triangle(Graphics* g, 
+    int x1, int y1, 
+    int x2, int y2, 
+    int x3, int y3, 
+    uint8 col);
+
+// Draw a line
+void g_draw_line(Graphics* g, int x1, int y1, 
+    int x2, int y2, uint8 col);
+
 #endif // __GRAPHICS__
