@@ -44,7 +44,7 @@ static void game_update(void* e, float tm) {
 // Draw
 static void game_draw(Graphics* g) {
     
-    g_draw_static(g);
+    g_clear_screen(g, 0b10110110);
 
     g_fill_rect(g, 1, 1, 12*8, 10, 0b11100000);
     g_draw_text(g, bmpFont, "HELLO WORLD!", 2, 2, 0, 0, false);
@@ -55,16 +55,24 @@ static void game_draw(Graphics* g) {
     // Draw a spinning triangle
     float r = 0.20f + abs(sinf(testAngle)*0.1f);
     float step = M_PI*2.0f/3.0f;
+    
+    float z = 0.5f + 0.1f * sinf(testAngle);
     g_draw_triangle_3D(g,
-        vec3((cosf(testAngle)*r), (sinf(testAngle)*r), 0.5f), 
-        vec3((cosf(testAngle+step)*r), (sinf(testAngle+step)*r), 0.5f), 
-        vec3((cosf(testAngle+step*2)*r), (sinf(testAngle+step*2)*r), 0.5f), 
+        vec3((cosf(testAngle)*r), (sinf(testAngle)*r), z), 
+        vec3((cosf(testAngle+step)*r), (sinf(testAngle+step)*r), z), 
+        vec3((cosf(testAngle+step*2)*r), (sinf(testAngle+step*2)*r), z), 
         0b00011100);
 
     g_draw_triangle_3D(g,
-        vec3(-0.5f+(cosf(testAngle)*r), (sinf(testAngle)*r), 1.0f), 
-        vec3(-0.5f+(cosf(testAngle+step)*r), (sinf(testAngle+step)*r),1.0f), 
-        vec3(-0.5f+(cosf(testAngle+step*2)*r), (sinf(testAngle+step*2)*r), 1.0f), 
+        vec3((cosf(-testAngle)*r), -0.15f+(sinf(-testAngle)*r), (0.8f-z)*2), 
+        vec3((cosf(-testAngle+step)*r),-0.15f+ (sinf(-testAngle+step)*r), (0.8f-z)*2), 
+        vec3((cosf(-testAngle+step*2)*r), -0.15f+(sinf(-testAngle+step*2)*r), (0.8f-z)*2), 
+        0b11100000);
+
+    g_draw_triangle_3D(g,
+        vec3(-0.25f+(cosf(testAngle)*r), (sinf(testAngle)*r), 0.5f), 
+        vec3(-0.25f+(cosf(testAngle+step)*r), (sinf(testAngle+step)*r),0.5f), 
+        vec3(-0.25f+(cosf(testAngle+step*2)*r), (sinf(testAngle+step*2)*r), 0.5f), 
         0b00000011);
 
     g_draw_triangle_buffer(g);

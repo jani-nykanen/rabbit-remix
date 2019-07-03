@@ -595,7 +595,7 @@ void g_draw_triangle_3D(Graphics* g,
     c.y = (int) (C.y/2.0f * g->csize.y);
 
     // Compute depth
-    float depth = (A.x + B.x + C.x) / 3.0f;
+    float depth = (A.z + B.z + C.z) / 3.0f;
 
     // Put to the buffer
     tbuf_add_triangle(&g->tbuf, a, b, c, depth, col);

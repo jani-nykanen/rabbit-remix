@@ -21,36 +21,52 @@ TriangleBuffer create_triangle_buffer() {
 void tbuf_add_triangle(TriangleBuffer* buf, 
     Point A, Point B, Point C, float depth, uint8 col) {
 
+    int i;
+    Triangle* next;
+    Triangle* prev;
+
     // Check if room left
     if (buf->triangleCount >= TRIANGLE_BUFFER_SIZE) {
 
         err_throw_no_param("Triangle buffer overflow!");
         return;
     }
-    Triangle t = (Triangle){A, B, C, depth, col, NULL};
-
     // Add to the buffer
-    buf->triangles [buf->triangleCount] = t;
+    Triangle* t = &buf->triangles [buf->triangleCount];
+    *t = (Triangle){A, B, C, depth, col, NULL};
     
     // Update first
     if (buf->first == NULL || depth > buf->first->depth) {
 
-        buf->triangles [buf->triangleCount].next = buf->first;
-        buf->first = (void*) &buf->triangles [buf->triangleCount];
+        t->next = buf->first;
+        buf->first = (void*) t;
     }
+    else {
 
-    // Find next
-    int i = 0;
-    for (; i < buf->triangleCount; ++ i) {
+        next = buf->first;
+        prev = NULL;
+        while(true) {
 
-        // Check if the triangle goes between nearby
-        // triangles
-        if (i > 0 && (buf->triangles[i].depth < depth ) &&
-            buf->triangles[i-1].depth >= depth) {
+            // If between two elements
+            if (prev != NULL &&
+                prev->depth >= depth &&
+                next->depth < depth) {
 
-            t.next = (void*) &buf->triangles[i];
-            buf->triangles[i-1].next = (void*) &buf->triangles [buf->triangleCount];
-            break;
+                prev->next = (void*)t;
+                t->next = (void*)next;
+                break;
+            }
+
+            prev = next;
+            next = (Triangle*)next->next;
+            // If end reached, add to the end of
+            // the list, kind of
+            if (next == NULL) {
+                
+                t->next = NULL;
+                prev->next = (void*)t;
+                break;
+            }
         }
     }
 
