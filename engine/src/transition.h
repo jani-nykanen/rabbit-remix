@@ -27,7 +27,7 @@ typedef struct {
     float speed;
     bool active;
     void (*callback)(void);
-    Color fadeColor;
+    uint8 fadeColor;
 
 } Transition;
 
@@ -37,7 +37,7 @@ Transition create_transition_object();
 
 // Activate
 void tr_activate(Transition* tr, Mode mode, 
-    float speed, void (*cb)(void), Color c);
+    float speed, void (*cb)(void), uint8 c);
 
 // Update transition
 void tr_update(Transition* tr, float tm);

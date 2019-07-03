@@ -18,7 +18,7 @@ Transition create_transition_object() {
 
 // Activate
 void tr_activate(Transition* tr, Mode mode, 
-    float speed, void (*cb)(void), Color c) {
+    float speed, void (*cb)(void), uint8 c) {
 
     tr->timer = TR_INITIAL_TIME;
     tr->speed = speed;

@@ -8,3 +8,10 @@ Vector2 vec2(float x, float y) {
 Point point(int x, int y) {
     return (Point){x, y};
 }
+
+
+// Constructor
+Vector3 vec3(float x, float y, float z) {
+
+    return (Vector3){x, y, z};
+}

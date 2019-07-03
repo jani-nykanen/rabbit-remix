@@ -8,17 +8,6 @@
 static const int FIXED_PREC = 256;
 
 
-// Color constructors
-Color rgb(uint8 r, uint8 g, uint8 b) {
-
-    return rgba(r, g, b, 255);
-}
-Color rgba(uint8 r, uint8 g, uint8 b, uint8 a) {
-
-    return (Color){r,g,b, a};
-}
-
-
 // Clip a rectangle
 static bool clip_rect(Graphics* g, int* x, int* y, 
     int* w, int* h) {
@@ -188,10 +177,16 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
         return NULL;
     }
 
+    // Create a triangle buffer
+    g->tbuf = create_triangle_buffer();
+
     // Resize
     int w, h;
     SDL_GetWindowSize(window, &w, &h);
     g_resize(g, w, h);
+
+    // Set defaults
+    g->translation = point(0, 0);
 
     return g;
 }

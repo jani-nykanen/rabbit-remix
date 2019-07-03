@@ -53,4 +53,13 @@ Vector2 vec2(float x, float y);
 Point point(int x, int y);
 
 
+// 3-component vector
+typedef struct {
+
+    float x, y, z;
+} Vector3;
+
+// Constructor
+Vector3 vec3(float x, float y, float z);
+
 #endif // __TYPES__

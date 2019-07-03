@@ -13,6 +13,7 @@
 
 #include "bitmap.h"
 #include "config.h"
+#include "trianglebuffer.h"
 
 // Flipping flags
 enum {
@@ -22,17 +23,6 @@ enum {
     FlipVertical = 2,
     FlipBoth = FlipHorizontal | FlipVertical // == 3
 };
-
-// Color
-typedef struct {
-
-    uint8 r,g,b,a;
-} Color;
-
-// Color constructors
-Color rgb(uint8 r, uint8 g, uint8 b);
-Color rgba(uint8 r, uint8 g, uint8 b, uint8 a);
-
 
 // Graphics type
 typedef struct {
@@ -56,8 +46,8 @@ typedef struct {
     // Translation
     Point translation;
 
-    // Global color
-    Color blendColor;
+    // Triangle buffer
+    TriangleBuffer tbuf;
 
 } Graphics;
 
