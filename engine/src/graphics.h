@@ -14,6 +14,7 @@
 #include "bitmap.h"
 #include "config.h"
 #include "trianglebuffer.h"
+#include "matrix.h"
 
 // Flipping flags
 enum {
@@ -38,6 +39,7 @@ typedef struct {
     // Canvas info
     Point canvasPos;
     Point canvasScale;
+    float aspectRatio;
     // Canvas bitmap
     SDL_Texture* canvas;
     // Canvas pixels
@@ -45,6 +47,14 @@ typedef struct {
 
     // Translation
     Point translation;
+
+    // Matrices
+    Matrix4 model;
+    Matrix4 view;
+    Matrix4 projection;
+    Matrix4 product;
+    // Is the product computed
+    bool productComputed;
 
     // Triangle buffer
     TriangleBuffer tbuf;
@@ -126,5 +136,27 @@ void g_draw_triangle_buffer(Graphics* g);
 // Draw a line
 void g_draw_line(Graphics* g, int x1, int y1, 
     int x2, int y2, uint8 col);
+
+
+  // ---------------- //
+ // Transformations  //
+// ---------------- //
+
+// Set model matrix to identity matrix
+void g_load_identity(Graphics* g);
+
+// Translate model space
+void g_translate_model(Graphics* g, float x, float y, float z);
+
+// Scale model space
+void g_scale_model(Graphics* g, float x, float y, float z);
+
+// Rotate model space
+void g_rotate_model(Graphics* g, 
+    float angle, float x, float y, float z);
+
+// Set perspective matrix
+void g_set_perspective(Graphics* g, 
+    float fovY, float near, float far);
 
 #endif // __GRAPHICS__

@@ -36,7 +36,7 @@ static void game_update(void* e, float tm) {
     if (evMan->tr->active) return;
 
 
-    testAngle += 0.05f * tm;
+    testAngle += 0.025f * tm;
     testAngle = fmodf(testAngle, M_PI*2.0f);
 }
 
@@ -46,10 +46,15 @@ static void game_draw(Graphics* g) {
     
     g_clear_screen(g, 0b10110110);
 
-    g_fill_rect(g, 1, 1, 12*8, 10, 0b11100000);
-    g_draw_text(g, bmpFont, "HELLO WORLD!", 2, 2, 0, 0, false);
-
     g_draw_bitmap_region_fast(g, bmpFont, 0, 0, 128, 64, 128, 96);
+
+    // Proper near/far doesn't work yet...
+    g_set_perspective(g, M_PI/4.0f, -1, 1);
+
+    g_load_identity(g);
+    g_translate_model(g, 0.1f*sinf(testAngle), -0.0f, 2.0f);
+    g_scale_model(g, 0.75f, 0.75f, 1.0f);
+    g_rotate_model(g, testAngle*2, 0.0f, 1.0f, 0.0f);
 
 
     // Draw a spinning triangle
@@ -76,6 +81,9 @@ static void game_draw(Graphics* g) {
         0b00000011);
 
     g_draw_triangle_buffer(g);
+
+    g_fill_rect(g, 1, 1, 12*8, 10, 0b11100000);
+    g_draw_text(g, bmpFont, "HELLO WORLD!", 2, 2, 0, 0, false);
 }
 
 

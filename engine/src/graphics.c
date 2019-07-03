@@ -8,6 +8,16 @@
 static const int FIXED_PREC = 256;
 
 
+// Compute product matrix
+static void compute_product(Graphics* g) {
+
+    Matrix4 a = mat4_mul(g->view, g->model);
+    g->product = mat4_mul(g->projection, a);
+
+    g->productComputed = true;
+}
+
+
 // Clip a rectangle
 static bool clip_rect(Graphics* g, int* x, int* y, 
     int* w, int* h) {
@@ -154,6 +164,7 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     // Read view target size
     g->csize.x = conf_get_param_int(conf, "canvas_width", 256);
     g->csize.y = conf_get_param_int(conf, "canvas_height", 192);
+    g->aspectRatio = (float)g->csize.x / (float)g->csize.y;
 
     // Create the canvas texture
     g->canvas = 
@@ -187,6 +198,13 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
 
     // Set defaults
     g->translation = point(0, 0);
+    g->productComputed = true;
+
+    // Create matrices
+    g->model = mat4_identity();
+    g->view = mat4_identity();
+    g->projection = mat4_identity();
+    g->product = mat4_identity();
 
     return g;
 }
@@ -562,13 +580,23 @@ void g_draw_triangle_3D(Graphics* g,
 
     const float NEAR = 0.025;
 
+    if (!g->productComputed) {
+
+        compute_product(g);
+    }
+
     // Apply transform 
-    // ...
+    A = mat4_mul_vec3(g->product, A);
+    B = mat4_mul_vec3(g->product, B);
+    C = mat4_mul_vec3(g->product, C);
 
     // Check depth
     if (A.z < NEAR && B.z < NEAR && C.z < NEAR)
         return;
 
+    // TEMPORARY
+    // Move points closer
+    // TODO: Clip with near plane
     if (A.z < NEAR) A.z = NEAR;
     if (B.z < NEAR) B.z = NEAR;
     if (C.z < NEAR) C.z = NEAR;
@@ -637,4 +665,60 @@ void g_draw_line(Graphics* g, int x1, int y1,
             err += dx; y1 += sy; 
         }
     }
+}
+
+
+  // ---------------- //
+ // Transformations  //
+// ---------------- //
+
+
+// Set model matrix to identity matrix
+void g_load_identity(Graphics* g) {
+
+    g->model = mat4_identity();
+
+    g->productComputed = false;
+}
+
+
+// Translate model space
+void g_translate_model(Graphics* g, float x, float y, float z) {
+
+    Matrix4 a = mat4_translate(x, y, z);
+    g->model = mat4_mul(g->model, a);
+
+    g->productComputed = false;
+}
+
+
+// Scale model space
+void g_scale_model(Graphics* g, float x, float y, float z) {
+
+    Matrix4 a = mat4_scale(x, y, z);
+    g->model = mat4_mul(g->model, a);
+
+    g->productComputed = false;
+}
+
+
+// Rotate model space
+void g_rotate_model(Graphics* g, 
+    float angle, float x, float y, float z) {
+
+    Matrix4 a = mat4_rotate(angle, x, y, z);
+    g->model = mat4_mul(g->model, a);
+
+    g->productComputed = false;
+}
+
+
+// Set perspective matrix
+void g_set_perspective(Graphics* g, 
+    float fovY, float near, float far) {
+
+    g->projection = mat4_perspective(
+        fovY, g->aspectRatio, near, far);
+
+    g->productComputed = false;
 }

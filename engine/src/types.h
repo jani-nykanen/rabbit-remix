@@ -62,4 +62,5 @@ typedef struct {
 // Constructor
 Vector3 vec3(float x, float y, float z);
 
+
 #endif // __TYPES__

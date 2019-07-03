@@ -13,21 +13,30 @@
 typedef struct {
 
     float m[4][4];
-} Mat4;
+} Matrix4;
+
+// Create a matrix full of zeroes
+Matrix4 mat4_zeroes();
 
 // Create an identity matrix
-Mat4 mat4_identity();
+Matrix4 mat4_identity();
 
 // Create a translation matrix
-Mat4 mat4_translate(float x, float y, float z);
+Matrix4 mat4_translate(float x, float y, float z);
 
 // Create a scaling matrix
-Mat4 mat4_scale(float x, float y, float z);
+Matrix4 mat4_scale(float x, float y, float z);
 
 // Create a rotation matrix
-Mat4 mat4_rotate(float angle, float x, float y, float z);
+Matrix4 mat4_rotate(float angle, float x, float y, float z);
+
+// Create a perspective matrix
+Matrix4 mat4_perspective(float fovY, float aspect, float near, float far);
 
 // Multiply
-Mat4 mat4_mul(Mat4 a, Mat4 b);
+Matrix4 mat4_mul(Matrix4 a, Matrix4 b);
+
+// Multiply with a vector
+Vector3 mat4_mul_vec3(Matrix4 a, Vector3 b);
 
 #endif // __MATRIX__

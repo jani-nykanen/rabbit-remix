@@ -10,7 +10,7 @@ Point point(int x, int y) {
 }
 
 
-// Constructor
+// Constructor, 3 components
 Vector3 vec3(float x, float y, float z) {
 
     return (Vector3){x, y, z};
