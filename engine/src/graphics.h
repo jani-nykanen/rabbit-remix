@@ -115,6 +115,14 @@ void g_draw_triangle(Graphics* g,
     int x3, int y3, 
     uint8 col);
 
+// Draw a 3D triangle
+void g_draw_triangle_3D(Graphics* g,
+    Vector3 A, Vector3 B, Vector3 C,
+    uint8 col);
+
+// Draw triangle buffer
+void g_draw_triangle_buffer(Graphics* g);
+
 // Draw a line
 void g_draw_line(Graphics* g, int x1, int y1, 
     int x2, int y2, uint8 col);

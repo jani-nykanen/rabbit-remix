@@ -33,24 +33,25 @@ void tbuf_add_triangle(TriangleBuffer* buf,
     buf->triangles [buf->triangleCount] = t;
     
     // Update first
-    if (buf->first == NULL || depth < buf->first->depth) {
+    if (buf->first == NULL || depth > buf->first->depth) {
 
+        buf->triangles [buf->triangleCount].next = buf->first;
         buf->first = (void*) &buf->triangles [buf->triangleCount];
     }
 
     // Find next
-    int i = 1;
+    int i = 0;
     for (; i < buf->triangleCount; ++ i) {
 
-        if (buf->triangles[i].depth >= depth &&
-            buf->triangles[i-1].depth < depth) {
+        // Check if the triangle goes between nearby
+        // triangles
+        if (i > 0 && (buf->triangles[i].depth < depth ) &&
+            buf->triangles[i-1].depth >= depth) {
 
             t.next = (void*) &buf->triangles[i];
             buf->triangles[i-1].next = (void*) &buf->triangles [buf->triangleCount];
-
             break;
         }
-
     }
 
     ++ buf->triangleCount;

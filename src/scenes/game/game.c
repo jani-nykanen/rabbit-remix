@@ -53,16 +53,21 @@ static void game_draw(Graphics* g) {
 
 
     // Draw a spinning triangle
-    int cx = 128;
-    int cy = 96;
-    int r = 48 + abs(sinf(testAngle)*32);
+    float r = 0.20f + abs(sinf(testAngle)*0.1f);
     float step = M_PI*2.0f/3.0f;
-    g_draw_triangle(g, 
-    cx +  (int)(cosf(testAngle)*r), cy + (int)(sinf(testAngle)*r), 
-    cx +  (int)(cosf(testAngle+step)*r), cy + (int)(sinf(testAngle+step)*r) , 
-    cx +  (int)(cosf(testAngle+step*2)*r), cy + (int)(sinf(testAngle+step*2)*r) , 
-    0b00011100);
-    
+    g_draw_triangle_3D(g,
+        vec3((cosf(testAngle)*r), (sinf(testAngle)*r), 0.5f), 
+        vec3((cosf(testAngle+step)*r), (sinf(testAngle+step)*r), 0.5f), 
+        vec3((cosf(testAngle+step*2)*r), (sinf(testAngle+step*2)*r), 0.5f), 
+        0b00011100);
+
+    g_draw_triangle_3D(g,
+        vec3(-0.5f+(cosf(testAngle)*r), (sinf(testAngle)*r), 1.0f), 
+        vec3(-0.5f+(cosf(testAngle+step)*r), (sinf(testAngle+step)*r),1.0f), 
+        vec3(-0.5f+(cosf(testAngle+step*2)*r), (sinf(testAngle+step*2)*r), 1.0f), 
+        0b00000011);
+
+    g_draw_triangle_buffer(g);
 }
 
 

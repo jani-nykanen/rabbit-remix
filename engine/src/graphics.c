@@ -555,6 +555,60 @@ void g_draw_triangle(Graphics* g,
 }
 
 
+// Draw a 3D triangle
+void g_draw_triangle_3D(Graphics* g,
+    Vector3 A, Vector3 B, Vector3 C,
+    uint8 col) {
+
+    const float NEAR = 0.025;
+
+    // Apply transform 
+    // ...
+
+    // Check depth
+    if (A.z < NEAR && B.z < NEAR && C.z < NEAR)
+        return;
+
+    if (A.z < NEAR) A.z = NEAR;
+    if (B.z < NEAR) B.z = NEAR;
+    if (C.z < NEAR) C.z = NEAR;
+
+    // Divide by depth
+    A.x /= A.z; A.y /= A.z;
+    B.x /= B.z; B.y /= B.z;
+    C.x /= C.z; C.y /= C.z;   
+
+    // Fit the canvas viewport
+    A.x += 1.0f; A.y += 1.0f;
+    B.x += 1.0f; B.y += 1.0f;
+    C.x += 1.0f; C.y += 1.0f;
+
+    Point a, b, c;
+
+    a.x = (int) (A.x/2.0f * g->csize.x);
+    a.y = (int) (A.y/2.0f * g->csize.y);
+
+    b.x = (int) (B.x/2.0f * g->csize.x);
+    b.y = (int) (B.y/2.0f * g->csize.y);
+
+    c.x = (int) (C.x/2.0f * g->csize.x);
+    c.y = (int) (C.y/2.0f * g->csize.y);
+
+    // Compute depth
+    float depth = (A.x + B.x + C.x) / 3.0f;
+
+    // Put to the buffer
+    tbuf_add_triangle(&g->tbuf, a, b, c, depth, col);
+}
+
+
+// Draw triangle buffer
+void g_draw_triangle_buffer(Graphics* g) {
+
+    tbuf_draw_triangles(&g->tbuf, (void*)g);
+}
+
+
 // Draw a line
 void g_draw_line(Graphics* g, int x1, int y1, 
     int x2, int y2, uint8 col) {
