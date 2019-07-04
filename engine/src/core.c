@@ -50,6 +50,12 @@ static int core_init(Core* c) {
         return -1;
     }
 
+    // Init global graphics context
+    if (init_graphics_global() == 1) {
+
+        return -1;
+    }
+
     // Create graphics
     c->g = create_graphics(c->window, &c->conf);
     if (c->g == NULL) {

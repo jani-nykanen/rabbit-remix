@@ -44,6 +44,10 @@ static void game_update(void* e, float tm) {
 // Draw
 static void game_draw(Graphics* g) {
     
+    // Test
+    g->dvalue = 
+        min_int32_2((int) (8 + sinf(testAngle)*8.0f), 14);
+
     g_clear_screen(g, 0b10110110);
 
     g_draw_bitmap_region_fast(g, bmpFont, 0, 0, 128, 64, 128, 96);

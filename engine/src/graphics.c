@@ -4,8 +4,79 @@
 #include "err.h"
 #include "mathext.h"
 
+// Maximum value for darkness
+#define MAX_DARKNESS_VALUE 8
+
 // Fixed point math precision
 static const int FIXED_PREC = 256;
+
+// Global darkness palettes
+static uint8 dpalette [MAX_DARKNESS_VALUE] [256];
+// Dithering arrays
+static uint8 ditherArray [MAX_DARKNESS_VALUE*2] [2];
+
+
+// Get darkened color index
+static uint8 get_darkened_color(uint8 col, int amount)
+{
+    uint8 r,g,b;
+
+    r = col >> 5;
+    g = col << 3;
+    g = g >> 5;
+    b = col << 6;
+    b = b >> 6; 
+
+    int i = 0;
+    for (; i < amount; ++ i)
+    {
+        if (r > 0) 
+            -- r;
+        if (g > 0) 
+            -- g;
+        
+        if (i % 2 == 1) {
+
+            if (b > 0) 
+                -- b;
+        }
+    }
+
+    r = r << 5;
+    g = g << 2;
+
+    return r | g | b;
+}
+
+
+// Generate darkness palettes
+static void gen_darkness_palettes() {
+
+    int i, j;
+
+    for(i = 0; i < MAX_DARKNESS_VALUE; ++ i)
+    {
+        for(j = 0; j < 256; ++ j)
+        {
+            dpalette[i][j] = get_darkened_color(j, i);
+        }
+    }
+}
+
+
+// Generate dithering array
+static void gen_dither_array() {
+
+    int i, j;
+
+    for (i = 0; i < MAX_DARKNESS_VALUE*2; ++ i) {
+
+        j = i / 2;
+
+        ditherArray[i][0] = i % 2 == 0 ? j : j+1;
+        ditherArray[i][1] = j;
+    }
+}
 
 
 // Compute product matrix
@@ -120,9 +191,11 @@ static void draw_triangle_half(Graphics * g,
         for (; x*signx <= endx*signx; x += stepx) {
 
             // Check if inside the canvas
-            if (x >= 0 && x < g->csize.x && y >= 0 && y < g->csize.y) {
+            if (x >= 0 
+                && x < g->csize.x && y >= 0 
+                && y < g->csize.y) {
                 
-                g->pdata[offset] = col;
+                g->pdata[offset] = dpalette[ ditherArray[g->dvalue] [x % 2 == y % 2] ] [col];
             }
             offset += stepx;
         }
@@ -130,6 +203,17 @@ static void draw_triangle_half(Graphics * g,
         sx += dx;
         ex -= dend;
     }
+}
+
+
+// Initialize global graphics content
+int init_graphics_global() {
+
+    // Initialize global arrays
+    gen_darkness_palettes();
+    gen_dither_array();
+
+    return 0;
 }
 
 
@@ -200,6 +284,7 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     g->translation = point(0, 0);
     g->productComputed = true;
     g->stackPointer = 0;
+    g->dvalue = 0;
 
     // Create matrices
     g->model = mat4_identity();

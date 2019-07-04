@@ -19,6 +19,10 @@
 // Matrix stack size
 #define MATRIX_STACK_SIZE 32 
 
+// Initialize global graphics content
+int init_graphics_global();
+
+
 // Flipping flags
 enum {
 
@@ -65,6 +69,9 @@ typedef struct {
     // Matrix stack for model space
     Matrix4 modelStack [MATRIX_STACK_SIZE];
     int stackPointer;
+
+    // Darkness values
+    int dvalue;
 
 } Graphics;
 
