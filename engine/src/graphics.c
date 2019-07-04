@@ -199,6 +199,7 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     // Set defaults
     g->translation = point(0, 0);
     g->productComputed = true;
+    g->stackPointer = 0;
 
     // Create matrices
     g->model = mat4_identity();
@@ -585,45 +586,52 @@ void g_draw_triangle_3D(Graphics* g,
         compute_product(g);
     }
 
+    Vector4 tA, tB, tC;
+
     // Apply transform 
-    A = mat4_mul_vec3(g->product, A);
-    B = mat4_mul_vec3(g->product, B);
-    C = mat4_mul_vec3(g->product, C);
+    tA = mat4_mul_vec3(g->product, A);
+    tB = mat4_mul_vec3(g->product, B);
+    tC = mat4_mul_vec3(g->product, C);
+
+    // Divide by the perspective thingy
+    tA.x /= tA.w; tA.y /= tA.w; tA.z /= tA.w;
+    tB.x /= tB.w; tB.y /= tB.w; tB.z /= tB.w;
+    tC.x /= tC.w; tC.y /= tC.w; tC.z /= tC.w;
 
     // Check depth
-    if (A.z < NEAR && B.z < NEAR && C.z < NEAR)
+    if (tA.z < NEAR && tB.z < NEAR && tC.z < NEAR)
         return;
 
     // TEMPORARY
     // Move points closer
     // TODO: Clip with near plane
-    if (A.z < NEAR) A.z = NEAR;
-    if (B.z < NEAR) B.z = NEAR;
-    if (C.z < NEAR) C.z = NEAR;
+    if (tA.z < NEAR) tA.z = NEAR;
+    if (tB.z < NEAR) tB.z = NEAR;
+    if (tC.z < NEAR) tC.z = NEAR;
 
     // Divide by depth
-    A.x /= A.z; A.y /= A.z;
-    B.x /= B.z; B.y /= B.z;
-    C.x /= C.z; C.y /= C.z;   
+    tA.x /= tA.z; tA.y /= tA.z;
+    tB.x /= tB.z; tB.y /= tB.z;
+    tC.x /= tC.z; tC.y /= tC.z;   
 
     // Fit the canvas viewport
-    A.x += 1.0f; A.y += 1.0f;
-    B.x += 1.0f; B.y += 1.0f;
-    C.x += 1.0f; C.y += 1.0f;
+    tA.x += 1.0f; tA.y += 1.0f;
+    tB.x += 1.0f; tB.y += 1.0f;
+    tC.x += 1.0f; tC.y += 1.0f;
 
     Point a, b, c;
 
-    a.x = (int) (A.x/2.0f * g->csize.x);
-    a.y = (int) (A.y/2.0f * g->csize.y);
+    a.x = (int) (tA.x/2.0f * g->csize.x);
+    a.y = (int) (tA.y/2.0f * g->csize.y);
 
-    b.x = (int) (B.x/2.0f * g->csize.x);
-    b.y = (int) (B.y/2.0f * g->csize.y);
+    b.x = (int) (tB.x/2.0f * g->csize.x);
+    b.y = (int) (tB.y/2.0f * g->csize.y);
 
-    c.x = (int) (C.x/2.0f * g->csize.x);
-    c.y = (int) (C.y/2.0f * g->csize.y);
+    c.x = (int) (tC.x/2.0f * g->csize.x);
+    c.y = (int) (tC.y/2.0f * g->csize.y);
 
     // Compute depth
-    float depth = (A.z + B.z + C.z) / 3.0f;
+    float depth = (tA.z + tB.z + tC.z) / 3.0f;
 
     // Put to the buffer
     tbuf_add_triangle(&g->tbuf, a, b, c, depth, col);
@@ -719,6 +727,31 @@ void g_set_perspective(Graphics* g,
 
     g->projection = mat4_perspective(
         fovY, g->aspectRatio, near, far);
+
+    g->productComputed = false;
+}
+
+
+// Push the current model transformation to the
+// stack
+void g_push(Graphics* g) {
+
+    if (g->stackPointer >= MATRIX_STACK_SIZE) {
+
+        err_throw_no_param("Matrix stack overflow!");
+        return;
+    }
+
+    g->modelStack[g->stackPointer ++] = g->model;
+}
+
+
+// Pop the model transformation from the stack
+void g_pop(Graphics* g) {
+
+    if (g->stackPointer <= 0) return;
+
+    g->model = g->modelStack[-- g->stackPointer];
 
     g->productComputed = false;
 }

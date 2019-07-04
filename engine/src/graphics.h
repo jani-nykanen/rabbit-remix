@@ -16,6 +16,9 @@
 #include "trianglebuffer.h"
 #include "matrix.h"
 
+// Matrix stack size
+#define MATRIX_STACK_SIZE 32 
+
 // Flipping flags
 enum {
 
@@ -58,6 +61,10 @@ typedef struct {
 
     // Triangle buffer
     TriangleBuffer tbuf;
+
+    // Matrix stack for model space
+    Matrix4 modelStack [MATRIX_STACK_SIZE];
+    int stackPointer;
 
 } Graphics;
 
@@ -158,5 +165,12 @@ void g_rotate_model(Graphics* g,
 // Set perspective matrix
 void g_set_perspective(Graphics* g, 
     float fovY, float near, float far);
+
+// Push the current model transformation to the
+// stack
+void g_push(Graphics* g);
+
+// Pop the model transformation from the stack
+void g_pop(Graphics* g);
 
 #endif // __GRAPHICS__

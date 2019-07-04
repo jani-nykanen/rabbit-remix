@@ -63,4 +63,14 @@ typedef struct {
 Vector3 vec3(float x, float y, float z);
 
 
+// 4-component vector
+typedef struct {
+
+    float x, y, z, w;
+} Vector4;
+
+// Constructor
+Vector4 vec4(float x, float y, float z, float w);
+
+
 #endif // __TYPES__

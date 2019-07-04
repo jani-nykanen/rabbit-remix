@@ -37,6 +37,6 @@ Matrix4 mat4_perspective(float fovY, float aspect, float near, float far);
 Matrix4 mat4_mul(Matrix4 a, Matrix4 b);
 
 // Multiply with a vector
-Vector3 mat4_mul_vec3(Matrix4 a, Vector3 b);
+Vector4 mat4_mul_vec3(Matrix4 a, Vector3 b);
 
 #endif // __MATRIX__
