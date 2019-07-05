@@ -60,6 +60,7 @@ typedef struct {
     Matrix4 view;
     Matrix4 projection;
     Matrix4 product;
+    Matrix4 rotation;
     // Is the product computed
     bool productComputed;
 
@@ -76,6 +77,7 @@ typedef struct {
     // Lighting info
     bool lightEnabled;
     float lightMag;
+    Vector3 lightDir;
 
 } Graphics;
 
@@ -157,6 +159,11 @@ void g_draw_line(Graphics* g, int x1, int y1,
 
 // Set darkness value
 void g_set_darkness(Graphics* g, int v);
+
+// Enable lighting
+void g_enable_lighting(Graphics* g, float mag, Vector3 dir);
+// Disable
+void g_disable_lighting(Graphics* g);
 
 
   // ---------------- //

@@ -62,6 +62,10 @@ typedef struct {
 // Constructor
 Vector3 vec3(float x, float y, float z);
 
+// Some operators
+Vector3 vec3_subtract(Vector3 a, Vector3 b);
+void vec3_normalize(Vector3* v);
+
 
 // 4-component vector
 typedef struct {
@@ -71,6 +75,9 @@ typedef struct {
 
 // Constructor
 Vector4 vec4(float x, float y, float z, float w);
+
+// Operators
+Vector3 vec4_to_vec3(Vector4 a);
 
 
 #endif // __TYPES__

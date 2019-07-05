@@ -82,7 +82,15 @@ static void gen_dither_array() {
 // Compute lighting
 static int compute_lighting(Graphics* g, Vector3 normal) {
 
-    
+    float multiplier = max_float_2(0.0f, 
+        normal.x*g->lightDir.x + 
+        normal.y*g->lightDir.y + 
+        normal.z*g->lightDir.z
+        );
+    multiplier = (1.0f-g->lightMag) + g->lightMag * multiplier;
+
+    return (int) floorf( (1.0f-multiplier) / 
+        (1.0f/ ( (float)2*(MAX_DARKNESS_VALUE)-1)) );
 }
 
 
@@ -292,6 +300,7 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     g->productComputed = true;
     g->stackPointer = 0;
     g->dvalue = 0;
+    g->lightEnabled = false;
 
     // Create matrices
     g->model = mat4_identity();
@@ -725,8 +734,23 @@ void g_draw_triangle_3D(Graphics* g,
     // Compute depth
     float depth = (tA.z + tB.z + tC.z) / 3.0f;
 
+    // Compute lighting, if enabled
+    int dvalue = g->dvalue;
+    Vector3 normal;
+    if (g->lightEnabled) {
+
+        // Compute normal
+        normal = cross_product(vec3_subtract(B, A), vec3_subtract(C, A));
+        
+        vec3_normalize(&normal);
+        normal = vec4_to_vec3(mat4_mul_vec3(g->rotation, normal));
+
+        // Compute lighting
+        dvalue = compute_lighting(g, normal);
+    }
+
     // Put to the buffer
-    tbuf_add_triangle(&g->tbuf, a, b, c, depth, col, g->dvalue);
+    tbuf_add_triangle(&g->tbuf, a, b, c, depth, col, dvalue);
 }
 
 
@@ -780,6 +804,22 @@ void g_set_darkness(Graphics* g, int v) {
 }
 
 
+// Enable lighting
+void g_enable_lighting(Graphics* g, float mag, Vector3 dir) {
+
+    g->lightEnabled = true;
+    g->lightMag = mag;
+    g->lightDir = dir;
+}
+
+
+// Disable
+void g_disable_lighting(Graphics* g) {
+
+    g->lightEnabled = false;
+}
+
+
   // ---------------- //
  // Transformations  //
 // ---------------- //
@@ -789,6 +829,7 @@ void g_set_darkness(Graphics* g, int v) {
 void g_load_identity(Graphics* g) {
 
     g->model = mat4_identity();
+    g->rotation = g->model;
 
     g->productComputed = false;
 }
@@ -822,6 +863,8 @@ void g_rotate_model(Graphics* g,
     g->model = mat4_mul(g->model, a);
 
     g->productComputed = false;
+
+    g->rotation = mat4_mul(g->rotation, a);
 }
 
 

@@ -87,7 +87,7 @@ void tbuf_draw_triangles(TriangleBuffer* buf, void* _g) {
     while (true) {
 
         // Draw
-        g_set_darkness(g, g->dvalue);
+        g_set_darkness(g, t->dvalue);
         g_draw_triangle(g, 
             t->A.x, t->A.y, 
             t->B.x, t->B.y, 

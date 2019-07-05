@@ -47,6 +47,19 @@ int max_int32_2(int a, int b) {
 }
 
 
+// And the same for float
+// TODO: Add a macro to get rid of repeating
+// code
+float min_float_2(float a, float b) {
+
+    return a <= b ? a : b;
+}
+float max_float_2(float a, float b) {
+
+    return a >= b ? a : b;
+}
+
+
 // Minimum (out of 3)
 int min_int32_3(int a, int b, int c) {
 
@@ -60,4 +73,15 @@ int max_int32_3(int a, int b, int c) {
 
     return (a >= b && a >= c) ? a 
         : ( (b >= a && b >=c) ? b : c);
+}
+
+
+// Vector functions 
+Vector3 cross_product(Vector3 a, Vector3 b) {
+
+    return vec3(
+        a.y*b.z - b.y*a.z,
+        a.x*b.z - b.x*a.z,
+        a.x*b.y - b.x*a.y
+    );
 }

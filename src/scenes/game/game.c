@@ -44,10 +44,6 @@ static void game_update(void* e, float tm) {
 // Draw
 static void game_draw(Graphics* g) {
     
-    // Test
-    g->dvalue = 
-        min_int32_2((int) (8 + sinf(testAngle)*8.0f), 14);
-
     g_clear_screen(g, 0b10110110);
 
     g_draw_bitmap_region_fast(g, bmpFont, 0, 0, 128, 64, 128, 96);
@@ -61,6 +57,9 @@ static void game_draw(Graphics* g) {
     g_translate_model(g, 0.0f, 0.0f, z);
     g_rotate_model(g, testAngle, 0.0f, 1.0f, 0.0f);
     g_scale_model(g, 2.5f, 2.5f, 2.5f);    
+
+    // Lighting
+    g_enable_lighting(g, 1.0f, vec3(0, 0, 1));
 
     // Draw a spinning triangle
     float r = 0.20f + abs(sinf(testAngle)*0.1f);
