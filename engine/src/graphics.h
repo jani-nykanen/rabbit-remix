@@ -15,6 +15,7 @@
 #include "config.h"
 #include "trianglebuffer.h"
 #include "matrix.h"
+#include "mesh.h"
 
 // Matrix stack size
 #define MATRIX_STACK_SIZE 32 
@@ -148,7 +149,10 @@ void g_draw_triangle(Graphics* g,
 // Draw a 3D triangle
 void g_draw_triangle_3D(Graphics* g,
     Vector3 A, Vector3 B, Vector3 C,
-    uint8 col);
+    uint8 col, Vector3* n);
+
+// Draw a mesh
+void g_draw_mesh(Graphics* g, Mesh* m);
 
 // Draw triangle buffer
 void g_draw_triangle_buffer(Graphics* g);

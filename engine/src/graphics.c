@@ -678,9 +678,9 @@ void g_draw_triangle(Graphics* g,
 // Draw a 3D triangle
 void g_draw_triangle_3D(Graphics* g,
     Vector3 A, Vector3 B, Vector3 C,
-    uint8 col) {
+    uint8 col, Vector3* n) {
 
-    const float NEAR = 0.025;
+    const float NEAR = 0.1;
 
     if (!g->productComputed) {
 
@@ -738,9 +738,14 @@ void g_draw_triangle_3D(Graphics* g,
     int dvalue = g->dvalue;
     Vector3 normal;
     if (g->lightEnabled) {
-
-        // Compute normal
-        normal = cross_product(vec3_subtract(B, A), vec3_subtract(C, A));
+        
+        // Determine normal (if not given,
+        // compute)
+        normal =
+            n != NULL ? *n : 
+            cross_product(
+                vec3_subtract(B, A), 
+                vec3_subtract(C, A));
         
         vec3_normalize(&normal);
         normal = vec4_to_vec3(mat4_mul_vec3(g->rotation, normal));
@@ -751,6 +756,40 @@ void g_draw_triangle_3D(Graphics* g,
 
     // Put to the buffer
     tbuf_add_triangle(&g->tbuf, a, b, c, depth, col, dvalue);
+}
+
+
+// Draw a mesh
+void g_draw_mesh(Graphics* g, Mesh* m) {
+
+    Vector3 P[3];
+    Vector3 N;
+    uint8 col;
+    int i = 0, j, k, l;
+    for (; i < m->indexCount; ++ i) {
+
+        j = i % 3;
+        k = m->indices[i];
+
+        // Determine points
+        P[j].x = m->vertices[k*3];
+        P[j].y = m->vertices[k*3 +1];
+        P[j].z = m->vertices[k*3 +2];
+
+        if (j == 2) {
+
+            l = i / 3;
+            // Determine color
+            col = m->colors[l];
+            // Determine normal
+            N.x = m->normals[l*3];
+            N.y = m->normals[l*3 +1];
+            N.z = m->normals[l*3 +2];
+
+            // Draw
+            g_draw_triangle_3D(g, P[0], P[1], P[2], col, &N);
+        }
+    }
 }
 
 
