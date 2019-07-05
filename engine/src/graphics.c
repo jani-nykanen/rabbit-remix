@@ -79,6 +79,13 @@ static void gen_dither_array() {
 }
 
 
+// Compute lighting
+static int compute_lighting(Graphics* g, Vector3 normal) {
+
+    
+}
+
+
 // Compute product matrix
 static void compute_product(Graphics* g) {
 
@@ -719,7 +726,7 @@ void g_draw_triangle_3D(Graphics* g,
     float depth = (tA.z + tB.z + tC.z) / 3.0f;
 
     // Put to the buffer
-    tbuf_add_triangle(&g->tbuf, a, b, c, depth, col);
+    tbuf_add_triangle(&g->tbuf, a, b, c, depth, col, g->dvalue);
 }
 
 
@@ -758,6 +765,18 @@ void g_draw_line(Graphics* g, int x1, int y1,
             err += dx; y1 += sy; 
         }
     }
+}
+
+
+// Set darkness value
+void g_set_darkness(Graphics* g, int v) {
+
+    if (v < 0)
+        v = 0;
+    else if (v > (MAX_DARKNESS_VALUE-1)*2)
+        v = (MAX_DARKNESS_VALUE-1)*2;
+
+    g->dvalue = v;
 }
 
 

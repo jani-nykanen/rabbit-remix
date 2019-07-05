@@ -73,6 +73,10 @@ typedef struct {
     // Darkness values
     int dvalue;
 
+    // Lighting info
+    bool lightEnabled;
+    float lightMag;
+
 } Graphics;
 
 // Create a graphics component
@@ -150,6 +154,9 @@ void g_draw_triangle_buffer(Graphics* g);
 // Draw a line
 void g_draw_line(Graphics* g, int x1, int y1, 
     int x2, int y2, uint8 col);
+
+// Set darkness value
+void g_set_darkness(Graphics* g, int v);
 
 
   // ---------------- //

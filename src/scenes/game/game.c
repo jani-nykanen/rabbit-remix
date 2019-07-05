@@ -72,7 +72,6 @@ static void game_draw(Graphics* g) {
         vec3((cosf(testAngle+step*2)*r), (sinf(testAngle+step*2)*r), 0), 
         0b00011100);
 
-
     g_draw_triangle_buffer(g);
 
     g_fill_rect(g, 1, 1, 12*8, 10, 0b11100000);

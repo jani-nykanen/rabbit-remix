@@ -19,6 +19,8 @@ typedef struct {
     float depth;
     // Color
     uint8 color;
+    // Darkness
+    int dvalue;
 
     // Next
     void* next;
@@ -44,7 +46,8 @@ TriangleBuffer create_triangle_buffer();
 
 // Add a triangle
 void tbuf_add_triangle(TriangleBuffer* buf, 
-    Point A, Point B, Point C, float depth, uint8 col);
+    Point A, Point B, Point C, float depth, uint8 col, 
+    int dvalue);
 
 // Draw triangles
 void tbuf_draw_triangles(TriangleBuffer* buf, void* _g);

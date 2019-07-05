@@ -19,7 +19,8 @@ TriangleBuffer create_triangle_buffer() {
 
 // Add a triangle
 void tbuf_add_triangle(TriangleBuffer* buf, 
-    Point A, Point B, Point C, float depth, uint8 col) {
+    Point A, Point B, Point C, float depth, uint8 col, 
+    int dvalue) {
 
     int i;
     Triangle* next;
@@ -33,7 +34,7 @@ void tbuf_add_triangle(TriangleBuffer* buf,
     }
     // Add to the buffer
     Triangle* t = &buf->triangles [buf->triangleCount];
-    *t = (Triangle){A, B, C, depth, col, NULL};
+    *t = (Triangle){A, B, C, depth, col, dvalue, NULL};
     
     // Update first
     if (buf->first == NULL || depth > buf->first->depth) {
@@ -86,11 +87,13 @@ void tbuf_draw_triangles(TriangleBuffer* buf, void* _g) {
     while (true) {
 
         // Draw
+        g_set_darkness(g, g->dvalue);
         g_draw_triangle(g, 
             t->A.x, t->A.y, 
             t->B.x, t->B.y, 
             t->C.x, t->C.y, 
             t->color);
+        g_set_darkness(g, 0);
 
         if (t->next == NULL)
             break;
