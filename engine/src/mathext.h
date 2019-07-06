@@ -20,7 +20,4 @@ float max_float_2(float a, float b);
 int min_int32_3(int a, int b, int c);
 int max_int32_3(int a, int b, int c);
 
-// Vector functions 
-Vector3 cross_product(Vector3 a, Vector3 b);
-
 #endif // __MATHEXT__

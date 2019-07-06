@@ -47,37 +47,8 @@ typedef struct {
 
 } KeyValuePair;
 
-
 // Constructors
 Vector2 vec2(float x, float y);
 Point point(int x, int y);
-
-
-// 3-component vector
-typedef struct {
-
-    float x, y, z;
-} Vector3;
-
-// Constructor
-Vector3 vec3(float x, float y, float z);
-
-// Some operators
-Vector3 vec3_subtract(Vector3 a, Vector3 b);
-void vec3_normalize(Vector3* v);
-
-
-// 4-component vector
-typedef struct {
-
-    float x, y, z, w;
-} Vector4;
-
-// Constructor
-Vector4 vec4(float x, float y, float z, float w);
-
-// Operators
-Vector3 vec4_to_vec3(Vector4 a);
-
 
 #endif // __TYPES__

@@ -74,14 +74,3 @@ int max_int32_3(int a, int b, int c) {
     return (a >= b && a >= c) ? a 
         : ( (b >= a && b >=c) ? b : c);
 }
-
-
-// Vector functions 
-Vector3 cross_product(Vector3 a, Vector3 b) {
-
-    return vec3(
-        a.y*b.z - b.y*a.z,
-        a.x*b.z - b.x*a.z,
-        a.x*b.y - b.x*a.y
-    );
-}

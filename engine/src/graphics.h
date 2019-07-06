@@ -13,12 +13,7 @@
 
 #include "bitmap.h"
 #include "config.h"
-#include "trianglebuffer.h"
-#include "matrix.h"
-#include "mesh.h"
 
-// Matrix stack size
-#define MATRIX_STACK_SIZE 32 
 
 // Initialize global graphics content
 int init_graphics_global();
@@ -56,29 +51,8 @@ typedef struct {
     // Translation
     Point translation;
 
-    // Matrices
-    Matrix4 model;
-    Matrix4 view;
-    Matrix4 projection;
-    Matrix4 product;
-    Matrix4 rotation;
-    // Is the product computed
-    bool productComputed;
-
-    // Triangle buffer
-    TriangleBuffer tbuf;
-
-    // Matrix stack for model space
-    Matrix4 modelStack [MATRIX_STACK_SIZE];
-    int stackPointer;
-
-    // Darkness values
+    // Darkness value
     int dvalue;
-
-    // Lighting info
-    bool lightEnabled;
-    float lightMag;
-    Vector3 lightDir;
 
 } Graphics;
 
@@ -146,56 +120,9 @@ void g_draw_triangle(Graphics* g,
     int x3, int y3, 
     uint8 col);
 
-// Draw a 3D triangle
-void g_draw_triangle_3D(Graphics* g,
-    Vector3 A, Vector3 B, Vector3 C,
-    uint8 col, Vector3* n);
-
-// Draw a mesh
-void g_draw_mesh(Graphics* g, Mesh* m);
-
-// Draw triangle buffer
-void g_draw_triangle_buffer(Graphics* g);
-
 // Draw a line
 void g_draw_line(Graphics* g, int x1, int y1, 
     int x2, int y2, uint8 col);
 
-// Set darkness value
-void g_set_darkness(Graphics* g, int v);
-
-// Enable lighting
-void g_enable_lighting(Graphics* g, float mag, Vector3 dir);
-// Disable
-void g_disable_lighting(Graphics* g);
-
-
-  // ---------------- //
- // Transformations  //
-// ---------------- //
-
-// Set model matrix to identity matrix
-void g_load_identity(Graphics* g);
-
-// Translate model space
-void g_translate_model(Graphics* g, float x, float y, float z);
-
-// Scale model space
-void g_scale_model(Graphics* g, float x, float y, float z);
-
-// Rotate model space
-void g_rotate_model(Graphics* g, 
-    float angle, float x, float y, float z);
-
-// Set perspective matrix
-void g_set_perspective(Graphics* g, 
-    float fovY, float near, float far);
-
-// Push the current model transformation to the
-// stack
-void g_push(Graphics* g);
-
-// Pop the model transformation from the stack
-void g_pop(Graphics* g);
 
 #endif // __GRAPHICS__

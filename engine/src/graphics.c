@@ -79,31 +79,6 @@ static void gen_dither_array() {
 }
 
 
-// Compute lighting
-static int compute_lighting(Graphics* g, Vector3 normal) {
-
-    float multiplier = max_float_2(0.0f, 
-        normal.x*g->lightDir.x + 
-        normal.y*g->lightDir.y + 
-        normal.z*g->lightDir.z
-        );
-    multiplier = (1.0f-g->lightMag) + g->lightMag * multiplier;
-
-    return (int) floorf( (1.0f-multiplier) / 
-        (1.0f/ ( (float)2*(MAX_DARKNESS_VALUE)-1)) );
-}
-
-
-// Compute product matrix
-static void compute_product(Graphics* g) {
-
-    Matrix4 a = mat4_mul(g->view, g->model);
-    g->product = mat4_mul(g->projection, a);
-
-    g->productComputed = true;
-}
-
-
 // Clip a rectangle
 static bool clip_rect(Graphics* g, int* x, int* y, 
     int* w, int* h) {
@@ -287,9 +262,6 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
         return NULL;
     }
 
-    // Create a triangle buffer
-    g->tbuf = create_triangle_buffer();
-
     // Resize
     int w, h;
     SDL_GetWindowSize(window, &w, &h);
@@ -297,16 +269,7 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
 
     // Set defaults
     g->translation = point(0, 0);
-    g->productComputed = true;
-    g->stackPointer = 0;
     g->dvalue = 0;
-    g->lightEnabled = false;
-
-    // Create matrices
-    g->model = mat4_identity();
-    g->view = mat4_identity();
-    g->projection = mat4_identity();
-    g->product = mat4_identity();
 
     return g;
 }
@@ -675,131 +638,6 @@ void g_draw_triangle(Graphics* g,
 }
 
 
-// Draw a 3D triangle
-void g_draw_triangle_3D(Graphics* g,
-    Vector3 A, Vector3 B, Vector3 C,
-    uint8 col, Vector3* n) {
-
-    const float NEAR = 0.1;
-
-    if (!g->productComputed) {
-
-        compute_product(g);
-    }
-
-    Vector4 tA, tB, tC;
-
-    // Apply transform 
-    tA = mat4_mul_vec3(g->product, A);
-    tB = mat4_mul_vec3(g->product, B);
-    tC = mat4_mul_vec3(g->product, C);
-
-    // Divide by the perspective thingy
-    tA.x /= tA.w; tA.y /= tA.w; tA.z /= tA.w;
-    tB.x /= tB.w; tB.y /= tB.w; tB.z /= tB.w;
-    tC.x /= tC.w; tC.y /= tC.w; tC.z /= tC.w;
-
-    // Check depth
-    if (tA.z < NEAR && tB.z < NEAR && tC.z < NEAR)
-        return;
-
-    // TEMPORARY
-    // Move points closer
-    // TODO: Clip with near plane
-    if (tA.z < NEAR) tA.z = NEAR;
-    if (tB.z < NEAR) tB.z = NEAR;
-    if (tC.z < NEAR) tC.z = NEAR;
-
-    // Divide by depth
-    tA.x /= tA.z; tA.y /= tA.z;
-    tB.x /= tB.z; tB.y /= tB.z;
-    tC.x /= tC.z; tC.y /= tC.z;   
-
-    // Fit the canvas viewport
-    tA.x += 1.0f; tA.y += 1.0f;
-    tB.x += 1.0f; tB.y += 1.0f;
-    tC.x += 1.0f; tC.y += 1.0f;
-
-    Point a, b, c;
-
-    a.x = (int) (tA.x/2.0f * g->csize.x);
-    a.y = (int) (tA.y/2.0f * g->csize.y);
-
-    b.x = (int) (tB.x/2.0f * g->csize.x);
-    b.y = (int) (tB.y/2.0f * g->csize.y);
-
-    c.x = (int) (tC.x/2.0f * g->csize.x);
-    c.y = (int) (tC.y/2.0f * g->csize.y);
-
-    // Compute depth
-    float depth = (tA.z + tB.z + tC.z) / 3.0f;
-
-    // Compute lighting, if enabled
-    int dvalue = g->dvalue;
-    Vector3 normal;
-    if (g->lightEnabled) {
-        
-        // Determine normal (if not given,
-        // compute)
-        normal =
-            n != NULL ? *n : 
-            cross_product(
-                vec3_subtract(B, A), 
-                vec3_subtract(C, A));
-        
-        vec3_normalize(&normal);
-        normal = vec4_to_vec3(mat4_mul_vec3(g->rotation, normal));
-
-        // Compute lighting
-        dvalue = compute_lighting(g, normal);
-    }
-
-    // Put to the buffer
-    tbuf_add_triangle(&g->tbuf, a, b, c, depth, col, dvalue);
-}
-
-
-// Draw a mesh
-void g_draw_mesh(Graphics* g, Mesh* m) {
-
-    Vector3 P[3];
-    Vector3 N;
-    uint8 col;
-    int i = 0, j, k, l;
-    for (; i < m->indexCount; ++ i) {
-
-        j = i % 3;
-        k = m->indices[i];
-
-        // Determine points
-        P[j].x = m->vertices[k*3];
-        P[j].y = m->vertices[k*3 +1];
-        P[j].z = m->vertices[k*3 +2];
-
-        if (j == 2) {
-
-            l = i / 3;
-            // Determine color
-            col = m->colors[l];
-            // Determine normal
-            N.x = m->normals[l*3];
-            N.y = m->normals[l*3 +1];
-            N.z = m->normals[l*3 +2];
-
-            // Draw
-            g_draw_triangle_3D(g, P[0], P[1], P[2], col, &N);
-        }
-    }
-}
-
-
-// Draw triangle buffer
-void g_draw_triangle_buffer(Graphics* g) {
-
-    tbuf_draw_triangles(&g->tbuf, (void*)g);
-}
-
-
 // Draw a line
 void g_draw_line(Graphics* g, int x1, int y1, 
     int x2, int y2, uint8 col) {
@@ -828,116 +666,4 @@ void g_draw_line(Graphics* g, int x1, int y1,
             err += dx; y1 += sy; 
         }
     }
-}
-
-
-// Set darkness value
-void g_set_darkness(Graphics* g, int v) {
-
-    if (v < 0)
-        v = 0;
-    else if (v > (MAX_DARKNESS_VALUE-1)*2)
-        v = (MAX_DARKNESS_VALUE-1)*2;
-
-    g->dvalue = v;
-}
-
-
-// Enable lighting
-void g_enable_lighting(Graphics* g, float mag, Vector3 dir) {
-
-    g->lightEnabled = true;
-    g->lightMag = mag;
-    g->lightDir = dir;
-}
-
-
-// Disable
-void g_disable_lighting(Graphics* g) {
-
-    g->lightEnabled = false;
-}
-
-
-  // ---------------- //
- // Transformations  //
-// ---------------- //
-
-
-// Set model matrix to identity matrix
-void g_load_identity(Graphics* g) {
-
-    g->model = mat4_identity();
-    g->rotation = g->model;
-
-    g->productComputed = false;
-}
-
-
-// Translate model space
-void g_translate_model(Graphics* g, float x, float y, float z) {
-
-    Matrix4 a = mat4_translate(x, y, z);
-    g->model = mat4_mul(g->model, a);
-
-    g->productComputed = false;
-}
-
-
-// Scale model space
-void g_scale_model(Graphics* g, float x, float y, float z) {
-
-    Matrix4 a = mat4_scale(x, y, z);
-    g->model = mat4_mul(g->model, a);
-
-    g->productComputed = false;
-}
-
-
-// Rotate model space
-void g_rotate_model(Graphics* g, 
-    float angle, float x, float y, float z) {
-
-    Matrix4 a = mat4_rotate(angle, x, y, z);
-    g->model = mat4_mul(g->model, a);
-
-    g->productComputed = false;
-
-    g->rotation = mat4_mul(g->rotation, a);
-}
-
-
-// Set perspective matrix
-void g_set_perspective(Graphics* g, 
-    float fovY, float near, float far) {
-
-    g->projection = mat4_perspective(
-        fovY, g->aspectRatio, near, far);
-
-    g->productComputed = false;
-}
-
-
-// Push the current model transformation to the
-// stack
-void g_push(Graphics* g) {
-
-    if (g->stackPointer >= MATRIX_STACK_SIZE) {
-
-        err_throw_no_param("Matrix stack overflow!");
-        return;
-    }
-
-    g->modelStack[g->stackPointer ++] = g->model;
-}
-
-
-// Pop the model transformation from the stack
-void g_pop(Graphics* g) {
-
-    if (g->stackPointer <= 0) return;
-
-    g->model = g->modelStack[-- g->stackPointer];
-
-    g->productComputed = false;
 }
