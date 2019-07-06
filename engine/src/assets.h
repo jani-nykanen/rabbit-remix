@@ -3,7 +3,6 @@
 // (c) 2019 Jani Nykänen
 //
 
-
 #ifndef __ASSETS__
 #define __ASSETS__
 
@@ -33,8 +32,8 @@ typedef struct
 
 // Load a bitmap and add it to the
 // assets
-int assets_add_bitmap(AssetManager* a, const char* name, const char* path, 
-    bool linearFilter);
+int assets_add_bitmap(AssetManager* a, 
+    const char* name, const char* path);
 
 // Load a tilemap and add it to the
 // assets

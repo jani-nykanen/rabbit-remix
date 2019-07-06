@@ -28,14 +28,11 @@ typedef struct {
 
 } Bitmap;
 
-// Initialize bitmap loader
-void init_bitmap_loader(SDL_Renderer* rend);
-
 // Load a bitmap
-Bitmap* load_bitmap(const char* path, bool dither);
+Bitmap* load_bitmap(const char* path);
 
 // Create a bitmap
-Bitmap* create_bitmap(uint16 w, uint16 h);
+Bitmap* create_bitmap(uint16 w, uint16 h, uint8* data);
 
 // Destroy a bitmap
 void destroy_bitmap(Bitmap* bmp);

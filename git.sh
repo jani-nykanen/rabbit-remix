@@ -7,3 +7,6 @@ git add keys.conf
 git add makefile
 git add git.sh
 git add assets
+git add tools/src
+git add tools/makefile
+git add dev

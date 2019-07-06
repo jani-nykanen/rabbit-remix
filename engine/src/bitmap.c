@@ -3,161 +3,76 @@
 #include "err.h"
 
 #include <stdio.h>
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "lib/stb_image.h"
-
-// A reference to the renderer
-static SDL_Renderer* rendRef =NULL;
+#include <stdlib.h>
 
 
+// Create a bitmap
+Bitmap* create_bitmap(uint16 w, uint16 h, uint8* data) {
 
-// Initialize bitmap loader
-void init_bitmap_loader(SDL_Renderer* rend) {
-
-    rendRef = rend;
-}
-
-
-// Load a bitmap
-Bitmap* load_bitmap(const char* path, bool dither) {
-
-    const float DIVISOR = 36.428f;
-    const int DIVISOR2 = 85;
+    uint16 i = 0;
 
     // Allocate memory
     Bitmap* bmp = (Bitmap*)malloc(sizeof(Bitmap));
-    if (bmp == NULL) {
+    if(bmp == NULL) {
 
-        ERR_MEM_ALLOC;
+        printf("Memory allocation error!\n");
+        return NULL;
+    }
+    bmp->data = (uint8*)malloc(sizeof(uint8) * w * h);
+    if(bmp->data == NULL) {
+
+        printf("Memory allocation error!\n");
         return NULL;
     }
 
-    // Load the image
-    int comp, w, h;
-    uint8* pdata = stbi_load(path, &w, &h, &comp, STBI_rgb_alpha);
-    if (pdata == NULL) {
+    // Copy data (if any)
+    if(data != NULL) {
 
-        err_throw_param_1("Failed to load a bitmap in ", path);
-        return NULL;
+        for(i=0; i < w*h; ++ i) {
+
+            bmp->data[i] = data[i];
+        }
     }
-    // Store dimensions
+
+    // Store size
     bmp->width = w;
     bmp->height = h;
-
-    // Allocate memory
-    bmp->data = (uint8*)malloc(sizeof(uint8) * w * h);
-    if (bmp->data == NULL) {
-
-        ERR_MEM_ALLOC;
-        free(bmp);
-        return NULL;
-    }
-
-    // Convert to a proper format
-    int i = 0;
-    int row = 0;
-    int column = 0;
-    uint8 pixel;
-    uint8 r,g,b,a;
-    uint8 er,eg,eb;
-    uint8 p = STBI_rgb_alpha;
-    for(; i < w*h; i++) {
-
-        row = i / w;
-        column = i % w;
-
-        // Check alpha
-        if (p == 4) {
-
-            a = pdata[i*4 +3];
-            if (a < 255) {
-                
-                bmp->data[i] = ALPHA;
-                continue;
-            }
-        }
-
-        b = pdata[i*p +2];
-        g = pdata[i*p +1];
-        r = pdata[i*p ];
-
-        // No dithering
-        if (!dither) {
-
-            er = (uint8) round((float)r / DIVISOR);
-            if (er > 7) r = 7;
-            er = er << 5;
-            eg = (uint8) round((float)g / DIVISOR);
-            if (eg > 7) eg = 7;
-            eg = eg << 2;
-            eb = (b / DIVISOR2);
-        }
-        // Dithering
-        else {
-
-            float (*func) (float);
-
-            // Even
-            if (row % 2 == column % 2) {
-
-                func = floorf;
-            }
-            // Odd
-            else {
-
-                func = ceilf;
-            }
-
-            er = (Uint8) func(r / (DIVISOR/2.0f) );
-            eg = (Uint8) func(g / (DIVISOR/2.0f) );
-            eb = (Uint8) func(b / ((float)DIVISOR2 / 2.0f));
-
-            er = er / 2;
-            eg = eg / 2;
-            eb = eb / 2;
-
-            // Limit
-            if (er > 7) er = 7;
-            if (eg > 7) eg = 7;
-            if (eb > 3) eb = 3;
-
-            er = er << 5;
-            eg = eg << 2;
-        }
-
-        pixel = er | eg | eb;
-
-        bmp->data[i] = pixel;
-    }
 
     return bmp;
 }
 
 
-// Create a bitmap
-Bitmap* create_bitmap(uint16 w, uint16 h) {
+// Load a bitmap
+Bitmap* load_bitmap(const char* path) {
+
+    uint16 w, h;
+    Bitmap* bmp;
+
+    // Open file
+    FILE* f = fopen(path, "rb");
+    if(f == NULL) {
+
+        err_throw_param_1("Could not load a file in: ", path);
+        return NULL;
+    }
+
+    // Read size
+    fread(&w, sizeof(uint16), 1, f);
+    fread(&h, sizeof(uint16), 1, f);
 
     // Allocate memory
-    Bitmap* bmp = (Bitmap*)malloc(sizeof(Bitmap));
-    if (bmp == NULL) {
+    bmp = create_bitmap((uint8)w, (uint8)h, NULL);
+    if(bmp == NULL) {
 
-        ERR_MEM_ALLOC;
+        err_throw_no_param("Failed to create a bitmap!");
         return NULL;
     }
 
-    // Set dimensions
-    bmp->width = w;
-    bmp->height = h;
+    // Read data
+    fread(bmp->data, sizeof(uint8), w*h, f);
 
-    // Allocate memory for data
-    bmp->data = (uint8*)malloc(sizeof(uint8) * w * h);
-    if (bmp->data == NULL) {
-
-        ERR_MEM_ALLOC;
-        free(bmp);
-        return NULL;
-    }
+    // Close file
+    fclose(f);
 
     return bmp;
 }

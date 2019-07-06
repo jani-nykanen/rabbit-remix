@@ -232,9 +232,6 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
         return NULL;
     }
 
-    // Pass renderer to the bitmap loader
-    init_bitmap_loader(g->rend);
-
     // Read view target size
     g->csize.x = conf_get_param_int(conf, "canvas_width", 256);
     g->csize.y = conf_get_param_int(conf, "canvas_height", 192);

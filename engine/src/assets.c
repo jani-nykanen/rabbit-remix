@@ -16,15 +16,13 @@ enum {
     TypeTilemap = 1,
     TypeSample = 2,
     TypeMusic = 3,
-
-    TypeFlag = 4,
 };
 
 
 // Load a bitmap and add it to the
 // assets
-int assets_add_bitmap(AssetManager* a, const char* name, const char* path, 
-    bool dithering) {
+int assets_add_bitmap(AssetManager* a, 
+    const char* name, const char* path) {
 
     if (a->assetCount == MAX_ASSET_COUNT) {
 
@@ -33,7 +31,7 @@ int assets_add_bitmap(AssetManager* a, const char* name, const char* path,
     }
 
     // Load
-    Bitmap* b = load_bitmap(path, dithering);
+    Bitmap* b = load_bitmap(path);
     if (b == NULL) {
 
         return -1;
@@ -137,9 +135,6 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
 
     char name [WR_WORD_LENGTH]; 
 
-    // Render flags
-    bool dithering = false;
-
     while(wr_read_next(wr)) {
 
         // Type
@@ -151,9 +146,6 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
                 type = TypeBitmap;
             else if (strcmp(wr->word, "tilemap") == 0) 
                 type = TypeTilemap;
-
-            else if (strcmp(wr->word, "flag") == 0) 
-                type = TypeFlag;
         }
         // Name
         else if (c == 1) {
@@ -167,7 +159,7 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
             {
             // Bitmap
             case TypeBitmap:
-                if (assets_add_bitmap(a, name, wr->word, dithering) == -1) {
+                if (assets_add_bitmap(a, name, wr->word) == -1) {
 
                     return -1;
                 }
@@ -179,16 +171,6 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
 
                     return -1;
                 }
-                break;
-            
-            // Flag
-            case TypeFlag:
-
-                if (strcmp(name, "dither") == 0) {
-
-                    dithering = (int)(strtol(wr->word,NULL,10)) == 1;
-                }
-
                 break;
 
             default:
