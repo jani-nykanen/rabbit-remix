@@ -80,7 +80,7 @@ static std::string findValue(std::string content,
     int p = content.find(lookFor) + lookFor.length();
     // Find the next quotation mark
     int i = p;
-    for(; i < content.length(); ++ i) {
+    for(; i < (int) content.length(); ++ i) {
 
         if(content[i] == '"') {
             break;
@@ -117,7 +117,7 @@ static void parseProperties(std::string content,
     // Find property keys & values
     // TODO: Inefficient with big data!
     std::string key, value;
-    for(int i = 0; i < propPos.size(); ++ i) {
+    for(int i = 0; i < (int) propPos.size(); ++ i) {
 
         key = findValue(content.substr(propPos[i]), "name");
         value = findValue(content.substr(propPos[i]), "value");
@@ -135,12 +135,12 @@ static void parseCSVInt(std::string content,
     std::string buffer = "";
     int count = 0;
     char c;
-    for(int i = 0; i < content.size(); ++ i) {
+    for(int i = 0; i < (int) content.size(); ++ i) {
 
         c = content[i];
         if(buffer.length() > 0 && c == ',') {
 
-            if(count < data.size()) {
+            if(count < (int) data.size()) {
                 
                 std::istringstream(buffer) >> data[count ++];
                 buffer = "";
@@ -192,7 +192,7 @@ static void parseLayers(std::string content,
     }
 
     // Read CSV data
-    for(int i = 0; i < count; ++ i) {
+    for(int i = 0; i < (int) count; ++ i) {
         
         // Add a new layer
         layers.push_back(Layer(size));
@@ -233,8 +233,6 @@ Tilemap::Tilemap(std::string path) {
     // Parse map data
     std::string findBegin = "<data encoding=\"csv\">";
     std::string findEnd = "</data>";
-    int begin = content.find(findBegin) + findBegin.length();
-    int end = content.find(findEnd);
 
     // Parse layers
     parseLayers(content, layers, width*height);
@@ -244,7 +242,7 @@ Tilemap::Tilemap(std::string path) {
 // Get tile
 int Tilemap::getTile(int layer, int x, int y) {
 
-    if(layer < 0 || layer >= layers.size() || 
+    if(layer < 0 || layer >=(int) layers.size() || 
        x < 0 || y < 0 || x >= width || y >= height)
         return -1;
 
@@ -255,7 +253,7 @@ int Tilemap::getTile(int layer, int x, int y) {
 // Get a property
 std::string Tilemap::getProp(std::string name) {
 
-    for(int i = 0; i < properties.size(); ++ i) {
+    for(int i = 0; i < (int) properties.size(); ++ i) {
 
         if(properties[i].key == name) {
 
@@ -269,6 +267,8 @@ std::string Tilemap::getProp(std::string name) {
 // Convert to a binary format
 void Tilemap::convertToBin(const char* out) {
 
+    const int PROPERTY_LENGTH = 16;
+
     FILE* f = fopen(out, "wb");
     if(f == NULL) {
 
@@ -281,6 +281,31 @@ void Tilemap::convertToBin(const char* out) {
     unsigned short h = height;
     fwrite(&w, sizeof(short), 1, f);
     fwrite(&h, sizeof(short), 1, f);
+
+    // Property size
+    unsigned char l = (unsigned char) PROPERTY_LENGTH;
+    fwrite(&l, sizeof(char), 1, f);
+
+    // Property count
+    unsigned short propertyCount = (unsigned short) properties.size();
+    fwrite(&propertyCount, sizeof(short), 1, f);
+
+    // Write properties
+    char* buf = (char*) malloc(sizeof(char) * PROPERTY_LENGTH);
+    if (buf == NULL) {
+
+        throw std::runtime_error("Memory error.");
+    }
+    for(int i = 0; i < (int)properties.size(); ++ i) {
+
+        // Key
+        snprintf(buf, PROPERTY_LENGTH, "%s", properties[i].key.c_str());
+        fwrite(buf, sizeof(char), PROPERTY_LENGTH, f);
+
+        // Value
+        snprintf(buf, PROPERTY_LENGTH, "%s", properties[i].value.c_str());
+        fwrite(buf, sizeof(char), PROPERTY_LENGTH, f);
+    }
 
     // Layer count
     unsigned char layerCount = (unsigned char)layers.size();
