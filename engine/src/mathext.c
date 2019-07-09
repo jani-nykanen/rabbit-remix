@@ -74,3 +74,29 @@ int max_int32_3(int a, int b, int c) {
     return (a >= b && a >= c) ? a 
         : ( (b >= a && b >=c) ? b : c);
 }
+
+
+// Negative modulo
+int neg_mod(int m, int n) {
+
+    if(m < 0) {
+
+        return n - (-m % n);
+    }
+    return m % n;
+}
+
+
+// Round fixed point number
+int round_fixed(int n, int p) {
+
+    int m = neg_mod(n, p);
+    if (m < p/2) {
+
+        return n / p;
+    }
+    else {
+
+        return n / p +1;
+    }
+}

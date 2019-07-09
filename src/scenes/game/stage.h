@@ -13,7 +13,7 @@
 typedef struct {
 
     // Bitmaps
-    Bitmap* bmpGrass;
+    Bitmap* bmpFloor;
     Bitmap* bmpFence;
     Bitmap* bmpBush;
     Bitmap* bmpHouses;
@@ -25,6 +25,7 @@ typedef struct {
     float bushPos;
     float housePos;
     float cloudPos;
+    float floorPos;
 
 } Stage;
 

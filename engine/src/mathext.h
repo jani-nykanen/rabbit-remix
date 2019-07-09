@@ -20,4 +20,10 @@ float max_float_2(float a, float b);
 int min_int32_3(int a, int b, int c);
 int max_int32_3(int a, int b, int c);
 
+// Negative modulo
+int neg_mod(int m, int n);
+
+// Round fixed point number
+int round_fixed(int n, int p);
+
 #endif // __MATHEXT__

@@ -35,6 +35,7 @@ Stage create_stage(AssetManager* a) {
     Stage s;
 
     // Get bitmaps
+    s.bmpFloor = (Bitmap*)assets_get(a, "floor");
     s.bmpFence = (Bitmap*)assets_get(a, "fence");
     s.bmpBush = (Bitmap*)assets_get(a, "bush");
     s.bmpHouses = (Bitmap*)assets_get(a, "houses");
@@ -46,6 +47,7 @@ Stage create_stage(AssetManager* a) {
     s.housePos = 0.0f;
     s.fencePos = 0.0f;
     s.cloudPos = 0.0f;
+    s.floorPos = 0.0f;
 
     return s;
 }
@@ -58,6 +60,7 @@ void stage_update(Stage* s, float globalSpeed,  float tm) {
     const float HOUSE_SPEED = BUSH_SPEED / 2.0f;
     const float FENCE_SPEED = 1.0f;
     const float CLOUD_SPEED = 0.33f;
+    const float FLOOR_SPEED = FENCE_SPEED;
 
     //
     // Update positions
@@ -69,18 +72,20 @@ void stage_update(Stage* s, float globalSpeed,  float tm) {
     update_scrolling_element(&s->housePos, 
         HOUSE_SPEED*globalSpeed, s->bmpHouses->width, tm);
     update_scrolling_element(&s->cloudPos, 
-        CLOUD_SPEED*globalSpeed, s->bmpClouds->width, tm);    
+        CLOUD_SPEED*globalSpeed, s->bmpClouds->width, tm); 
+    update_scrolling_element(&s->floorPos, 
+        FLOOR_SPEED*globalSpeed, s->bmpFloor->width, tm);      
 }
 
 
 // Draw stage
 void stage_draw(Stage* s, Graphics* g) {
 
-    const int GROUND_HEIGHT = 40;
-    const int BUSH_Y = 80;
-    const int HOUSE_Y = 28;
+    const int GROUND_HEIGHT = 32;
+    const int BUSH_Y = 88;
+    const int HOUSE_Y = 36;
     const int FENCE_Y = 192 - GROUND_HEIGHT - s->bmpFence->height;
-    const int CLOUD_Y = 8;
+    const int CLOUD_Y = 16;
 
     int i, p;
 
@@ -96,9 +101,7 @@ void stage_draw(Stage* s, Graphics* g) {
     // Fence
     draw_scrolling_element(g, s->bmpFence, s->fencePos, FENCE_Y);
 
-    // The ground will come here
-    g_fill_rect(g, 0, 
-        192-GROUND_HEIGHT, 
-        256, 48, 
-        0b00001000);
+    // Floor
+    g_draw_3D_floor(g, s->bmpFloor, 0, 192-GROUND_HEIGHT, 
+        256, GROUND_HEIGHT, -s->floorPos, 0.25f, 6.0f);
 }

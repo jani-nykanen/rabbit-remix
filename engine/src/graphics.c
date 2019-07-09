@@ -664,3 +664,47 @@ void g_draw_line(Graphics* g, int x1, int y1,
         }
     }
 }
+
+
+// Draw "3D" floor
+void g_draw_3D_floor(Graphics* g, Bitmap* bmp,
+    int dx, int dy, int w, int h, int xdelta,
+    float mx, float my) {
+
+    //
+    // TODO: Use fixed point numbers
+    // for slightly better performance
+    //
+
+    int x, y;
+    int tx, ty;
+    int px, py;
+    uint8 col;
+
+    int yjumpDelta = (int)(mx*FIXED_PREC) / h;
+    int yjump = FIXED_PREC;
+
+    int xjumpDelta = (int)((my-1.0f)*FIXED_PREC) / h;
+    int xjump = (int)(my*FIXED_PREC);
+
+    ty = 0;
+    for (y = dy; y < dy + h; ++ y) {
+
+        py = round_fixed(ty, FIXED_PREC) % bmp->height;
+        tx = -w/2 * yjump;
+        for (x = dx; x < dx + w; ++ x) {
+            
+            px = neg_mod((round_fixed(tx, FIXED_PREC))-xdelta, bmp->width);
+            col = bmp->data[py * bmp->width + px];
+
+            g->pdata[y*g->csize.x + x] = col;
+
+            tx += yjump;
+        }
+        ty += xjump;
+
+        xjump -= xjumpDelta;
+        yjump -= yjumpDelta;
+        
+    }    
+}

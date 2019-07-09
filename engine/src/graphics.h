@@ -124,5 +124,10 @@ void g_draw_triangle(Graphics* g,
 void g_draw_line(Graphics* g, int x1, int y1, 
     int x2, int y2, uint8 col);
 
+// Draw "3D" floor
+void g_draw_3D_floor(Graphics* g, Bitmap* bmp,
+    int x, int y, int w, int h, int xdelta, 
+    float mx, float my);
+
 
 #endif // __GRAPHICS__
