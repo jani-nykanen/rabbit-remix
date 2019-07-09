@@ -6,8 +6,13 @@
 
 #include <stdlib.h>
 
+#include "stage.h"
+
 // Bitmaps
 static Bitmap* bmpFont;
+
+// Components
+static Stage stage;
 
 
 // Initialize
@@ -22,6 +27,9 @@ static int game_on_load(AssetManager* a) {
 
     bmpFont = (Bitmap*)assets_get(a, "font");
 
+    // Create components
+    stage = create_stage(a);
+
     return 0;
 }
 
@@ -31,6 +39,9 @@ static void game_update(void* e, float tm) {
 
     EventManager* evMan = (EventManager*)e;
     if (evMan->tr->active) return;
+
+    // Update stage
+    stage_update(&stage, tm);
 }
 
 
@@ -38,6 +49,9 @@ static void game_update(void* e, float tm) {
 static void game_draw(Graphics* g) {
     
     g_clear_screen(g, 0b10110110);
+
+    // Draw stage
+    stage_draw(&stage, g);
 
     g_fill_rect(g, 1, 1, 12*8, 10, 0b11100000);
     g_draw_text(g, bmpFont, "HELLO WORLD!", 2, 2, 0, 0, false);
