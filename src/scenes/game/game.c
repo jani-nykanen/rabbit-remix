@@ -14,6 +14,9 @@ static Bitmap* bmpFont;
 // Components
 static Stage stage;
 
+// Global speed
+static float globalSpeed;
+
 
 // Initialize
 static int game_init(void* e) {
@@ -30,6 +33,9 @@ static int game_on_load(AssetManager* a) {
     // Create components
     stage = create_stage(a);
 
+    // Set initials
+    globalSpeed = 1.0f;
+
     return 0;
 }
 
@@ -41,7 +47,7 @@ static void game_update(void* e, float tm) {
     if (evMan->tr->active) return;
 
     // Update stage
-    stage_update(&stage, tm);
+    stage_update(&stage, globalSpeed, tm);
 }
 
 

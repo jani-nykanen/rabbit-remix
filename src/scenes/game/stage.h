@@ -20,13 +20,19 @@ typedef struct {
     Bitmap* bmpClouds;
     Bitmap* bmpSky;
 
+    // Positions
+    float fencePos;
+    float bushPos;
+    float housePos;
+    float cloudPos;
+
 } Stage;
 
 // Create stage
 Stage create_stage(AssetManager* a);
 
 // Update stage
-void stage_update(Stage* s, float tm);
+void stage_update(Stage* s, float globalSpeed, float tm);
 
 // Draw stage
 void stage_draw(Stage* s, Graphics* g);
