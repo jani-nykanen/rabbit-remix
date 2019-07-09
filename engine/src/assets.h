@@ -3,6 +3,7 @@
 // (c) 2019 Jani Nykänen
 //
 
+
 #ifndef __ASSETS__
 #define __ASSETS__
 
@@ -32,8 +33,8 @@ typedef struct
 
 // Load a bitmap and add it to the
 // assets
-int assets_add_bitmap(AssetManager* a, 
-    const char* name, const char* path);
+int assets_add_bitmap(AssetManager* a, const char* name, const char* path, 
+    bool linearFilter);
 
 // Load a tilemap and add it to the
 // assets
@@ -50,6 +51,5 @@ int assets_parse_text_file(AssetManager* a, const char* path);
 
 // Create an asset manager
 AssetManager* create_asset_manager();
-
 
 #endif // __ASSETS__
