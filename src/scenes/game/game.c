@@ -59,8 +59,7 @@ static void game_draw(Graphics* g) {
     // Draw stage
     stage_draw(&stage, g);
 
-    g_fill_rect(g, 1, 1, 12*8, 10, 0b11100000);
-    g_draw_text(g, bmpFont, "HELLO WORLD!", 2, 2, 0, 0, false);
+    g_draw_text(g, bmpFont, "ALPHA 0.0.1", 2, 2, 0, 0, false);
 }
 
 
