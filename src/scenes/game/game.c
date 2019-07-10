@@ -37,7 +37,7 @@ static int game_on_load(AssetManager* a) {
 
     // Create components
     stage = create_stage(a);
-    player = create_player(64, 192-16);
+    player = create_player(64, 192-32);
 
     // Set initials
     globalSpeed = 1.0f;

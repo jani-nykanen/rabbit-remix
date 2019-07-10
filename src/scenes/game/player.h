@@ -19,6 +19,7 @@ typedef struct {
 
     // Position & speed
     Vector2 pos;
+    Vector2 oldPos;
     Vector2 speed;
     Vector2 target;
 
@@ -39,5 +40,8 @@ void pl_update(Player* pl, EventManager* evMan, float tm);
 
 // Draw player
 void pl_draw(Player* pl, Graphics* g);
+
+// Jump collision
+void pl_jump_collision(Player* pl, float x, float y, float w);
 
 #endif // __PLAYER__
