@@ -123,7 +123,7 @@ void g_draw_line(Graphics* g, int x1, int y1,
 // Draw "3D" floor
 void g_draw_3D_floor(Graphics* g, Bitmap* bmp,
     int x, int y, int w, int h, int xdelta, 
-    float mx, float my);
+    int mx, int my);
 
 
 #endif // __GRAPHICS__

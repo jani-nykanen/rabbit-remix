@@ -715,7 +715,7 @@ void g_draw_line(Graphics* g, int x1, int y1,
 // Draw "3D" floor
 void g_draw_3D_floor(Graphics* g, Bitmap* bmp,
     int dx, int dy, int w, int h, int xdelta,
-    float mx, float my) {
+    int mx, int my) {
 
     //
     // TODO: Use fixed point numbers
@@ -727,11 +727,11 @@ void g_draw_3D_floor(Graphics* g, Bitmap* bmp,
     int px, py;
     uint8 col;
 
-    int yjumpDelta = (int)(mx*FIXED_PREC) / h;
+    int yjumpDelta = (int)mx / h;
     int yjump = FIXED_PREC;
 
-    int xjumpDelta = (int)((my-1.0f)*FIXED_PREC) / h;
-    int xjump = (int)(my*FIXED_PREC);
+    int xjumpDelta = (int)(my-FIXED_PREC) / h;
+    int xjump = (int)my;
 
     ty = 0;
     for (y = dy; y < dy + h; ++ y) {
