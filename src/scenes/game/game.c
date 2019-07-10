@@ -7,12 +7,14 @@
 #include <stdlib.h>
 
 #include "stage.h"
+#include "player.h"
 
 // Bitmaps
 static Bitmap* bmpFont;
 
 // Components
 static Stage stage;
+static Player player;
 
 // Global speed
 static float globalSpeed;
@@ -30,8 +32,12 @@ static int game_on_load(AssetManager* a) {
 
     bmpFont = (Bitmap*)assets_get(a, "font");
 
+    // Initialize global components
+    init_global_player(a);
+
     // Create components
     stage = create_stage(a);
+    player = create_player(64, 192-16);
 
     // Set initials
     globalSpeed = 1.0f;
@@ -48,6 +54,9 @@ static void game_update(void* e, float tm) {
 
     // Update stage
     stage_update(&stage, globalSpeed, tm);
+
+    // Update player
+    pl_update(&player, evMan, tm);
 }
 
 
@@ -58,6 +67,9 @@ static void game_draw(Graphics* g) {
 
     // Draw stage
     stage_draw(&stage, g);
+
+    // Draw player
+    pl_draw(&player, g);
 
     g_draw_text(g, bmpFont, "ALPHA 0.0.1", 2, 2, 0, 0, false);
 }

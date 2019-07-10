@@ -103,5 +103,5 @@ void stage_draw(Stage* s, Graphics* g) {
 
     // Floor
     g_draw_3D_floor(g, s->bmpFloor, 0, 192-GROUND_HEIGHT, 
-        256, GROUND_HEIGHT, -s->floorPos, 0.25f, 6.0f);
+        256, GROUND_HEIGHT, -s->floorPos, 0.25f, 6.75f);
 }
