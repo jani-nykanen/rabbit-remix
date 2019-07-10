@@ -111,10 +111,25 @@ void pl_update(Player* pl, EventManager* evMan, float tm) {
 // Draw player
 void pl_draw(Player* pl, Graphics* g) {
 
+    const float SHADOW_SCALE_COMPARE = 192-16;
+
+    int px = (int)roundf(pl->pos.x);
+    int py = (int)roundf(pl->pos.y);
+
+    // Draw shadow
+    int scale = (int)(pl->pos.y/SHADOW_SCALE_COMPARE *48.0f);
+
+    // TEMP:
+    g->dvalue = 9;
+    g_draw_scaled_bitmap_region(g, bmpBunny,
+        144, 0, 48, 48, 
+        px-scale/2, 192-16 - scale, 
+        scale, scale, false);
+
     // Draw sprite
     spr_draw(&pl->spr, g, bmpBunny, 
-        (int)roundf(pl->pos.x-24), 
-        (int)roundf(pl->pos.y-48), false);
+        px-24, 
+        py-48, false);
 }
 
 

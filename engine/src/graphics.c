@@ -382,7 +382,7 @@ void g_draw_static(Graphics* g) {
 void g_draw_bitmap(Graphics* g, Bitmap* bmp, 
     int dx, int dy, bool flip) {
 
-    g_draw_scaled_bitmap_region(g, bmp,
+    g_draw_bitmap_region(g, bmp,
         0, 0, bmp->width, bmp->height, 
         dx, dy, 
         flip);
@@ -391,16 +391,6 @@ void g_draw_bitmap(Graphics* g, Bitmap* bmp,
 
 // Draw a bitmap region
 void g_draw_bitmap_region(Graphics* g, Bitmap* bmp, 
-    int sx, int sy, int sw, int sh, 
-    int dx, int dy, bool flip) {
-
-    g_draw_scaled_bitmap_region(g, bmp, sx, sy, sw, sh,
-        dx, dy, flip);
-}
-
-
-// Draw a scaled bitmap region
-void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp, 
     int sx, int sy, int sw, int sh, 
     int dx, int dy,
     bool flip) {
@@ -445,28 +435,84 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
 }
 
 
+// Draw a scaled bitmap region
+void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp, 
+    int sx, int sy, int sw, int sh, 
+    int dx, int dy, int dw, int dh,
+    bool flip) {
+
+    //
+    // To get a better performance, we don't
+    // make draw_bitmap_region function call
+    // this function, thus we rewrite a lot of
+    // code.
+    //
+
+    int x, y;
+    uint64 offset;
+    int boff;
+    int pixel;
+    int dir = flip ? -1 : 1;
+
+    if (bmp == NULL) return;
+
+    // Translate
+    dx += g->translation.x;
+    dy += g->translation.y;
+
+    // Clip
+    if(!clip(g, &sx, &sy, &dw, &dh, &dx, &dy, flip))
+       return;
+
+    int tx, ty;
+    uint8 col;
+
+    // Jumps
+    int xjump = sw * FIXED_PREC / dw;
+    int yjump = sh * FIXED_PREC / dh;
+
+    // Draw pixels
+    ty = sy * FIXED_PREC;
+    for(y = dy; y < dy+dh; ++ y) {
+
+        tx = sx * FIXED_PREC;
+        for(x = dx; x < dx+dw; ++ x) {
+
+            col = bmp->data[ 
+                round_fixed(ty, FIXED_PREC)*bmp->width 
+                + round_fixed(tx, FIXED_PREC) ];
+            
+            if (col != ALPHA) {
+
+                // TODO:
+                // Pixel put function
+                col = g->pdata[y*g->csize.x + x];
+                g->pdata[y*g->csize.x + x] 
+                    = dpalette[ ditherArray[g->dvalue] [ x % 2 == y % 2] ] [col];
+
+                // g->pdata[ y*g->csize.x + x ] = col;
+            }
+
+            tx += xjump;
+        }
+
+        ty += yjump;
+    }
+}
+
+
 // Draw a bitmap
 void g_draw_bitmap_fast(Graphics* g, Bitmap* bmp, 
     int dx, int dy) {
 
-    g_draw_scaled_bitmap_region_fast(g, bmp,
+    g_draw_bitmap_region_fast(g, bmp,
         0, 0, bmp->width, bmp->height, 
         dx, dy);
 }
 
 
-// Draw a bitmap region
-void g_draw_bitmap_region_fast(Graphics* g, Bitmap* bmp, 
-    int sx, int sy, int sw, int sh, 
-    int dx, int dy) {
-
-    g_draw_scaled_bitmap_region_fast(g, bmp, sx, sy, sw, sh,
-        dx, dy);
-}
-
-
 // Draw a scaled bitmap region fast
-void g_draw_scaled_bitmap_region_fast(Graphics* g, Bitmap* bmp, 
+void g_draw_bitmap_region_fast(Graphics* g, Bitmap* bmp, 
     int sx, int sy, int sw, int sh, 
     int dx, int dy) {
 
