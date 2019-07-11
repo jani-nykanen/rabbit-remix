@@ -461,8 +461,8 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
     dy += g->translation.y;
 
     // Clip
-    if(!clip(g, &sx, &sy, &dw, &dh, &dx, &dy, flip))
-       return;
+    //if(!clip(g, &sx, &sy, &dw, &dh, &dx, &dy, flip))
+    //   return;
 
     int tx, ty;
     uint8 col;
@@ -473,10 +473,24 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
 
     // Draw pixels
     ty = sy * FIXED_PREC;
-    for(y = dy; y < dy+dh; ++ y) {
+    for(y = dy; y < min_int32_2(dy+dh, g->csize.y); ++ y) {
+
+        if (y < 0) {
+
+            ty += yjump * -(y-1);
+            y = -1;
+            continue;
+        }
 
         tx = sx * FIXED_PREC;
-        for(x = dx; x < dx+dw; ++ x) {
+        for(x = dx; x < min_int32_2(dx+dw, g->csize.x); ++ x) {
+
+            if (x < 0) {
+
+                tx += xjump * -(x+1);
+                x = -1;
+                continue;
+            }
 
             col = bmp->data[ 
                 round_fixed(ty, FIXED_PREC)*bmp->width 
@@ -716,11 +730,6 @@ void g_draw_line(Graphics* g, int x1, int y1,
 void g_draw_3D_floor(Graphics* g, Bitmap* bmp,
     int dx, int dy, int w, int h, int xdelta,
     int mx, int my) {
-
-    //
-    // TODO: Use fixed point numbers
-    // for slightly better performance
-    //
 
     int x, y;
     int tx, ty;

@@ -26,6 +26,8 @@ typedef struct {
     // Jump variables
     float jumpTimer;
     bool doubleJump;
+    bool djumpReleased;
+    bool flapping;
 
     // Sprite
     Sprite spr;
