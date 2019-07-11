@@ -41,7 +41,7 @@ void bullet_update(Bullet* b, float tm) {
 
     // Check if inside the screen boundaries
     if (b->pos.x+b->radius < 0 || b->pos.x-b->radius > 256 ||
-        b->pos.y+b->radius < 0 || b->pos.y+b->radius > 192-FLOOR_HEIGHT) {
+        b->pos.y+b->radius < 0 || b->pos.y > 192-FLOOR_HEIGHT) {
 
         b->exist = false;
     }
@@ -67,7 +67,7 @@ void bullet_draw(Bullet* b, Graphics* g) {
     float x3 = b->pos.x + cosf(b->angle + step*2) * b->radius;
     float y3 = b->pos.y + sinf(b->angle + step*2) * b->radius;
 
-    g_set_pixel_function(g, PixelFunctionInverse, 0, 0);
+    g_set_pixel_function(g, PixelFunctionInverseFrame, 0, 0);
     g_draw_triangle(
         g, (int)x1, (int)y1,
         (int)x2, (int)y2,

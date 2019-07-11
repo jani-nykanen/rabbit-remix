@@ -37,6 +37,7 @@ typedef struct {
     bool doubleJump;
     bool djumpReleased;
     bool flapping;
+    // Falling
     bool quickFall;
     bool quickFallJump;
 
@@ -49,6 +50,10 @@ typedef struct {
 
     // Bullets
     Bullet bullets [BULLET_COUNT];
+    float shootWait;
+    // "Loading"
+    bool loading;
+    float loadTimer;
 
 } Player;
 

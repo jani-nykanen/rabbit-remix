@@ -227,12 +227,24 @@ static void pl_update_dust(Player* pl, float tm) {
 static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
 
     const float BULLET_RADIUS = 12;
+    const float BIG_RADIUS = 24;
+    const float LOAD_INITIAL = -60.0f;
+    const float LOAD_BASE_WAIT = 30.0f;
+    const float SPEED_MOD = 0.25f;
+    const float SPEED_NORMAL = 4.0f;
+    const float SPEED_BIG = 3.0f;
+    const float BIG_WAIT = 10.0f;
 
     int i;
+    int s = pad_get_button_state(evMan->vpad, "fire2");
 
     // Create a bullet
     Bullet* b = NULL;
-    if (pad_get_button_state(evMan->vpad, "fire2") == StatePressed) {
+    bool makeBig = 
+        pl->loading && 
+        s == StateReleased && 
+        pl->loadTimer >= 0.0f;
+    if ( pl->shootWait <= 0.0f && (s == StatePressed || makeBig)) {
 
         for (i = 0; i < BULLET_COUNT; ++ i) {
 
@@ -246,9 +258,38 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
         if (b != NULL) {
 
             bullet_activate(b, vec2(pl->pos.x+12, pl->pos.y-24),
-                vec2(4, 0), BULLET_RADIUS);
+               
+                vec2(pl->speed.x*SPEED_MOD + (makeBig ? SPEED_BIG : SPEED_NORMAL),
+                     pl->speed.y*SPEED_MOD), 
+                makeBig ? BIG_RADIUS : BULLET_RADIUS);
 
+            pl->loading = (makeBig ? false : true);
+            pl->loadTimer = LOAD_INITIAL;
+
+            pl->shootWait = makeBig ? BIG_WAIT : 0.0f;
         }
+    }
+
+    // Update load timer
+    if (pl->loading) {
+
+        pl->loadTimer += 1.0f * tm;
+        if (pl->loadTimer > 0.0f) {
+
+            pl->loadTimer = fmodf(pl->loadTimer, LOAD_BASE_WAIT);
+        }
+    
+        if (s == StateReleased || s == StateUp) {
+
+            pl->loading = false;
+            pl->loadTimer = LOAD_INITIAL;
+        }
+    }
+
+    // Update shoot timer
+    if (pl->shootWait > 0.0f) {
+
+        pl->shootWait -= 1.0f * tm;
     }
 
     // Update bullets
@@ -278,6 +319,8 @@ Player create_player(int x, int y) {
     pl.extendJump = false;
     pl.quickFall = false;
     pl.quickFallJump = false;
+    pl.loading = false;
+    pl.loadTimer = 0.0f;
 
     // Create sprite
     pl.spr = create_sprite(48, 48);
@@ -344,9 +387,15 @@ void pl_draw(Player* pl, Graphics* g) {
     }
 
     // Draw sprite
+    if (pl->loading && pl->loadTimer > 0.0f && 
+        (int)floorf(pl->loadTimer/4.0f) % 2 == 0) {
+
+        g_set_pixel_function(g, PixelFunctionInverse, 0, 0);
+    }
     spr_draw(&pl->spr, g, bmpBunny, 
         px-24, 
         py-48, false);
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
 
     // Draw bullets
     for (i = 0; i < BULLET_COUNT; ++ i) {

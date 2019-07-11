@@ -26,7 +26,8 @@ enum {
     PixelFunctionDarken = 1,
     PixelFunctionSingleColor = 2,
     PixelFunctionSingleColorSkip = 3,
-    PixelFunctionInverse = 4,
+    PixelFunctionInverseFrame = 4,
+    PixelFunctionInverse = 5,
 };
 
 // Graphics type

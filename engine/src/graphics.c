@@ -50,10 +50,15 @@ static void pfunc_skip_single_color(void* _g, int offset, uint8 col) {
         return;
     g->pdata[offset] = g->pparam2;
 }
-static void pfunc_inverse(void* _g, int offset, uint8 col) {
+static void pfunc_inverse_frame(void* _g, int offset, uint8 col) {
 
     Graphics* g = (Graphics*)_g;
     g->pdata[offset] = ~g->pdata[offset];
+}
+static void pfunc_inverse(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+    g->pdata[offset] = ~col;
 }
 
 
@@ -380,6 +385,10 @@ void g_set_pixel_function(Graphics* g, int func, int param1, int param2) {
         g->pfunc = pfunc_skip_single_color;
         break;
 
+    case PixelFunctionInverseFrame:
+        g->pfunc = pfunc_inverse_frame;
+        break;    
+
     case PixelFunctionInverse:
         g->pfunc = pfunc_inverse;
         break;    
@@ -552,9 +561,8 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
 
         if (y < 0) {
 
-            ty += yjump * -(y-1);
-            y = -1;
-            continue;
+            ty += yjump * -y;
+            y = 0;
         }
 
         tx = sx * FIXED_PREC;
@@ -562,9 +570,8 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
 
             if (x < 0) {
 
-                tx += xjump * -(x+1);
-                x = -1;
-                continue;
+                tx += xjump * -x;
+                x = 0;
             }
 
             col = bmp->data[ 
