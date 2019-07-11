@@ -19,13 +19,13 @@
 int init_graphics_global();
 
 
-// Flipping flags
+// Pixel function types
 enum {
 
-    FlipNone = 0,
-    FlipHorizontal = 1,
-    FlipVertical = 2,
-    FlipBoth = FlipHorizontal | FlipVertical // == 3
+    PixelFunctionDefault = 0,
+    PixelFunctionDarken = 1,
+    PixelFunctionSingleColor = 2,
+    PixelFunctionSingleColorSkip = 3,
 };
 
 // Graphics type
@@ -54,6 +54,11 @@ typedef struct {
     // Darkness value
     int dvalue;
 
+    // Pixel function & param
+    void (*pfunc) (void* g, int offset, uint8 col);
+    int pparam1;
+    int pparam2;
+
 } Graphics;
 
 // Create a graphics component
@@ -64,6 +69,9 @@ void dispose_graphics(Graphics* g);
 
 // Resize event
 void g_resize(Graphics* g, int w, int h);
+
+// Set pixel function
+void g_set_pixel_function(Graphics* g, int func, int param1, int param2);
 
 // Translate
 void g_translate(Graphics* g, int tx, int ty);

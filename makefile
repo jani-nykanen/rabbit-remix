@@ -12,7 +12,7 @@ SRC := $(wildcard src/*.c src/*/*.c src/*/*/*.c)
 OBJ := $(patsubst %.c, %.o, $(SRC))
 
 LD_FLAGS :=  lib/libengine.a -lSDL2 -lm -I ./include
-CC_FLAGS :=  -Iinclude -Wall #-O3
+CC_FLAGS :=  -Iinclude -Wall -O3
 
 all: game clean
 

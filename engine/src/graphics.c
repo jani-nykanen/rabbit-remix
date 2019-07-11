@@ -16,6 +16,42 @@ static uint8 dpalette [MAX_DARKNESS_VALUE] [256];
 static uint8 ditherArray [MAX_DARKNESS_VALUE*2] [2];
 
 
+//
+// Pixel functions
+//
+static void pfunc_default(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+    g->pdata[offset] = col;
+}
+static void pfunc_darken(void* _g, int offset, uint8 c) {
+
+    Graphics* g = (Graphics*)_g;
+    uint8 col = g->pdata[offset];
+    int x = offset % g->csize.x;
+    int y = offset / g->csize.x;
+
+    g->pdata[offset] 
+         = dpalette[ ditherArray[g->pparam1] [ x % 2 == y % 2] ] [col];
+}
+static void pfunc_single_color(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+    g->pdata[offset] = g->pparam1;
+}
+static void pfunc_skip_single_color(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+
+    int x = offset % g->csize.x;
+    int y = offset / g->csize.x;
+
+    if (x % g->pparam1 == 0 || y % g->pparam1 == 0) 
+        return;
+    g->pdata[offset] = g->pparam2;
+}
+
+
 // Get darkened color index
 static uint8 get_darkened_color(uint8 col, int amount)
 {
@@ -267,6 +303,8 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     // Set defaults
     g->translation = point(0, 0);
     g->dvalue = 0;
+    g->pfunc = pfunc_default;
+    g->pparam1 = 0;
 
     return g;
 }
@@ -310,6 +348,36 @@ void g_resize(Graphics* g, int w, int h) {
 
     // Store window size
     g->windowSize = point(w, h);
+}
+
+
+// Set pixel function
+void g_set_pixel_function(Graphics* g, int func, int param1, int param2) {
+
+    // TODO: An array approach
+    switch (func)
+    {
+    case PixelFunctionDefault:
+        g->pfunc = pfunc_default;
+        break;
+
+    case PixelFunctionDarken:
+        g->pfunc = pfunc_darken;
+        break;
+
+    case PixelFunctionSingleColor:
+        g->pfunc = pfunc_single_color;
+        break;  
+
+     case PixelFunctionSingleColorSkip:
+        g->pfunc = pfunc_skip_single_color;
+        break;  
+    
+    default:
+        break;
+    }
+    g->pparam1 = param1;
+    g->pparam2 = param2;
 }
 
 
@@ -423,7 +491,7 @@ void g_draw_bitmap_region(Graphics* g, Bitmap* bmp,
             // (i.e not transparent)
             if (pixel != ALPHA) {
 
-                g->pdata[offset] = pixel;
+                g->pfunc(g, offset, pixel);
             }
 
             boff += dir;
@@ -454,15 +522,11 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
     int pixel;
     int dir = flip ? -1 : 1;
 
-    if (bmp == NULL) return;
+    if (bmp == NULL || dw <= 0 || dh <= 0) return;
 
     // Translate
     dx += g->translation.x;
     dy += g->translation.y;
-
-    // Clip
-    //if(!clip(g, &sx, &sy, &dw, &dh, &dx, &dy, flip))
-    //   return;
 
     int tx, ty;
     uint8 col;
@@ -493,18 +557,12 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
             }
 
             col = bmp->data[ 
-                round_fixed(ty, FIXED_PREC)*bmp->width 
-                + round_fixed(tx, FIXED_PREC) ];
+                min_int32_2(round_fixed(ty, FIXED_PREC), bmp->height-1)*bmp->width  +
+                min_int32_2(round_fixed(tx, FIXED_PREC), bmp->width-1) ];
             
             if (col != ALPHA) {
 
-                // TODO:
-                // Pixel put function
-                col = g->pdata[y*g->csize.x + x];
-                g->pdata[y*g->csize.x + x] 
-                    = dpalette[ ditherArray[g->dvalue] [ x % 2 == y % 2] ] [col];
-
-                // g->pdata[ y*g->csize.x + x ] = col;
+                g->pfunc(g, y*g->csize.x+x, col);
             }
 
             tx += xjump;
@@ -596,7 +654,7 @@ void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
         // Draw character
         g_draw_bitmap_region(g, 
             bmp, sx * cw, sy * ch, cw, ch,
-            x, y, FlipNone);
+            x, y, false);
 
         x += (cw + xoff);
     } 

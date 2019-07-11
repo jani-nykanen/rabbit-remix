@@ -3,6 +3,12 @@
 // Shared pointers to bitmaps
 static Bitmap* bmpBunny;
 
+// Constants
+static const float HIT_JUMP_TIME = 10.0f;
+static const float JUMP_REACT_MIN_TIME = 1.0f;
+static const float JUMP_EXTEND_TIME = 10.0f;
+static const float DUST_WAIT = 8.0f;
+
 
 // Init global data
 void init_global_player(AssetManager* a) {
@@ -35,25 +41,61 @@ static void update_axis(float* axis,
 // Control
 static void pl_control(Player* pl, EventManager* evMan, float tm) {
 
-    const float GRAVITY_TARGET = 2.5f;
+    const float GRAVITY_TARGET = 3.0f;
     const float MOVE_TARGET = 1.5f;
     const float FLAP_SPEED = 0.5f;
+    const float DJUMP_TIME = 8.0f;
+
+    const float QUICK_FALL_EPS = 0.5f;
+    const float QUICK_FALL_MUL = 2.0f;
 
     // Set target speed
     pl->target.x = evMan->vpad->stick.x * MOVE_TARGET;
     pl->target.y = GRAVITY_TARGET;
+    
+    // Quick fall
+    if (!pl->quickFall &&
+        evMan->vpad->stick.y > QUICK_FALL_EPS &&
+        evMan->vpad->delta.y > 0.0f) {
+
+        pl->quickFall = true;
+        pl->speed.y = pl->target.y * QUICK_FALL_MUL;
+    }
+    if (evMan->vpad->stick.y < 0.0f) {
+
+        pl->quickFall = false;
+    }
+    if (pl->quickFall) {
+
+        pl->target.y *= QUICK_FALL_MUL;
+    }
 
     // Jumping
     State fire1 = pad_get_button_state(evMan->vpad, "fire1");
-    if (fire1 == StatePressed && pl->doubleJump) {
-        
-        pl->speed.y = -4.0f;
+    if (!pl->extendJump && 
+        pl->jumpTimer > JUMP_REACT_MIN_TIME && pl->doubleJump && 
+        (fire1 == StatePressed || fire1 == StateDown)) {
 
-        pl->doubleJump = false;
+        pl->jumpTimer += JUMP_EXTEND_TIME;
+        pl->extendJump = true;
     }
-    else if(fire1 == StateReleased && !pl->doubleJump) {
+    else  if (fire1 == StatePressed && pl->doubleJump) {
+            
+        pl->jumpTimer = DJUMP_TIME;
+        pl->doubleJump = false;
+        pl->quickFallJump = false;
+    }
 
-        pl->djumpReleased = true;
+    // Stop jumping
+    if (fire1 == StateReleased && pl->jumpTimer > 0.0f) {
+
+        if (!pl->doubleJump) {
+
+            pl->djumpReleased = true;
+        }
+
+        pl->jumpTimer = 0.0f;
+        pl->quickFallJump = false;
     }
 
     // Flapping
@@ -69,9 +111,28 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
 // Move
 static void pl_move(Player* pl, EventManager* evMan, float tm) {
 
-    const float ACC_X = 0.15f;
+    const float ACC_X = 0.20f;
     const float ACC_Y = 0.1f;
     const float SCREEN_OFF = 16;
+    const float JUMP_SPEED = -3.0f;
+    const float QUICK_JUMP_MUL = 1.25f;
+
+    // Check double jump timer
+    if (pl->jumpTimer > 0.0f) {
+
+        pl->jumpTimer -= 1.0f * tm;
+        pl->speed.y = JUMP_SPEED;
+        if (pl->quickFallJump) {
+
+            pl->speed.y *= QUICK_JUMP_MUL;
+        }
+        pl->target.y = pl->speed.y;
+
+        if (pl->jumpTimer <= 0.0f) {
+
+            pl->quickFallJump = false;
+        }
+    }
 
     // Store old position
     pl->oldPos = pl->pos;
@@ -126,6 +187,42 @@ static void pl_animate(Player* pl, float tm) {
 }
 
 
+// Update dust
+static void pl_update_dust(Player* pl, float tm) {
+
+    const float DUST_SPEED = 1.25f;
+
+    int i;
+
+    if ( (pl->dustTimer += 1.0f * tm) >= DUST_WAIT) {
+
+        pl->dustTimer -= DUST_WAIT;
+
+        // Find the first dust that does not exist
+        Dust* d = NULL;
+        for (i = 0; i < DUST_COUNT; ++ i) {
+
+            if (pl->dust[i].exist == false) {
+
+                d = &pl->dust[i];
+                break;
+            }
+        }
+        if (d == NULL) return;
+
+        dust_activate(d, vec2(pl->pos.x, pl->pos.y-24), DUST_SPEED,
+            pl->spr.frame*pl->spr.width, pl->spr.row*pl->spr.height,
+            pl->spr.width, pl->spr.height);
+    }
+
+    // Update dust
+    for (i = 0; i < DUST_COUNT; ++ i) {
+
+        dust_update(&pl->dust[i], tm);
+    }
+}
+
+
 // Create a player
 Player create_player(int x, int y) {
 
@@ -142,9 +239,19 @@ Player create_player(int x, int y) {
     pl.doubleJump = false;
     pl.flapping = false;
     pl.djumpReleased = false;
+    pl.extendJump = false;
+    pl.quickFall = false;
+    pl.quickFallJump = false;
 
     // Create sprite
     pl.spr = create_sprite(48, 48);
+
+    // Create dust
+    int i;
+    for(i = 0; i < DUST_COUNT; ++ i) {
+
+        pl.dust[i] = create_dust();
+    }
 
     return pl;
 }
@@ -157,6 +264,7 @@ void pl_update(Player* pl, EventManager* evMan, float tm) {
     pl_control(pl, evMan, tm);
     pl_move(pl, evMan, tm);
     pl_animate(pl, tm);
+    pl_update_dust(pl, tm);
 
     // TEMP
     // Floor collision
@@ -170,6 +278,8 @@ void pl_draw(Player* pl, Graphics* g) {
     const float SHADOW_SCALE_COMPARE = 176+128;
     const float COMPARE_DELTA = 128;
 
+    int i;
+
     int px = (int)roundf(pl->pos.x);
     int py = (int)roundf(pl->pos.y);
 
@@ -177,12 +287,18 @@ void pl_draw(Player* pl, Graphics* g) {
     int scale = (int)((pl->pos.y+COMPARE_DELTA)/
         SHADOW_SCALE_COMPARE *48.0f);
 
-    // TEMP:
-    g->dvalue = 9;
+    g_set_pixel_function(g, PixelFunctionDarken, 9, 0);
     g_draw_scaled_bitmap_region(g, bmpBunny,
         144, 0, 48, 48, 
         px-scale/2, 192-16 - scale, 
         scale, scale, false);
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+
+    // Draw dust
+    for (i = 0; i < DUST_COUNT; ++ i) {
+
+        dust_draw(&pl->dust[i], g, bmpBunny, 255);
+    }
 
     // Draw sprite
     spr_draw(&pl->spr, g, bmpBunny, 
@@ -202,9 +318,18 @@ void pl_jump_collision(Player* pl, float x, float y, float w) {
         pl->pos.y > y-pl->speed.y) {
 
         pl->pos.y = y;
-        pl->speed.y = HIT_JUMP_HEIGHT;
 
         pl->doubleJump = true;
         pl->djumpReleased = false;
+        pl->extendJump = false;
+
+        pl->jumpTimer = HIT_JUMP_TIME;
+
+        // Check quick fall
+        if (pl->quickFall) {
+
+            pl->quickFallJump = true;
+        }
+        pl->quickFall = false;
     }
 }

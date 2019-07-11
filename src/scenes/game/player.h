@@ -11,6 +11,11 @@
 #include <engine/eventmanager.h>
 #include <engine/assets.h>
 
+#include "dust.h"
+
+// Maximum dust count
+#define DUST_COUNT 16
+
 // Init global data
 void init_global_player(AssetManager* a);
 
@@ -25,12 +30,19 @@ typedef struct {
 
     // Jump variables
     float jumpTimer;
+    bool extendJump;
     bool doubleJump;
     bool djumpReleased;
     bool flapping;
+    bool quickFall;
+    bool quickFallJump;
 
     // Sprite
     Sprite spr;
+
+    // Dust
+    Dust dust [DUST_COUNT];
+    float dustTimer;
 
 } Player;
 

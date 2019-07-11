@@ -80,8 +80,11 @@ void pad_update(Gamepad* vpad) {
     vpad->stick.y = vpad->input->joystick.y;
 
     // If too small a movement, check keyboard
-    if (hypotf(vpad->stick.x, vpad->stick.y) < EPS) {
-
+    //if (hypotf(vpad->stick.x, vpad->stick.y) < EPS) {
+/* 
+        vpad->stick.x = 0;
+        vpad->stick.y = 0;
+*/
         // Emulate analogue stick with arrow keys
         if (input_get_key_state(vpad->input, (int)SDL_SCANCODE_RIGHT)
             == StateDown) {
@@ -99,12 +102,12 @@ void pad_update(Gamepad* vpad) {
         else if (input_get_key_state(vpad->input, (int)SDL_SCANCODE_UP)
             == StateDown) {
             vpad->stick.y = -1;
-        }
+        } 
 
         // Note that we DO NOT restrict the stick
         // to B(0,1) since, for example, in platformers, that would
         // be unwanted behaviour
-    }
+    //}
 
     // Compute delta
     vpad->delta.x = vpad->stick.x - oldPos.x;
