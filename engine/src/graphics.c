@@ -50,6 +50,11 @@ static void pfunc_skip_single_color(void* _g, int offset, uint8 col) {
         return;
     g->pdata[offset] = g->pparam2;
 }
+static void pfunc_inverse(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+    g->pdata[offset] = ~g->pdata[offset];
+}
 
 
 // Get darkened color index
@@ -218,10 +223,12 @@ static void draw_triangle_half(Graphics * g,
 
             // Check if inside the canvas
             if (x >= 0 
-                && x < g->csize.x && y >= 0 
+                && x < g->csize.x 
+                && y >= 0 
                 && y < g->csize.y) {
                 
-                g->pdata[offset] = dpalette[ ditherArray[g->dvalue] [x % 2 == y % 2] ] [col];
+                // g->pdata[offset] = dpalette[ ditherArray[g->dvalue] [x % 2 == y % 2] ] [col];
+                g->pfunc(g, y*g->csize.x + x, col);
             }
             offset += stepx;
         }
@@ -369,9 +376,13 @@ void g_set_pixel_function(Graphics* g, int func, int param1, int param2) {
         g->pfunc = pfunc_single_color;
         break;  
 
-     case PixelFunctionSingleColorSkip:
+    case PixelFunctionSingleColorSkip:
         g->pfunc = pfunc_skip_single_color;
-        break;  
+        break;
+
+    case PixelFunctionInverse:
+        g->pfunc = pfunc_inverse;
+        break;    
     
     default:
         break;
@@ -737,8 +748,8 @@ void g_draw_triangle(Graphics* g,
     if (points[1].y != points[0].y) {
         
         draw_triangle_half(g,
-            points[1].x,points[1].y, endMid, 
-            max_int32_2(points[0].y, -1), stepx, -1, 
+            points[1].x, points[1].y, endMid, 
+            max_int32_2(points[0].y-1, -1), stepx, -1, 
             dx1, dend, x1, y1, col);
     }
 
@@ -746,7 +757,7 @@ void g_draw_triangle(Graphics* g,
     if (points[1].y != points[2].y) {
 
         draw_triangle_half(g, 
-            points[1].x,points[1].y, endMid, 
+            points[1].x,points[1].y+1, endMid, 
             min_int32_2(points[2].y, g->csize.y), stepx, 1, 
             dx2, -dend, x1, y1, col);
     }

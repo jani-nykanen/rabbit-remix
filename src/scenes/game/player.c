@@ -160,7 +160,7 @@ static void pl_animate(Player* pl, float tm) {
 
     const float EPS = 0.5f;
     const float FLIP_SPEED = 4.0f; 
-    const float FLAP_SPEED = 3.0f;
+    const float FLAP_SPEED = 4.0f;
 
     int frame = 0;
 
@@ -223,6 +223,42 @@ static void pl_update_dust(Player* pl, float tm) {
 }
 
 
+// Update bullet-specific behavior
+static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
+
+    const float BULLET_RADIUS = 12;
+
+    int i;
+
+    // Create a bullet
+    Bullet* b = NULL;
+    if (pad_get_button_state(evMan->vpad, "fire2") == StatePressed) {
+
+        for (i = 0; i < BULLET_COUNT; ++ i) {
+
+            if (pl->bullets[i].exist == false) {
+
+                b = &pl->bullets[i];
+                break;
+            }
+        }
+
+        if (b != NULL) {
+
+            bullet_activate(b, vec2(pl->pos.x+12, pl->pos.y-24),
+                vec2(4, 0), BULLET_RADIUS);
+
+        }
+    }
+
+    // Update bullets
+    for (i = 0; i < BULLET_COUNT; ++ i) {
+
+        bullet_update(&pl->bullets[i], tm);
+    }
+}
+
+
 // Create a player
 Player create_player(int x, int y) {
 
@@ -253,6 +289,12 @@ Player create_player(int x, int y) {
         pl.dust[i] = create_dust();
     }
 
+    // Create bullets
+    for(i = 0; i < BULLET_COUNT; ++ i) {
+
+        pl.bullets[i] = create_bullet();
+    }
+
     return pl;
 }
 
@@ -263,6 +305,7 @@ void pl_update(Player* pl, EventManager* evMan, float tm) {
     // Do stuff
     pl_control(pl, evMan, tm);
     pl_move(pl, evMan, tm);
+    pl_update_bullets(pl, evMan, tm);
     pl_animate(pl, tm);
     pl_update_dust(pl, tm);
 
@@ -304,6 +347,12 @@ void pl_draw(Player* pl, Graphics* g) {
     spr_draw(&pl->spr, g, bmpBunny, 
         px-24, 
         py-48, false);
+
+    // Draw bullets
+    for (i = 0; i < BULLET_COUNT; ++ i) {
+
+        bullet_draw(&pl->bullets[i], g);
+    }
 }
 
 

@@ -12,9 +12,12 @@
 #include <engine/assets.h>
 
 #include "dust.h"
+#include "bullet.h"
 
 // Maximum dust count
 #define DUST_COUNT 16
+// Maximum bullet count
+#define BULLET_COUNT 16
 
 // Init global data
 void init_global_player(AssetManager* a);
@@ -43,6 +46,9 @@ typedef struct {
     // Dust
     Dust dust [DUST_COUNT];
     float dustTimer;
+
+    // Bullets
+    Bullet bullets [BULLET_COUNT];
 
 } Player;
 
