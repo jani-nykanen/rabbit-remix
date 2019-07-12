@@ -173,6 +173,11 @@ static void pl_animate(Player* pl, float tm) {
     else if (pl->flapping) {
 
         spr_animate(&pl->spr, 3, 0, 3, FLAP_SPEED, tm);
+
+        if (pl->shootWait > 0.0f) {
+
+            ++ pl->spr.row;
+        }
     }
     else {
 
@@ -183,6 +188,11 @@ static void pl_animate(Player* pl, float tm) {
 
         pl->spr.frame = frame;
         pl->spr.row = 0;
+
+        if (pl->shootWait > 0.0f) {
+
+            ++ pl->spr.row;
+        }
     }
 }
 
@@ -233,7 +243,10 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
     const float SPEED_MOD = 0.25f;
     const float SPEED_NORMAL = 4.0f;
     const float SPEED_BIG = 3.0f;
-    const float BIG_WAIT = 10.0f;
+    const float SHOOT_ANIM_TIME = 60.0f;
+
+    const float BULLET_X_OFF = 16;
+    const float BULLET_Y_OFF = -21;
 
     int i;
     int s = pad_get_button_state(evMan->vpad, "fire2");
@@ -244,7 +257,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
         pl->loading && 
         s == StateReleased && 
         pl->loadTimer >= 0.0f;
-    if ( pl->shootWait <= 0.0f && (s == StatePressed || makeBig)) {
+    if (s == StatePressed || makeBig) {
 
         for (i = 0; i < BULLET_COUNT; ++ i) {
 
@@ -257,7 +270,8 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
 
         if (b != NULL) {
 
-            bullet_activate(b, vec2(pl->pos.x+12, pl->pos.y-24),
+            bullet_activate(b, 
+                vec2(pl->pos.x+BULLET_X_OFF, pl->pos.y+BULLET_Y_OFF),
                
                 vec2(pl->speed.x*SPEED_MOD + (makeBig ? SPEED_BIG : SPEED_NORMAL),
                      pl->speed.y*SPEED_MOD), 
@@ -266,7 +280,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
             pl->loading = (makeBig ? false : true);
             pl->loadTimer = LOAD_INITIAL;
 
-            pl->shootWait = makeBig ? BIG_WAIT : 0.0f;
+            pl->shootWait = SHOOT_ANIM_TIME;
         }
     }
 
