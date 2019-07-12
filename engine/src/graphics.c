@@ -232,8 +232,7 @@ static void draw_triangle_half(Graphics * g,
                 && y >= 0 
                 && y < g->csize.y) {
                 
-                // g->pdata[offset] = dpalette[ ditherArray[g->dvalue] [x % 2 == y % 2] ] [col];
-                g->pfunc(g, y*g->csize.x + x, col);
+                g->pfunc(g, offset, col);
             }
             offset += stepx;
         }
@@ -484,7 +483,7 @@ void g_draw_bitmap_region(Graphics* g, Bitmap* bmp,
     bool flip) {
 
     int x, y;
-    uint64 offset;
+    int offset;
     int boff;
     int pixel;
     int dir = flip ? -1 : 1;
@@ -537,7 +536,7 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
     //
 
     int x, y;
-    uint64 offset;
+    int offset;
     int boff;
     int pixel;
     int dir = flip ? -1 : 1;
