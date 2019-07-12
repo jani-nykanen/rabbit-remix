@@ -51,6 +51,7 @@ typedef struct {
     // Bullets
     Bullet bullets [BULLET_COUNT];
     float shootWait;
+    float blastTime;
     // "Loading"
     bool loading;
     float loadTimer;

@@ -2,6 +2,7 @@
 
 // Shared pointers to bitmaps
 static Bitmap* bmpBunny;
+static Bitmap* bmpBlast;
 
 // Constants
 static const float HIT_JUMP_TIME = 10.0f;
@@ -14,6 +15,7 @@ static const float DUST_WAIT = 8.0f;
 void init_global_player(AssetManager* a) {
 
     bmpBunny = (Bitmap*)assets_get(a, "bunny");
+    bmpBlast = (Bitmap*)assets_get(a, "blast");
 }
 
 
@@ -163,6 +165,9 @@ static void pl_animate(Player* pl, float tm) {
     const float FLAP_SPEED = 4.0f;
 
     int frame = 0;
+    int row = 0;
+
+    bool drawGun = pl->shootWait > 0.0f;
 
     // Double jump
     if (pl->speed.y < 0.0f && !pl->doubleJump) {
@@ -172,12 +177,8 @@ static void pl_animate(Player* pl, float tm) {
     // Flapping
     else if (pl->flapping) {
 
-        spr_animate(&pl->spr, 3, 0, 3, FLAP_SPEED, tm);
-
-        if (pl->shootWait > 0.0f) {
-
-            ++ pl->spr.row;
-        }
+        row = drawGun ? 4 : 3;
+        spr_animate(&pl->spr, row, 0, 3, FLAP_SPEED, tm);
     }
     else {
 
@@ -189,7 +190,7 @@ static void pl_animate(Player* pl, float tm) {
         pl->spr.frame = frame;
         pl->spr.row = 0;
 
-        if (pl->shootWait > 0.0f) {
+        if (drawGun) {
 
             ++ pl->spr.row;
         }
@@ -244,6 +245,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
     const float SPEED_NORMAL = 4.0f;
     const float SPEED_BIG = 3.0f;
     const float SHOOT_ANIM_TIME = 60.0f;
+    const float BLAST_TIME = 10.0f;
 
     const float BULLET_X_OFF = 16;
     const float BULLET_Y_OFF = -21;
@@ -257,7 +259,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
         pl->loading && 
         s == StateReleased && 
         pl->loadTimer >= 0.0f;
-    if (s == StatePressed || makeBig) {
+    if (pl->blastTime <= 0.0f && (s == StatePressed || makeBig)) {
 
         for (i = 0; i < BULLET_COUNT; ++ i) {
 
@@ -281,7 +283,14 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
             pl->loadTimer = LOAD_INITIAL;
 
             pl->shootWait = SHOOT_ANIM_TIME;
+            pl->blastTime = BLAST_TIME;
         }
+    }
+
+    // Update blast timer
+    if (pl->blastTime > 0.0f) {
+
+        pl->blastTime -= 1.0f * tm;
     }
 
     // Update load timer
@@ -335,6 +344,7 @@ Player create_player(int x, int y) {
     pl.quickFallJump = false;
     pl.loading = false;
     pl.loadTimer = 0.0f;
+    pl.blastTime = 0.0f;
 
     // Create sprite
     pl.spr = create_sprite(48, 48);
@@ -410,6 +420,8 @@ void pl_draw(Player* pl, Graphics* g) {
         px-24, 
         py-48, false);
     g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+
+    // Draw blast
 
     // Draw bullets
     for (i = 0; i < BULLET_COUNT; ++ i) {
