@@ -9,6 +9,7 @@ static const float HIT_JUMP_TIME = 10.0f;
 static const float JUMP_REACT_MIN_TIME = 1.0f;
 static const float JUMP_EXTEND_TIME = 10.0f;
 static const float DUST_WAIT = 8.0f;
+static const float BLAST_TIME = 10.0f;
 
 
 // Init global data
@@ -242,10 +243,9 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
     const float LOAD_INITIAL = -60.0f;
     const float LOAD_BASE_WAIT = 30.0f;
     const float SPEED_MOD = 0.25f;
-    const float SPEED_NORMAL = 4.0f;
+    const float SPEED_NORMAL = 5.0f;
     const float SPEED_BIG = 3.0f;
     const float SHOOT_ANIM_TIME = 60.0f;
-    const float BLAST_TIME = 10.0f;
 
     const float BULLET_X_OFF = 16;
     const float BULLET_Y_OFF = -21;
@@ -257,9 +257,12 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
     Bullet* b = NULL;
     bool makeBig = 
         pl->loading && 
-        s == StateReleased && 
+        (s == StateReleased || s == StateUp) && 
         pl->loadTimer >= 0.0f;
-    if (pl->blastTime <= 0.0f && (s == StatePressed || makeBig)) {
+    bool djump = pl->speed.y < 0.0f && !pl->doubleJump;
+    if (pl->blastTime <= 0.0f && 
+        !djump &&
+        (s == StatePressed || makeBig)) {
 
         for (i = 0; i < BULLET_COUNT; ++ i) {
 
@@ -302,7 +305,8 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
             pl->loadTimer = fmodf(pl->loadTimer, LOAD_BASE_WAIT);
         }
     
-        if (s == StateReleased || s == StateUp) {
+        if (pl->blastTime <= 0.0f && !djump &&
+            (s == StateReleased || s == StateUp)) {
 
             pl->loading = false;
             pl->loadTimer = LOAD_INITIAL;
@@ -389,6 +393,7 @@ void pl_draw(Player* pl, Graphics* g) {
     const float COMPARE_DELTA = 128;
 
     int i;
+    int frame;
 
     int px = (int)roundf(pl->pos.x);
     int py = (int)roundf(pl->pos.y);
@@ -421,12 +426,19 @@ void pl_draw(Player* pl, Graphics* g) {
         py-48, false);
     g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
 
-    // Draw blast
-
     // Draw bullets
     for (i = 0; i < BULLET_COUNT; ++ i) {
 
         bullet_draw(&pl->bullets[i], g);
+    }
+
+    // Draw blast
+    if (pl->blastTime > 0.0f) {
+
+        frame = 2 - (int) floorf(fabsf(pl->blastTime - BLAST_TIME/2.0f)/(BLAST_TIME/2.0f)*3.0f);
+
+        g_draw_bitmap_region(g, bmpBlast, frame*32, 0, 32, 32,
+            px + 20, py - 40, false);
     }
 }
 

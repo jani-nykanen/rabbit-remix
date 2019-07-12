@@ -71,7 +71,7 @@ static void game_draw(Graphics* g) {
     // Draw player
     pl_draw(&player, g);
 
-    g_draw_text(g, bmpFont, "ALPHA 0.0.1", 2, 2, 0, 0, false);
+    g_draw_text(g, bmpFont, "ALPHA 0.0.5", 2, 2, 0, 0, false);
 }
 
 
