@@ -259,9 +259,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
         pl->loading && 
         (s == StateReleased || s == StateUp) && 
         pl->loadTimer >= 0.0f;
-    bool djump = pl->speed.y < 0.0f && !pl->doubleJump;
     if (pl->blastTime <= 0.0f && 
-        !djump &&
         (s == StatePressed || makeBig)) {
 
         for (i = 0; i < BULLET_COUNT; ++ i) {
@@ -305,7 +303,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
             pl->loadTimer = fmodf(pl->loadTimer, LOAD_BASE_WAIT);
         }
     
-        if (pl->blastTime <= 0.0f && !djump &&
+        if (pl->blastTime <= 0.0f &&
             (s == StateReleased || s == StateUp)) {
 
             pl->loading = false;
@@ -432,8 +430,9 @@ void pl_draw(Player* pl, Graphics* g) {
         bullet_draw(&pl->bullets[i], g);
     }
 
-    // Draw blast
-    if (pl->blastTime > 0.0f) {
+    // Draw blast (if not double jumping)
+    if (pl->blastTime > 0.0f && 
+        !(pl->speed.y < 0.0f && !pl->doubleJump)) {
 
         frame = 2 - (int) floorf(fabsf(pl->blastTime - BLAST_TIME/2.0f)/(BLAST_TIME/2.0f)*3.0f);
 
