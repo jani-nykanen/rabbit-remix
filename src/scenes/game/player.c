@@ -1,5 +1,7 @@
 #include "player.h"
 
+#include "stage.h"
+
 // Shared pointers to bitmaps
 static Bitmap* bmpBunny;
 static Bitmap* bmpBlast;
@@ -371,6 +373,7 @@ Player create_player(int x, int y) {
 // Update player
 void pl_update(Player* pl, EventManager* evMan, float tm) {
 
+
     // Do stuff
     pl_control(pl, evMan, tm);
     pl_move(pl, evMan, tm);
@@ -380,7 +383,7 @@ void pl_update(Player* pl, EventManager* evMan, float tm) {
 
     // TEMP
     // Floor collision
-    pl_jump_collision(pl, 0, 192-16, 256);
+    pl_jump_collision(pl, 0, 192-GROUND_COLLISION_HEIGHT, 256);
 }
 
 
@@ -403,7 +406,7 @@ void pl_draw(Player* pl, Graphics* g) {
     g_set_pixel_function(g, PixelFunctionDarken, 9, 0);
     g_draw_scaled_bitmap_region(g, bmpBunny,
         144, 0, 48, 48, 
-        px-scale/2, 192-16 - scale, 
+        px-scale/2, 192-GROUND_COLLISION_HEIGHT - scale, 
         scale, scale, false);
     g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
 
