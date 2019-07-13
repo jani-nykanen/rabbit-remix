@@ -10,7 +10,7 @@
 #include <engine/assets.h>
 
 // Sorry
-#define GROUND_COLLISION_HEIGHT 18
+#define GROUND_COLLISION_HEIGHT 21
 
 // Stage type
 typedef struct {

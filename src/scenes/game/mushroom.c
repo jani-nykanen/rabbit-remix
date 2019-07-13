@@ -3,13 +3,15 @@
 // Bitmaps
 static Bitmap* bmpMushroom;
 
+// Constants
+static const float BOUNCE_WAIT = 20.0f;
+
 
 // Initialize global content
 void init_global_mushrooms(AssetManager* a) {
 
-    bmpMushroom = (Bitmap*)assets_get(a, "mushroom");
+    bmpMushroom = (Bitmap*)assets_get(a, "mushrooms");
 }
-
 
 
 // Create a mushroom
@@ -31,10 +33,15 @@ void mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
 
     m->exist = true;
     
+    // Set initials
+    m->bounceTimer = 0.0f;
+
+    // Set dimensions
     int w = 64;
     int h = 32;
-
     m->spr = create_sprite(w, h);
+    m->spr.row = m->majorType;
+    m->spr.frame = m->minorType * 2;
 }
 
 
@@ -45,8 +52,19 @@ void mush_update(Mushroom* m, float globalSpeed, float tm) {
 
     if (!m->exist) return;
 
+    // Update bounce timer
+    if (m->bounceTimer > 0.0) {
+
+        m->bounceTimer -= 1.0f * tm;
+        m->spr.frame = m->minorType * 2 +1;
+    }
+    else {
+
+        m->spr.frame = m->minorType * 2;
+    }
+
     // Move
-    m->pos.x += globalSpeed * tm;
+    m->pos.x -= globalSpeed * tm;
     if (m->pos.x+STOP_RADIUS < 0) {
 
         m->exist = false;
@@ -54,13 +72,84 @@ void mush_update(Mushroom* m, float globalSpeed, float tm) {
 }
 
 
-// Draw a mushroom
-void mush_draw(Mushroom* m, Graphics* g) {
+// Player collision
+void mush_player_collision(Mushroom* m, Player* pl) {
+
+    const float HEIGHT_MUL = 0.70f;
+    const float SPEED_BASE = 3.0f;
+    const float POWERS[] = {
+        8.0f
+    };
 
     if (!m->exist) return;
 
-    int px = (int) (m->pos.x-m->spr.width/2);
-    int py = (int) (m->pos.y-m->spr.height);
+    float mul = pl->speed.y / SPEED_BASE;
 
-    spr_draw(&m->spr, g, bmpMushroom, px, py, false);
+    if (pl_jump_collision(
+        pl,
+        m->pos.x-m->spr.width/2.0f,
+        m->pos.y-m->spr.height * HEIGHT_MUL,
+        m->spr.width,
+        POWERS[m->majorType] )) {
+            
+        m->bounceTimer = BOUNCE_WAIT * mul;
+    }
+}
+
+
+// Draw a mushroom
+void mush_draw(Mushroom* m, Graphics* g) {
+
+    const int SHADOW_Y_OFF = 6;
+    const int SHADOW_DARK_VALUE = 5;
+    const float SCALE_MOD = 0.2f;
+
+    if (!m->exist) return;
+
+    int px = (int) roundf(m->pos.x-m->spr.width/2);
+    int py = (int) roundf(m->pos.y-m->spr.height);
+    int oy = py;
+    int sx, sy;
+    float t;
+
+    // Draw base mushroom
+    if (m->bounceTimer > 0.0f) {
+
+        t = m->bounceTimer / BOUNCE_WAIT;
+        sx = (int) (m->spr.width* (1.0f+t*SCALE_MOD));
+        sy = (int) (m->spr.height*(1.0f-t*SCALE_MOD));
+
+        px -= (sx - m->spr.width) / 2; 
+        py -= (sy - m->spr.height);
+
+        // Draw scaled shadow
+        g_set_pixel_function(g, 
+            PixelFunctionDarken, 
+            SHADOW_DARK_VALUE, 0);
+        spr_draw_scaled_frame(&m->spr, g, bmpMushroom, 
+            px, 
+            oy+SHADOW_Y_OFF, 
+            2, m->spr.row, sx, m->spr.height, false);
+        g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+
+        // Draw scaled sprite
+        spr_draw_scaled(&m->spr, 
+            g, bmpMushroom, px, py, 
+            sx, sy, false);
+    }
+    else {
+
+        // Draw shadow
+        g_set_pixel_function(g, 
+            PixelFunctionDarken, 
+            SHADOW_DARK_VALUE, 0);
+        spr_draw_frame(&m->spr, g, bmpMushroom, 
+            px, 
+            py+SHADOW_Y_OFF, 
+            2, m->spr.row, false);
+        g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+
+        // Draw sprite
+        spr_draw(&m->spr, g, bmpMushroom, px, py, false);
+    }
 }

@@ -1,5 +1,7 @@
 #include "player.h"
 
+#include <engine/mathext.h>
+
 #include "stage.h"
 
 // Shared pointers to bitmaps
@@ -7,11 +9,11 @@ static Bitmap* bmpBunny;
 static Bitmap* bmpBlast;
 
 // Constants
-static const float HIT_JUMP_TIME = 10.0f;
 static const float JUMP_REACT_MIN_TIME = 1.0f;
 static const float JUMP_EXTEND_TIME = 10.0f;
 static const float DUST_WAIT = 8.0f;
 static const float BLAST_TIME = 10.0f;
+static const float GRAVITY_TARGET = 3.0f;
 
 
 // Init global data
@@ -46,13 +48,12 @@ static void update_axis(float* axis,
 // Control
 static void pl_control(Player* pl, EventManager* evMan, float tm) {
 
-    const float GRAVITY_TARGET = 3.0f;
     const float MOVE_TARGET = 1.5f;
     const float FLAP_SPEED = 0.5f;
     const float DJUMP_TIME = 8.0f;
 
     const float QUICK_FALL_EPS = 0.5f;
-    const float QUICK_FALL_MUL = 2.0f;
+    const float QUICK_FALL_MUL = 1.5f;
 
     // Set target speed
     pl->target.x = evMan->vpad->stick.x * MOVE_TARGET;
@@ -88,7 +89,8 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
             
         pl->jumpTimer = DJUMP_TIME;
         pl->doubleJump = false;
-        pl->quickFallJump = false;
+
+        pl->jumpSpeedMul = 1.0f;
     }
 
     // Stop jumping
@@ -100,7 +102,6 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
         }
 
         pl->jumpTimer = 0.0f;
-        pl->quickFallJump = false;
     }
 
     // Flapping
@@ -119,24 +120,14 @@ static void pl_move(Player* pl, EventManager* evMan, float tm) {
     const float ACC_X = 0.20f;
     const float ACC_Y = 0.1f;
     const float SCREEN_OFF = 16;
-    const float JUMP_SPEED = -3.0f;
-    const float QUICK_JUMP_MUL = 1.25f;
+    const float JUMP_SPEED = -2.5f;
 
     // Check double jump timer
     if (pl->jumpTimer > 0.0f) {
 
         pl->jumpTimer -= 1.0f * tm;
-        pl->speed.y = JUMP_SPEED;
-        if (pl->quickFallJump) {
-
-            pl->speed.y *= QUICK_JUMP_MUL;
-        }
+        pl->speed.y = JUMP_SPEED * pl->jumpSpeedMul;
         pl->target.y = pl->speed.y;
-
-        if (pl->jumpTimer <= 0.0f) {
-
-            pl->quickFallJump = false;
-        }
     }
 
     // Store old position
@@ -345,10 +336,11 @@ Player create_player(int x, int y) {
     pl.djumpReleased = false;
     pl.extendJump = false;
     pl.quickFall = false;
-    pl.quickFallJump = false;
     pl.loading = false;
     pl.loadTimer = 0.0f;
     pl.blastTime = 0.0f;
+    pl.dustTimer = 0.0f;
+    pl.jumpSpeedMul = 1.0f;
 
     // Create sprite
     pl.spr = create_sprite(48, 48);
@@ -383,18 +375,17 @@ void pl_update(Player* pl, EventManager* evMan, float tm) {
 
     // TEMP
     // Floor collision
-    pl_jump_collision(pl, 0, 192-GROUND_COLLISION_HEIGHT, 256);
+    pl_jump_collision(pl, 0, 192-GROUND_COLLISION_HEIGHT, 256, 10.0f);
 }
 
 
-// Draw player
-void pl_draw(Player* pl, Graphics* g) {
+// Draw the player shadow
+void pl_draw_shadow(Player* pl, Graphics* g) {
 
     const float SHADOW_SCALE_COMPARE = 176+128;
     const float COMPARE_DELTA = 128;
-
-    int i;
-    int frame;
+    const int SHADOW_MOVE_Y = 3;
+    const int SHADOW_DARK_VALUE = 5;
 
     int px = (int)roundf(pl->pos.x);
     int py = (int)roundf(pl->pos.y);
@@ -403,12 +394,26 @@ void pl_draw(Player* pl, Graphics* g) {
     int scale = (int)((pl->pos.y+COMPARE_DELTA)/
         SHADOW_SCALE_COMPARE *48.0f);
 
-    g_set_pixel_function(g, PixelFunctionDarken, 9, 0);
+    g_set_pixel_function(g, 
+        PixelFunctionDarken, 
+        SHADOW_DARK_VALUE, 0);
     g_draw_scaled_bitmap_region(g, bmpBunny,
         144, 0, 48, 48, 
-        px-scale/2, 192-GROUND_COLLISION_HEIGHT - scale, 
+        px-scale/2, 
+        192-GROUND_COLLISION_HEIGHT+SHADOW_MOVE_Y - scale, 
         scale, scale, false);
     g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+}
+
+
+// Draw player
+void pl_draw(Player* pl, Graphics* g) {
+
+    int i;
+    int frame;
+
+    int px = (int)roundf(pl->pos.x);
+    int py = (int)roundf(pl->pos.y);
 
     // Draw dust
     for (i = 0; i < DUST_COUNT; ++ i) {
@@ -446,9 +451,11 @@ void pl_draw(Player* pl, Graphics* g) {
 
 
 // Jump collision
-void pl_jump_collision(Player* pl, float x, float y, float w) {
+bool pl_jump_collision(Player* pl, float x, float y, float w, float power) {
 
-    const float HIT_JUMP_HEIGHT = -4.0f;
+    const float JUMP_SPEED_MUL_FACTOR = 0.5f;
+
+    float mul = pl->speed.y / GRAVITY_TARGET;
 
     if (pl->speed.y > 0.0f &&
         pl->pos.x > x && pl->pos.x < x+w &&
@@ -461,13 +468,13 @@ void pl_jump_collision(Player* pl, float x, float y, float w) {
         pl->djumpReleased = false;
         pl->extendJump = false;
 
-        pl->jumpTimer = HIT_JUMP_TIME;
-
-        // Check quick fall
-        if (pl->quickFall) {
-
-            pl->quickFallJump = true;
-        }
+        pl->jumpTimer = power * mul;
         pl->quickFall = false;
+
+        pl->jumpSpeedMul = 1.0f + (mul-1.0f)*JUMP_SPEED_MUL_FACTOR;
+
+        return true;
     }
+
+    return false;
 }

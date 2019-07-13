@@ -33,13 +33,13 @@ typedef struct {
 
     // Jump variables
     float jumpTimer;
+    float jumpSpeedMul;
     bool extendJump;
     bool doubleJump;
     bool djumpReleased;
     bool flapping;
     // Falling
     bool quickFall;
-    bool quickFallJump;
 
     // Sprite
     Sprite spr;
@@ -64,10 +64,13 @@ Player create_player(int x, int y);
 // Update player
 void pl_update(Player* pl, EventManager* evMan, float tm);
 
+// Draw the player shadow
+void pl_draw_shadow(Player* pl, Graphics* g);
+
 // Draw player
 void pl_draw(Player* pl, Graphics* g);
 
 // Jump collision
-void pl_jump_collision(Player* pl, float x, float y, float w);
+bool pl_jump_collision(Player* pl, float x, float y, float w, float power);
 
 #endif // __PLAYER__

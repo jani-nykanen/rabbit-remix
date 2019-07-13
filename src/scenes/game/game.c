@@ -5,12 +5,16 @@
 #include <engine/mathext.h>
 
 #include <stdlib.h>
+#include <time.h>
 
 #include "stage.h"
 #include "player.h"
 #include "mushroom.h"
 
 #define MUSHROOM_COUNT 8
+
+// Constants
+static const float MUSHROOM_GEN_TIME = 90.0f;
 
 // Bitmaps
 static Bitmap* bmpFont;
@@ -20,15 +24,54 @@ static Stage stage;
 static Player player;
 static Mushroom mushrooms [MUSHROOM_COUNT];
 
+// Mushroom timer & stuff
+static float mushroomTimer;
+
 // Global speed
 static float globalSpeed;
 
 
+// Update mushroom generator
+static void update_mushroom_generator(float globalSpeed, float tm) {
+
+    const float X_OFF = 64;
+    const int TIME_VARY_MIN = -30;
+    const int TIME_VARY_MAX = 90;
+
+    int i;
+    Mushroom* m = NULL;
+
+    // Update & check the timer
+    if ((mushroomTimer -= globalSpeed * tm) <= 0.0f) {
+
+        // Find the first mushroom that is not active
+        for (i = 0; i < MUSHROOM_COUNT; ++ i) {
+
+            if (mushrooms[i].exist == false) {
+
+                m = &mushrooms[i];
+                break;
+            }
+        }
+        if (m == NULL) return;
+
+        // Create the mushroom to the screen
+        mush_activate(m, vec2(256+X_OFF, 192-GROUND_COLLISION_HEIGHT), 0, 0);
+
+        mushroomTimer += MUSHROOM_GEN_TIME +
+            (float) ( (rand() % (TIME_VARY_MAX-TIME_VARY_MIN)) + TIME_VARY_MIN);
+    }
+}
+
+
 // Initialize
 static int game_init(void* e) {
-    
+
+    srand(time(NULL));
+
     return 0;
 }
+
 
 
 // On load
@@ -53,6 +96,7 @@ static int game_on_load(AssetManager* a) {
 
     // Set initials
     globalSpeed = 1.0f;
+    mushroomTimer = 0.0f;
 
     return 0;
 }
@@ -61,10 +105,15 @@ static int game_on_load(AssetManager* a) {
 // Update
 static void game_update(void* e, float tm) {
 
+    // Needed to get proper movement speed
+    // for the moving objects
+    const float PERSPECTIVE_SPEED_MUL = 1.1f;
+
     EventManager* evMan = (EventManager*)e;
     if (evMan->tr->active) return;
 
     int i;
+    float speed = globalSpeed * PERSPECTIVE_SPEED_MUL;
 
     // Update stage
     stage_update(&stage, globalSpeed, tm);
@@ -72,10 +121,13 @@ static void game_update(void* e, float tm) {
     // Update player
     pl_update(&player, evMan, tm);
 
+    // Update mushroom generator
+    update_mushroom_generator(speed, tm);
     // Update mushrooms
     for (i = 0; i < MUSHROOM_COUNT; ++ i) {
 
-        mush_update(&mushrooms[i], globalSpeed, tm);
+        mush_update(&mushrooms[i], speed, tm);
+        mush_player_collision(&mushrooms[i], &player);
     }
 }
 
@@ -90,6 +142,9 @@ static void game_draw(Graphics* g) {
     // Draw stage
     stage_draw(&stage, g);
 
+    // Draw player shadow
+    pl_draw_shadow(&player, g);
+
     // Update mushrooms
     for (i = 0; i < MUSHROOM_COUNT; ++ i) {
 
@@ -99,7 +154,7 @@ static void game_draw(Graphics* g) {
     // Draw player
     pl_draw(&player, g);
 
-    g_draw_text(g, bmpFont, "ALPHA 0.0.5", 2, 2, 0, 0, false);
+    g_draw_text(g, bmpFont, "ALPHA 0.0.9", 2, 2, 0, 0, false);
 }
 
 

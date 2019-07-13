@@ -25,6 +25,9 @@ typedef struct {
     // Minor type (=column)
     int minorType;
 
+    // "Bounce" timer & stuff
+    float bounceTimer;
+
     // Sprite
     Sprite spr;
 
@@ -41,6 +44,9 @@ void mush_activate(Mushroom* m, Vector2 pos, int major, int minor);
 
 // Update a mushroom
 void mush_update(Mushroom* m, float globalSpeed, float tm);
+
+// Player collision
+void mush_player_collision(Mushroom* m, Player* pl);
 
 // Draw a mushroom
 void mush_draw(Mushroom* m, Graphics* g);

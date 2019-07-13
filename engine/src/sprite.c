@@ -76,7 +76,7 @@ void spr_draw_frame(Sprite* s, Graphics* g, Bitmap* bmp,
     int x, int y, int frame, int row, bool flip) {
 
     g_draw_bitmap_region(g, bmp, 
-        s->frame*s->width, s->row*s->height, 
+        frame*s->width, row*s->height, 
         s->width, s->height, x, y, flip);
 }
 
@@ -86,4 +86,23 @@ void spr_draw(Sprite* s, Graphics* g, Bitmap* bmp,
     int x, int y, bool flip) {
 
     spr_draw_frame(s, g, bmp, x, y, s->frame, s->row, flip);
+}
+
+
+// Draw scaled sprite frame
+void spr_draw_scaled_frame(Sprite* s, Graphics* g, Bitmap* bmp, 
+    int x, int y, int frame, int row, int sx, int sy, bool flip) {
+
+    g_draw_scaled_bitmap_region(g, bmp, 
+        frame*s->width, row*s->height, 
+        s->width, s->height, x, y, sx, sy, flip);
+}
+
+
+// Draw scaled sprite
+void spr_draw_scaled(Sprite* s, Graphics* g, Bitmap* bmp, 
+    int x, int y, int sx, int sy, bool flip) {
+
+    spr_draw_scaled_frame(s, g, bmp, 
+        x, y, s->frame, s->row, sx, sy, flip);
 }
