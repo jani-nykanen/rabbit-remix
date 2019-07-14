@@ -37,18 +37,34 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     const float X_OFF = 64;
     const int TIME_VARY_MIN = -30;
     const int TIME_VARY_MAX = 90;
-    const int MAJOR_MAX = 4;
+    const int MAJOR_MAX = 6;
 
     int i;
     int minor, major;
     float wait = 1.0f;
     Mushroom* m = NULL;
 
+    int dir = 1;
+    int end = MUSHROOM_COUNT-1;
+    int begin = 0;
+
     // Update & check the timer
     if ((mushroomTimer -= globalSpeed * tm) <= 0.0f) {
 
+        // Determine types
+        minor = 0;
+        major = rand() % MAJOR_MAX;
+
+        // If flying forward, make sure it is drawn last
+        if (major == 5) {
+
+            dir = -1;
+            begin = end;
+            end = 0;
+        }
+
         // Find the first mushroom that is not active
-        for (i = 0; i < MUSHROOM_COUNT; ++ i) {
+        for (i = begin; i != end; i += dir) {
 
             if (mushrooms[i].exist == false) {
 
@@ -57,10 +73,6 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
             }
         }
         if (m == NULL) return;
-
-        // Determine types
-        minor = 0;
-        major = rand() % MAJOR_MAX;
 
         // Create the mushroom to the screen
         wait = mush_activate(m, vec2(256+X_OFF, 192-GROUND_COLLISION_HEIGHT), 
@@ -153,16 +165,24 @@ static void game_draw(Graphics* g) {
     // Draw player shadow
     pl_draw_shadow(&player, g);
 
-    // Update mushrooms
+    // Draw "normal" mushrooms
     for (i = 0; i < MUSHROOM_COUNT; ++ i) {
 
-        mush_draw(&mushrooms[i], g);
+        if (mushrooms[i].majorType != 5)
+            mush_draw(&mushrooms[i], g);
+    }
+
+    // Draw flying mushrooms
+    for (i = 0; i < MUSHROOM_COUNT; ++ i) {
+
+        if (mushrooms[i].majorType == 5)
+            mush_draw(&mushrooms[i], g);
     }
 
     // Draw player
     pl_draw(&player, g);
 
-    g_draw_text(g, bmpFont, "ALPHA 0.0.9", 2, 2, 0, 0, false);
+    g_draw_text(g, bmpFont, "ALPHA 0.1.0", 2, 2, 0, 0, false);
 }
 
 

@@ -33,6 +33,10 @@ typedef struct {
     float jumpTimer;
     float gravity;
 
+    // Flying
+    float wave;
+    float middlePos;
+
     // Sprite
     Sprite spr;
 
