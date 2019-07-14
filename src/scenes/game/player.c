@@ -341,6 +341,7 @@ Player create_player(int x, int y) {
     pl.blastTime = 0.0f;
     pl.dustTimer = 0.0f;
     pl.jumpSpeedMul = 1.0f;
+    pl.shootWait = 0.0f;
 
     // Create sprite
     pl.spr = create_sprite(48, 48);
@@ -420,6 +421,15 @@ void pl_draw(Player* pl, Graphics* g) {
 
         dust_draw(&pl->dust[i], g, bmpBunny, 255);
     }
+    
+    // Draw gun behind the bunny while 
+    // double jumping
+    if (pl->doubleJump == false && pl->speed.y < 0.0f
+        && pl->shootWait > 0.0f ) {
+
+        spr_draw_frame(&pl->spr, g, 
+            bmpBunny, px-24, py-48, 3, 1, false);
+    }
 
     // Draw sprite
     if (pl->loading && pl->loadTimer > 0.0f && 
@@ -438,11 +448,12 @@ void pl_draw(Player* pl, Graphics* g) {
         bullet_draw(&pl->bullets[i], g);
     }
 
-    // Draw blast (if not double jumping)
-    if (pl->blastTime > 0.0f && 
-        !(pl->speed.y < 0.0f && !pl->doubleJump)) {
+    // Draw blast
+    if (pl->blastTime > 0.0f) {
 
-        frame = 2 - (int) floorf(fabsf(pl->blastTime - BLAST_TIME/2.0f)/(BLAST_TIME/2.0f)*3.0f);
+        frame = 2 - (int) floorf(
+            fabsf(pl->blastTime - BLAST_TIME/2.0f) /
+            (BLAST_TIME/2.0f)*3.0f);
 
         g_draw_bitmap_region(g, bmpBlast, frame*32, 0, 32, 32,
             px + 20, py - 40, false);

@@ -20,6 +20,7 @@ typedef struct {
 
     // Position
     Vector2 pos;
+    Vector2 startPos;
     // Major type (=row)
     int majorType;
     // Minor type (=column)
@@ -27,6 +28,10 @@ typedef struct {
 
     // "Bounce" timer & stuff
     float bounceTimer;
+
+    // Jumping (for mushrooms that jump)
+    float jumpTimer;
+    float gravity;
 
     // Sprite
     Sprite spr;

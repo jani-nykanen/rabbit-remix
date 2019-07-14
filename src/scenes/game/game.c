@@ -37,7 +37,7 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     const float X_OFF = 64;
     const int TIME_VARY_MIN = -30;
     const int TIME_VARY_MAX = 90;
-    const int MAJOR_MAX = 3;
+    const int MAJOR_MAX = 4;
 
     int i;
     int minor, major;
