@@ -50,7 +50,7 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
 
     const float MOVE_TARGET = 1.5f;
     const float FLAP_SPEED = 0.5f;
-    const float DJUMP_TIME = 8.0f;
+    const float DJUMP_TIME = 7.0f;
 
     const float QUICK_FALL_EPS = 0.5f;
     const float QUICK_FALL_MUL = 1.5f;
@@ -120,7 +120,7 @@ static void pl_move(Player* pl, EventManager* evMan, float tm) {
     const float ACC_X = 0.20f;
     const float ACC_Y = 0.1f;
     const float SCREEN_OFF = 16;
-    const float JUMP_SPEED = -2.5f;
+    const float JUMP_SPEED = -2.75f;
 
     // Check double jump timer
     if (pl->jumpTimer > 0.0f) {

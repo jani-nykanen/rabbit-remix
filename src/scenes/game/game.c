@@ -37,8 +37,11 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     const float X_OFF = 64;
     const int TIME_VARY_MIN = -30;
     const int TIME_VARY_MAX = 90;
+    const int MAJOR_MAX = 3;
 
     int i;
+    int minor, major;
+    float wait = 1.0f;
     Mushroom* m = NULL;
 
     // Update & check the timer
@@ -55,10 +58,15 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
         }
         if (m == NULL) return;
 
-        // Create the mushroom to the screen
-        mush_activate(m, vec2(256+X_OFF, 192-GROUND_COLLISION_HEIGHT), 0, 0);
+        // Determine types
+        minor = 0;
+        major = rand() % MAJOR_MAX;
 
-        mushroomTimer += MUSHROOM_GEN_TIME +
+        // Create the mushroom to the screen
+        wait = mush_activate(m, vec2(256+X_OFF, 192-GROUND_COLLISION_HEIGHT), 
+            major, minor);
+
+        mushroomTimer += wait * MUSHROOM_GEN_TIME +
             (float) ( (rand() % (TIME_VARY_MAX-TIME_VARY_MIN)) + TIME_VARY_MIN);
     }
 }

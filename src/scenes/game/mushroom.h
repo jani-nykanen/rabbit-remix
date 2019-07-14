@@ -40,7 +40,7 @@ typedef struct {
 Mushroom create_mushroom();
 
 // Activate a mushroom
-void mush_activate(Mushroom* m, Vector2 pos, int major, int minor);
+float mush_activate(Mushroom* m, Vector2 pos, int major, int minor);
 
 // Update a mushroom
 void mush_update(Mushroom* m, float globalSpeed, float tm);

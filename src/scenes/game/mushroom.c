@@ -25,7 +25,21 @@ Mushroom create_mushroom() {
 
 
 // Activate a mushroom
-void mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
+float mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
+
+    const float WAIT_MOD[] = {
+        1.0f, 1.25f, 1.0f
+    };
+
+    const int WIDTHS[] = {
+        64, 96, 64,
+    };
+    const int HEIGHTS[] = {
+        32, 32, 64
+    };
+    const int ROW[] = {
+        0, 1, 1
+    };
 
     m->pos = pos;
     m->majorType = major;
@@ -37,11 +51,13 @@ void mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
     m->bounceTimer = 0.0f;
 
     // Set dimensions
-    int w = 64;
-    int h = 32;
+    int w = WIDTHS[major];
+    int h = HEIGHTS[major];
     m->spr = create_sprite(w, h);
-    m->spr.row = m->majorType;
+    m->spr.row = ROW[m->majorType];
     m->spr.frame = m->minorType * 2;
+
+    return WAIT_MOD[major];
 }
 
 
@@ -78,7 +94,7 @@ void mush_player_collision(Mushroom* m, Player* pl) {
     const float HEIGHT_MUL = 0.70f;
     const float SPEED_BASE = 3.0f;
     const float POWERS[] = {
-        8.0f
+        7.0f, 6.0f, 8.0f,
     };
 
     if (!m->exist) return;
