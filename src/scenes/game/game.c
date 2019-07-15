@@ -76,6 +76,8 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     const int TIME_VARY_MIN = -30;
     const int TIME_VARY_MAX = 60;
     const int MAJOR_MAX = 6;
+    // To make sure two jumping mushrooms etc.
+    // spawn at the same time
     const int PROHIBIT_WAIT = 3;
 
     int i;
@@ -249,7 +251,7 @@ static void game_draw(Graphics* g) {
     // Draw player
     pl_draw(&player, g);
 
-    g_draw_text(g, bmpFont, "ALPHA 0.1.0", 2, 2, 0, 0, false);
+    g_draw_text(g, bmpFont, "ALPHA 0.1.2", 2, 2, 0, 0, false);
 }
 
 

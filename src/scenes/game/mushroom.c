@@ -9,6 +9,7 @@ static Bitmap* bmpMushroom;
 
 // Constants
 static const float BOUNCE_WAIT = 20.0f;
+static const float DEATH_TIME = 30.0f;
 
 
 // Initialize global content
@@ -167,13 +168,15 @@ float mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
     m->dir = pos.x < 128 ? -1 : 1;
     m->flip = m->dir < 0;
     m->middlePos = 0.0f;
+    m->deathTimer = DEATH_TIME;
+    m->dying = false;
 
     // Set dimensions
     int w = WIDTHS[major];
     int h = HEIGHTS[major];
     m->spr = create_sprite(w, h);
     m->spr.row = ROW[m->majorType];
-    m->spr.frame = 0; // m->minorType * 2;
+    m->spr.frame = 0;
 
     // Jumping mushroom
     if (major == 3 && minor == 1) {
@@ -204,6 +207,23 @@ void mush_update(Mushroom* m, float globalSpeed, float tm) {
     bool spc = m->majorType == 3 || 
         m->majorType == 4 || 
         m->majorType == 5;
+
+    // Update death
+    if (m->dying) {
+
+        // Move
+        m->pos.x -= globalSpeed * m->dir * tm;
+        // Set frame
+        m->spr.frame = m->minorType * 3 +1;
+
+        // Update timer
+        if ((m->deathTimer -= 1.0f * tm) <= 0.0f) {
+
+            m->dying = false;
+            m->exist = false;
+        }
+        return;
+    }
 
     // Update bounce timer
     if (m->bounceTimer > 0.0) {
@@ -247,7 +267,7 @@ void mush_player_collision(Mushroom* m, Player* pl) {
         7.0f, 9.0f, 6.0f, 7.0f, 7.0f, 7.0f,
     };
 
-    if (!m->exist) return;
+    if (!m->exist || m->dying) return;
 
     float mul = pl->speed.y / SPEED_BASE;
 
@@ -260,6 +280,11 @@ void mush_player_collision(Mushroom* m, Player* pl) {
             
         m->bounceTimer = BOUNCE_WAIT * mul;
         m->gravity = fabsf(m->gravity);
+
+        // Die if golden mushroom
+        if (m->minorType == 1 && 
+            (m->majorType == 0 || m->majorType == 2))
+            m->dying = true;
     }
 }
 
@@ -287,6 +312,7 @@ void mush_draw(Mushroom* m, Graphics* g) {
 
     int px = (int) roundf(m->pos.x-m->spr.width/2);
     int py = (int) roundf(m->pos.y-m->spr.height);
+    int ox = px;
     int oy = (int) roundf(m->startPos.y-m->spr.height);
     int sx, sy;
     int shadowScaleX, shadowScaleY;
@@ -294,14 +320,28 @@ void mush_draw(Mushroom* m, Graphics* g) {
     float t;
 
     // Draw base mushroom
-    if (m->bounceTimer > 0.0f) {
+    if (m->bounceTimer > 0.0f || m->dying) {
 
-        t = m->bounceTimer / BOUNCE_WAIT;
-        sx = (int) (m->spr.width* (1.0f+t*SCALE_MOD));
-        sy = (int) (m->spr.height*(1.0f-t*SCALE_MOD));
+        if (m->dying) {
 
-        shadowScaleX = (int) (m->spr.width  * st) * (1.0f+t*SCALE_MOD);
-        shadowScaleY = (int) (m->spr.height * st);
+            t = m->deathTimer / DEATH_TIME;
+            sx = (int) (m->spr.width * t);
+            sy = (int) (m->spr.height* t);
+
+            shadowScaleX = sx;
+            shadowScaleY = sy;
+
+            st = t;
+        }
+        else {
+
+            t = m->bounceTimer / BOUNCE_WAIT;
+            sx = (int) (m->spr.width* (1.0f+t*SCALE_MOD));
+            sy = (int) (m->spr.height*(1.0f-t*SCALE_MOD));
+
+            shadowScaleX = (int) (m->spr.width  * st) * (1.0f+t*SCALE_MOD);
+            shadowScaleY = (int) (m->spr.height * st);
+        }
 
         px -= (sx - m->spr.width) / 2; 
         py -= (sy - m->spr.height);
@@ -311,7 +351,7 @@ void mush_draw(Mushroom* m, Graphics* g) {
             PixelFunctionDarken, 
             SHADOW_DARK_VALUE, 0);
         spr_draw_scaled_frame(&m->spr, g, bmpMushroom, 
-            px - (shadowScaleX - m->spr.width) / 2, 
+            ox - (shadowScaleX - m->spr.width) / 2, 
             oy - (shadowScaleY - m->spr.height) + SHADOW_Y_OFF*st, 
             SHADOW_FRAME[m->majorType], 
             m->spr.row, shadowScaleX, shadowScaleY, false);

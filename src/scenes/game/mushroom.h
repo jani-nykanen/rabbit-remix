@@ -44,6 +44,9 @@ typedef struct {
 
     // Does exist
     bool exist;
+    // Dying
+    float deathTimer;
+    bool dying;
 
 } Mushroom;
 
