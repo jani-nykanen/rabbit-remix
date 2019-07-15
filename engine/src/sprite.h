@@ -6,7 +6,7 @@
 #ifndef __SPRITE__
 #define __SPRITE__
 
-#include <engine/graphics.h>
+#include "graphics.h"
 
 // Sprite type
 typedef struct  
