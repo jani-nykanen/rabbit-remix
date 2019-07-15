@@ -36,9 +36,11 @@ typedef struct {
     // Flying
     float wave;
     float middlePos;
+    int dir;
 
     // Sprite
     Sprite spr;
+    bool flip;
 
     // Does exist
     bool exist;

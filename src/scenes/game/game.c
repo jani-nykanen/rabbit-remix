@@ -26,6 +26,9 @@ static Mushroom mushrooms [MUSHROOM_COUNT];
 
 // Mushroom timer & stuff
 static float mushroomTimer;
+// Make sure a special type mushroom
+// won't appear until this counter hits 0
+static int prohibitSpecialCount;
 
 // Global speed
 static float globalSpeed;
@@ -36,8 +39,9 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
 
     const float X_OFF = 64;
     const int TIME_VARY_MIN = -30;
-    const int TIME_VARY_MAX = 90;
+    const int TIME_VARY_MAX = 60;
     const int MAJOR_MAX = 6;
+    const int PROHIBIT_WAIT = 3;
 
     int i;
     int minor, major;
@@ -48,12 +52,19 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     int end = MUSHROOM_COUNT-1;
     int begin = 0;
 
+    float x;
+
     // Update & check the timer
     if ((mushroomTimer -= globalSpeed * tm) <= 0.0f) {
 
         // Determine types
         minor = 0;
         major = rand() % MAJOR_MAX;
+        if ((-- prohibitSpecialCount < 0) && (major == 5 || major == 3) ) {
+
+            minor = rand () % 2;
+            prohibitSpecialCount = PROHIBIT_WAIT;
+        }
 
         // If flying forward, make sure it is drawn last
         if (major == 5) {
@@ -74,12 +85,23 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
         }
         if (m == NULL) return;
 
+        // Determine start pos
+        x = 256+X_OFF;
+        if ( (major == 5 || major == 3) && minor == 1) {
+
+            x -= (256 + X_OFF*2);
+        }
+
         // Create the mushroom to the screen
-        wait = mush_activate(m, vec2(256+X_OFF, 192-GROUND_COLLISION_HEIGHT), 
+        wait = mush_activate(m, vec2(x, 
+            192-GROUND_COLLISION_HEIGHT), 
             major, minor);
 
-        mushroomTimer += wait * MUSHROOM_GEN_TIME +
-            (float) ( (rand() % (TIME_VARY_MAX-TIME_VARY_MIN)) + TIME_VARY_MIN);
+        // Special case: forward jumping
+        // mushroom, no wait time
+        mushroomTimer += max_float_2(0.0f, wait * MUSHROOM_GEN_TIME +
+            (float) ( (rand() % (TIME_VARY_MAX-TIME_VARY_MIN)) 
+            + TIME_VARY_MIN));
     }
 }
 
@@ -117,6 +139,7 @@ static int game_on_load(AssetManager* a) {
     // Set initials
     globalSpeed = 1.0f;
     mushroomTimer = 0.0f;
+    prohibitSpecialCount = 0;
 
     return 0;
 }

@@ -19,13 +19,14 @@ void init_global_mushrooms(AssetManager* a) {
 
 
 // Update jump
-static void mush_update_jump(Mushroom* m, float tm) {
+static void mush_update_jump(Mushroom* m, float globalSpeed, float tm) {
 
     const float MAX_GRAVITY = 3.0f;
     const float GRAVITY_DELTA = 0.15f;
     const float JUMP_WAIT = 30.0f;
     const float JUMP_HEIGHT_MAX = -4.5f;
     const float JUMP_HEIGHT_MIN = -3.5f;
+    const float FORWARD_JUMP_SPEED = 0.5f;
 
     if (m->majorType == 3) {
 
@@ -42,6 +43,9 @@ static void mush_update_jump(Mushroom* m, float tm) {
                     ((float)(rand() % 100))/100.0f * 
                     (JUMP_HEIGHT_MAX-JUMP_HEIGHT_MIN) + JUMP_HEIGHT_MIN;
             }
+
+            if (m->dir < 0)
+                m->pos.x -= globalSpeed*2 * tm;
         }
         // Jumping
         else {
@@ -62,6 +66,10 @@ static void mush_update_jump(Mushroom* m, float tm) {
                 m->pos.y = m->startPos.y;
                 m->jumpTimer = JUMP_WAIT;
             }
+
+            // Increase movement
+            if (m->dir < 0)
+                m->pos.x += FORWARD_JUMP_SPEED * tm;
         }
     }
 }
@@ -93,7 +101,8 @@ static void mush_fly_stationary(Mushroom* m, float tm) {
 // Fly, forward
 static void mush_fly_forward(Mushroom* m, float globalSpeed, float tm) {
 
-    const float SPEED_MUL = 0.5f;
+    const float SPEED_MUL_RIGHT = 0.5f;
+    const float SPEED_MUL_LEFT = 0.5f;
     const float ANIM_SPEED = 6.0f;
     const float WAVE_SPEED = 0.1f;
     const float AMPLITUDE = 8.0f;
@@ -103,8 +112,12 @@ static void mush_fly_forward(Mushroom* m, float globalSpeed, float tm) {
     // Animate
     spr_animate(&m->spr, m->spr.row, 0, 3, ANIM_SPEED, tm);
 
-    // Move
-    m->pos.x -= SPEED_MUL * globalSpeed * tm;
+    // Reduce movement
+    if (m->dir < 0)
+        m->pos.x -= SPEED_MUL_RIGHT * (globalSpeed-1.1f) * tm;
+    else 
+        m->pos.x -= SPEED_MUL_LEFT * globalSpeed * tm;
+    
 }
 
 
@@ -151,16 +164,25 @@ float mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
     m->jumpTimer = (float) (rand() % JUMP_WAIT_VARY);
     m->gravity = 0.0f;
     m->wave = 0.0f;
+    m->dir = pos.x < 128 ? -1 : 1;
+    m->flip = m->dir < 0;
+    m->middlePos = 0.0f;
 
     // Set dimensions
     int w = WIDTHS[major];
     int h = HEIGHTS[major];
     m->spr = create_sprite(w, h);
     m->spr.row = ROW[m->majorType];
-    m->spr.frame = m->minorType * 2;
+    m->spr.frame = 0; // m->minorType * 2;
 
+    // Jumping mushroom
+    if (major == 3 && minor == 1) {
+
+        m->jumpTimer = 0.0f;
+        return 0.0f;
+    }
     // Flying mushroom
-    if (major == 4 || major == 5) {
+    else if (major == 4 || major == 5) {
 
         m->pos.y += (rand() % FLY_POS_VARY) + FLY_POS_MIDDLE;
         m->middlePos = m->pos.y; 
@@ -200,15 +222,16 @@ void mush_update(Mushroom* m, float globalSpeed, float tm) {
     // Jumping
     // TODO: Use `switch`
     if (m->majorType == 3)
-        mush_update_jump(m, tm);
+        mush_update_jump(m, globalSpeed, tm);
     else if (m->majorType == 4)
         mush_fly_stationary(m, tm);
     else if (m->majorType == 5) 
         mush_fly_forward(m, globalSpeed, tm);
     
     // Move
-    m->pos.x -= globalSpeed * tm;
-    if (m->pos.x+STOP_RADIUS < 0) {
+    m->pos.x -= globalSpeed * m->dir * tm;
+    if ( (m->dir > 0 && m->pos.x+STOP_RADIUS < 0) ||
+         (m->dir < 0 && m->pos.x-STOP_RADIUS > 256) ) {
 
         m->exist = false;
     }
@@ -297,7 +320,7 @@ void mush_draw(Mushroom* m, Graphics* g) {
         // Draw scaled sprite
         spr_draw_scaled(&m->spr, 
             g, bmpMushroom, px, py, 
-            sx, sy, false);
+            sx, sy, m->flip);
     }
     else {
 
@@ -328,6 +351,6 @@ void mush_draw(Mushroom* m, Graphics* g) {
         g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
 
         // Draw sprite
-        spr_draw(&m->spr, g, bmpMushroom, px, py, false);
+        spr_draw(&m->spr, g, bmpMushroom, px, py, m->flip);
     }
 }

@@ -564,12 +564,12 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
             y = 0;
         }
 
-        tx = sx * FIXED_PREC;
+        tx = (flip ? sx+sw-1 : sx) * FIXED_PREC;
         for(x = dx; x < min_int32_2(dx+dw, g->csize.x); ++ x) {
 
             if (x < 0) {
 
-                tx += xjump * -x;
+                tx += dir * xjump * -x;
                 x = 0;
             }
 
@@ -582,7 +582,7 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
                 g->pfunc(g, y*g->csize.x+x, col);
             }
 
-            tx += xjump;
+            tx += xjump * dir;
         }
 
         ty += yjump;
