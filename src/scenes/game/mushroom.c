@@ -24,9 +24,9 @@ static void mush_update_jump(Mushroom* m, float globalSpeed, float tm) {
     const float MAX_GRAVITY = 3.0f;
     const float GRAVITY_DELTA = 0.15f;
     const float JUMP_WAIT = 30.0f;
-    const float JUMP_HEIGHT_MAX = -4.5f;
+    const float JUMP_HEIGHT_MAX = -5.0f;
     const float JUMP_HEIGHT_MIN = -3.5f;
-    const float FORWARD_JUMP_SPEED = 0.5f;
+    const float FORWARD_JUMP_SPEED = 0.25f;
 
     if (m->majorType == 3) {
 
@@ -139,7 +139,7 @@ float mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
     const int FLY_POS_VARY = -48;
 
     const float WAIT_MOD[] = {
-        1.0f, 1.25f, 1.0f, 1.0f, 1.0f, 0.40f,
+        1.0f, 1.25f, 1.0f, 1.0f, 1.0f, 0.75f,
     };
 
     const int WIDTHS[] = {
@@ -211,12 +211,12 @@ void mush_update(Mushroom* m, float globalSpeed, float tm) {
         m->bounceTimer -= 1.0f * tm;
 
         if (!spc)
-            m->spr.frame = m->minorType * 2 +1;
+            m->spr.frame = m->minorType * 3 +1;
     }
     else {
 
         if (!spc)
-            m->spr.frame = m->minorType * 2;
+            m->spr.frame = m->minorType * 3;
     }
 
     // Jumping

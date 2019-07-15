@@ -16,6 +16,15 @@
 // Constants
 static const float MUSHROOM_GEN_TIME = 90.0f;
 
+// Probabilities
+static const int MUSHROOM_PROB[][6] = {
+    {25, 15, 20, 15, 15, 10}
+};
+static const int MINOR_PROB[][6] = {
+    {10, 0, 10, 25, 0, 25}
+};
+
+
 // Bitmaps
 static Bitmap* bmpFont;
 
@@ -32,6 +41,32 @@ static int prohibitSpecialCount;
 
 // Global speed
 static float globalSpeed;
+// Phase
+static int phase;
+
+
+// Get index by probability
+static int get_index(int prob) {
+
+    int i;
+    int p = MUSHROOM_PROB[phase][0];
+    for (i = 1; i < 6; ++ i) {
+
+        if (prob < p) {
+
+            return i-1;
+        }
+        p += MUSHROOM_PROB[phase][i];
+    }
+    return 5;
+}
+
+
+// Get minor index
+static int get_minor_index(int major, int prob) {
+
+    return prob < MINOR_PROB[phase][major] ? 1 : 0;
+}
 
 
 // Update mushroom generator
@@ -58,16 +93,24 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     if ((mushroomTimer -= globalSpeed * tm) <= 0.0f) {
 
         // Determine types
-        minor = 0;
-        major = rand() % MAJOR_MAX;
-        if ((-- prohibitSpecialCount < 0) && (major == 5 || major == 3) ) {
+        major = get_index(rand() % 100);
+        minor = get_minor_index(major, rand() % 100);
 
-            minor = rand () % 2;
-            prohibitSpecialCount = PROHIBIT_WAIT;
+        if (minor == 1) {
+
+            if (prohibitSpecialCount > 0) {
+
+                -- prohibitSpecialCount;
+                minor = 0;
+            }
+            else {
+
+                prohibitSpecialCount = PROHIBIT_WAIT;
+            }
         }
 
         // If flying forward, make sure it is drawn last
-        if (major == 5) {
+        if (major == 5 || (major == 3 && minor == 1)) {
 
             dir = -1;
             begin = end;
@@ -140,6 +183,7 @@ static int game_on_load(AssetManager* a) {
     globalSpeed = 1.0f;
     mushroomTimer = 0.0f;
     prohibitSpecialCount = 0;
+    phase = 0;
 
     return 0;
 }
