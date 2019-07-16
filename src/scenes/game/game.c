@@ -10,18 +10,30 @@
 #include "stage.h"
 #include "player.h"
 #include "mushroom.h"
+#include "spikeball.h"
 
+// Constants that are actually macros, d'oh!
 #define MUSHROOM_COUNT 8
+#define SPIKEBALL_COUNT 8
 
 // Constants
 static const float MUSHROOM_GEN_TIME = 90.0f;
 
-// Probabilities
+// Probabilities & other phase-specific things
 static const int MUSHROOM_PROB[][6] = {
     {25, 15, 20, 15, 15, 10}
 };
 static const int MINOR_PROB[][6] = {
-    {10, 0, 10, 25, 0, 25}
+    {20, 0, 20, 25, 0, 25}
+};
+static const int SPIKEBALL_MIN_TIME[] = {
+    2
+};
+static const int SPIKEBALL_MAX_TIME[] = {
+    8
+};
+static const int SPIKEBALL_SPECIAL_PROB[] = {
+    50
 };
 
 
@@ -32,12 +44,15 @@ static Bitmap* bmpFont;
 static Stage stage;
 static Player player;
 static Mushroom mushrooms [MUSHROOM_COUNT];
+static Spikeball spikeballs [SPIKEBALL_COUNT];
 
 // Mushroom timer & stuff
 static float mushroomTimer;
 // Make sure a special type mushroom
 // won't appear until this counter hits 0
 static int prohibitSpecialCount;
+// Spikeball wait counter
+static int spikeballWait;
 
 // Global speed
 static float globalSpeed;
@@ -69,6 +84,27 @@ static int get_minor_index(int major, int prob) {
 }
 
 
+// Generate a spikeball
+static void gen_spikeball(float x, float y) {
+
+    int i;
+    Spikeball* b;
+    for (i = 0; i < SPIKEBALL_COUNT; ++ i) {
+
+        if (spikeballs[i].exist == false) {
+
+            b = &spikeballs[i];
+            break;
+        }
+    }
+    if (b == NULL) return;
+
+    // Create... err, activate
+    sb_activate(b, x, y, 
+       ((rand() % 100) < SPIKEBALL_SPECIAL_PROB[phase] ) ? 1 : 0 );
+}
+
+
 // Update mushroom generator
 static void update_mushroom_generator(float globalSpeed, float tm) {
 
@@ -79,6 +115,8 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     // To make sure two jumping mushrooms etc.
     // spawn at the same time
     const int PROHIBIT_WAIT = 3;
+    const int SPIKEBALL_WAIT_MIN = 2;
+    const int SPIKEBALL_WAIT_MAX = 10;
 
     int i;
     int minor, major;
@@ -147,6 +185,19 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
         mushroomTimer += max_float_2(0.0f, wait * MUSHROOM_GEN_TIME +
             (float) ( (rand() % (TIME_VARY_MAX-TIME_VARY_MIN)) 
             + TIME_VARY_MIN));
+
+        // Update spikeball counter
+        if ((-- spikeballWait) <= 0) {
+
+            // Generate a new spikeball
+            gen_spikeball(256 + X_OFF, 
+                m->pos.y-m->spr.height);
+
+            // Set a new wait time
+            spikeballWait = (rand() % 
+                (SPIKEBALL_MAX_TIME[phase]-SPIKEBALL_MIN_TIME[phase])) 
+                + SPIKEBALL_MIN_TIME[phase];
+        }
     }
 }
 
@@ -169,6 +220,7 @@ static int game_on_load(AssetManager* a) {
     // Initialize global components
     init_global_player(a);
     init_global_mushrooms(a);
+    init_global_spikeballs(a);
 
     // Create components
     stage = create_stage(a);
@@ -180,12 +232,17 @@ static int game_on_load(AssetManager* a) {
 
         mushrooms[i] = create_mushroom();
     }
+    for (i = 0; i < SPIKEBALL_COUNT; ++ i) {
+
+        spikeballs[i] = create_spikeball();
+    }
 
     // Set initials
     globalSpeed = 1.0f;
     mushroomTimer = 0.0f;
     prohibitSpecialCount = 0;
     phase = 0;
+    spikeballWait = SPIKEBALL_MIN_TIME[phase];
 
     return 0;
 }
@@ -218,6 +275,12 @@ static void game_update(void* e, float tm) {
         mush_update(&mushrooms[i], speed, tm);
         mush_player_collision(&mushrooms[i], &player);
     }
+    // Update spikeballs
+    for (i = 0; i < SPIKEBALL_COUNT; ++ i) {
+
+        sb_update(&spikeballs[i], speed, tm);
+        sb_player_collision(&spikeballs[i], &player);
+    }
 }
 
 
@@ -234,24 +297,22 @@ static void game_draw(Graphics* g) {
     // Draw player shadow
     pl_draw_shadow(&player, g);
 
-    // Draw "normal" mushrooms
+    // Draw mushrooms
     for (i = 0; i < MUSHROOM_COUNT; ++ i) {
 
-        if (mushrooms[i].majorType != 5)
-            mush_draw(&mushrooms[i], g);
+        mush_draw(&mushrooms[i], g);
     }
 
-    // Draw flying mushrooms
-    for (i = 0; i < MUSHROOM_COUNT; ++ i) {
+    // Draw spikeballs
+    for (i = 0; i < SPIKEBALL_COUNT; ++ i) {
 
-        if (mushrooms[i].majorType == 5)
-            mush_draw(&mushrooms[i], g);
+        sb_draw(&spikeballs[i], g);
     }
 
     // Draw player
     pl_draw(&player, g);
 
-    g_draw_text(g, bmpFont, "ALPHA 0.1.2", 2, 2, 0, 0, false);
+    g_draw_text(g, bmpFont, "ALPHA 0.2.0", 2, 2, 0, 0, false);
 }
 
 

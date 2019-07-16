@@ -18,8 +18,12 @@ void init_global_spikeballs(AssetManager* a);
 typedef struct {
 
     Vector2 pos;
+    float startY;
+    float maxY;
     int type;
     bool exist;
+
+    float wave;
 
 } Spikeball;
 

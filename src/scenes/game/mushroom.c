@@ -189,6 +189,8 @@ float mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
 
         m->pos.y += (rand() % FLY_POS_VARY) + FLY_POS_MIDDLE;
         m->middlePos = m->pos.y; 
+
+        m->wave = (float)(rand() % 1000)/1000.0f * M_PI*2;
     }
 
     return WAIT_MOD[major];
