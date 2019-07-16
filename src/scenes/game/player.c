@@ -7,6 +7,7 @@
 // Shared pointers to bitmaps
 static Bitmap* bmpBunny;
 static Bitmap* bmpBlast;
+static Bitmap* bmpArrow;
 
 // Constants
 static const float JUMP_REACT_MIN_TIME = 1.0f;
@@ -21,6 +22,7 @@ void init_global_player(AssetManager* a) {
 
     bmpBunny = (Bitmap*)assets_get(a, "bunny");
     bmpBlast = (Bitmap*)assets_get(a, "blast");
+    bmpArrow = (Bitmap*)assets_get(a, "arrow");
 }
 
 
@@ -366,6 +368,7 @@ Player create_player(int x, int y) {
 // Update player
 void pl_update(Player* pl, EventManager* evMan, float tm) {
 
+    const float ARROW_WAVE_SPEED = 0.15f;
 
     // Do stuff
     pl_control(pl, evMan, tm);
@@ -373,6 +376,10 @@ void pl_update(Player* pl, EventManager* evMan, float tm) {
     pl_update_bullets(pl, evMan, tm);
     pl_animate(pl, tm);
     pl_update_dust(pl, tm);
+
+    // Update arrow wave
+    pl->arrowWave += ARROW_WAVE_SPEED * tm;
+    pl->arrowWave = fmodf(pl->arrowWave, M_PI*2);
 
     // TEMP
     // Floor collision
@@ -409,6 +416,9 @@ void pl_draw_shadow(Player* pl, Graphics* g) {
 
 // Draw player
 void pl_draw(Player* pl, Graphics* g) {
+
+    const int ARROW_Y = 4;
+    const int ARROW_AMPLITUDE = 4;
 
     int i;
     int frame;
@@ -457,6 +467,15 @@ void pl_draw(Player* pl, Graphics* g) {
 
         g_draw_bitmap_region(g, bmpBlast, frame*32, 0, 32, 32,
             px + 20, py - 40, false);
+    }
+
+    // Draw arrow
+    if (pl->pos.y < 0.0f) {
+
+        g_draw_bitmap(g, bmpArrow, 
+            px-24, 
+            ARROW_Y + (int)(sinf(pl->arrowWave)*ARROW_AMPLITUDE), 
+            false);
     }
 }
 

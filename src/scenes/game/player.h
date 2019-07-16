@@ -56,6 +56,9 @@ typedef struct {
     bool loading;
     float loadTimer;
 
+    // Arrow "wave" effect
+    float arrowWave;
+
 } Player;
 
 // Create a player
