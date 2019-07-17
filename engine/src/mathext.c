@@ -79,7 +79,7 @@ int max_int32_3(int a, int b, int c) {
 // Negative modulo
 int neg_mod(int m, int n) {
 
-    if (n == 0) return 0;
+    // if (n == 0) return 0;
 
     if(m < 0) {
 
