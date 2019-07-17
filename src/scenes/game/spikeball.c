@@ -1,5 +1,7 @@
 #include "spikeball.h"
 
+#include "stage.h"
+
 #include <engine/mathext.h>
 
 #include <math.h>
@@ -33,14 +35,15 @@ Spikeball create_spikeball() {
 void sb_activate(Spikeball* b, float x, float maxY, int type) {
 
     const int X_VARY = 64.0f;
-    const float SAFETY_RANGE = 32.0f;
+    const int TOP_OFF = 64.0f;
+    const float SAFETY_RANGE = 20.0f;
 
-    float mid = (maxY-24.0f) / 2.0f;
-    int vary = (maxY-SAFETY_RANGE*2)/2;
+    float mid = maxY-24.0f;
+    int vary = (maxY-TOP_OFF);
 
     b->pos = vec2(
         x + (float)(rand() % X_VARY),
-        mid + (rand() % (vary*2))-vary );
+        mid - (rand() % (vary)) );
     // Make sure not too close
     if (b->pos.y+SAFETY_RANGE > maxY) {
 
@@ -51,12 +54,12 @@ void sb_activate(Spikeball* b, float x, float maxY, int type) {
         }
 
         // Not enough room, forget
-        if (b->pos.y < SAFETY_RANGE) return;
+        if (b->pos.y < TOP_OFF) return;
     }
     // ...or too far
-    else if(b->pos.y < SAFETY_RANGE) {
+    else if(b->pos.y < TOP_OFF) {
 
-        b->pos.y = SAFETY_RANGE;
+        b->pos.y = TOP_OFF;
         if (b->type == 1) {
 
             b->pos.y += SPECIAL_AMPLITUDE;
@@ -65,8 +68,11 @@ void sb_activate(Spikeball* b, float x, float maxY, int type) {
 
     b->type = type;
     b->wave = (float)(rand() % 1000)/1000.0f * M_PI*2;
-    b->startY = b->pos.y;
+    b->startPos = b->pos;
     b->maxY = maxY;
+    b->speed = vec2(0, 0);
+    b->maxDist = b->pos.y;
+    b->startDist = b->maxDist;
 
     b->exist = true;
 }
@@ -77,22 +83,58 @@ void sb_update(Spikeball* b, float globalSpeed, float tm) {
 
     const float CHECK_RADIUS = 24.0f;
     const float WAVE_SPEED = 0.05f;
+    const float EPS = 0.1f;
+    const float SPEED_DELTA = 0.05f;
+
 
     if (!b->exist) return;
 
+    float dist = hypotf(b->pos.x-b->startPos.x, b->pos.y);
+    bool stopped = fabsf(dist - b->maxDist) < EPS &&
+        hypotf(b->speed.x, b->speed.y) < EPS;
+
     // If special, do waves
-    if (b->type == 1) {
+    if (b->type == 1 && stopped) {
 
         b->wave += WAVE_SPEED * tm;
         b->wave = fmodf(b->wave, 2*M_PI);
-        b->pos.y = b->startY + sinf(b->wave)*SPECIAL_AMPLITUDE;
+        b->maxDist = b->startDist + sinf(b->wave)*SPECIAL_AMPLITUDE;
+    }
+    
+
+    // Update speed
+    if (b->pos.x > b->startPos.x+EPS) {
+
+        b->speed.x -= SPEED_DELTA * tm;
+    }
+    else if (b->pos.x < b->startPos.x-EPS) {
+
+        b->speed.x += SPEED_DELTA * tm;
     }
 
     // Move
-    b->pos.x -= globalSpeed * tm;
-    if (b->pos.x < -CHECK_RADIUS) {
+    b->pos.x += ((-globalSpeed) + b->speed.x) * tm;
+    b->startPos.x -= globalSpeed * tm;
+    if (b->startPos.x < -CHECK_RADIUS &&
+        b->pos.x < -CHECK_RADIUS) {
 
         b->exist = false;
+    }
+    if (fabsf(b->pos.x-b->startPos.x) < EPS) {
+
+        b->pos.x = b->startPos.x;
+    }
+
+    // Check if moved too far
+    float angle = atan2f(b->pos.y, b->pos.x-b->startPos.x);
+    float dx, dy;
+    if (fabsf(dist - b->maxDist) > EPS) {
+
+        dx = cosf(angle) * (b->maxDist - dist);
+        dy = sinf(angle) * (b->maxDist - dist);
+
+        b->pos.x += dx;
+        b->pos.y += dy;
     }
 }
 
@@ -104,9 +146,62 @@ void sb_player_collision(Spikeball* b, Player* pl) {
 }
 
 
+// Spikeball-bullet collision
+void sb_bullet_collision(Spikeball* sb, Bullet* b) {
+
+    const float RADIUS= 12.0f;
+    const float SPEED_MUL = 2.0f;
+    const float SPEED_COMP = 12.0f;
+
+    if (!sb->exist || !b->exist) return;
+
+    // Check if inside the collision area
+    if (hypotf(b->pos.x-sb->pos.x, b->pos.y-sb->pos.y) < RADIUS+b->radius) {
+
+        bullet_kill(b);
+        sb->speed.x = b->radius/SPEED_COMP * SPEED_MUL;
+    }
+}
+
+
+// Draw the spikeball shadow
+void sb_draw_shadow(Spikeball* b, Graphics* g) {
+
+    const float SHADOW_SCALE_COMPARE = 176+128;
+    const float COMPARE_DELTA = 128;
+    const int SHADOW_MOVE_Y = 3;
+    const int SHADOW_DARK_VALUE = 5;
+
+    if (!b->exist) return;
+
+    int px = (int)roundf(b->pos.x);
+    int py = (int)roundf(b->pos.y);
+
+    // Draw shadow
+    int scale = (int)((b->pos.y+COMPARE_DELTA)/
+        SHADOW_SCALE_COMPARE *48.0f);
+
+    g_set_pixel_function(g, 
+        PixelFunctionDarken, 
+        SHADOW_DARK_VALUE, 0);
+    g_draw_scaled_bitmap_region(g, bmpSpikeball,
+        96, 0, 48, 48, 
+        px-scale/2, 
+        192-GROUND_COLLISION_HEIGHT+SHADOW_MOVE_Y - scale, 
+        scale, scale, false);
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+}
+
 
 // Draw a spikeball
 void sb_draw(Spikeball* b, Graphics* g) {
+
+    const int ROPE_WIDTH = 8;
+    const uint8 COLORS[] = {
+        0b01000100,
+        0b10101000,
+        0b11110101,
+    };
 
     if (!b->exist) return;
 
@@ -114,13 +209,16 @@ void sb_draw(Spikeball* b, Graphics* g) {
     int y = (int) roundf(b->pos.y);
     int i;
 
-    // Draw chain
-    for (i = 0; i < (192-b->pos.y)/32 +1; ++ i) {
-
-        g_draw_bitmap_region(g, bmpSpikeball, 
-            96, 0, 16, 32,
-            x - 8, y - (i+1)*32, false);
+    // Draw rope
+    for (i = 0; i < 3; ++ i) {
+        
+        g_draw_thick_line(g, 
+            (int)roundf(b->startPos.x), 
+            -ROPE_WIDTH/2, x, y, 
+            ROPE_WIDTH - i*2, 
+            COLORS[i]);
     }
+
 
     // Draw sprite
     g_draw_bitmap_region(g, bmpSpikeball, 

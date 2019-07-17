@@ -60,6 +60,17 @@ static void pfunc_inverse(void* _g, int offset, uint8 col) {
     Graphics* g = (Graphics*)_g;
     g->pdata[offset] = ~col;
 }
+static void pfunc_skip_inverse(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+
+    int x = offset % g->csize.x;
+    int y = offset / g->csize.x;
+
+    if (x % g->pparam1 == 0 || y % g->pparam1 == 0) 
+        return;
+    g->pdata[offset] = ~g->pdata[offset];
+}
 
 
 // Get darkened color index
@@ -391,6 +402,10 @@ void g_set_pixel_function(Graphics* g, int func, int param1, int param2) {
     case PixelFunctionInverse:
         g->pfunc = pfunc_inverse;
         break;    
+
+    case PixelFunctionInverseSkip:
+        g->pfunc = pfunc_skip_inverse;
+        break;
     
     default:
         break;
@@ -799,6 +814,32 @@ void g_draw_line(Graphics* g, int x1, int y1,
         }
     }
 }
+
+
+// Draw a thick line
+void g_draw_thick_line(Graphics* g, 
+    int dx1, int dy1, int dx2, int dy2, int r, uint8 col) {
+
+    float angle = atan2f(dy2-dy1, dx2-dx1) + M_PI/2.0f;
+
+    float c = cosf(angle);
+    float s = sinf(angle);
+
+    int x1 = dx1-(int)(c*r/2);
+    int y1 = dy1-(int)(s*r/2);
+
+    int x2 = dx2-(int)(c*r/2);
+    int y2 = dy2-(int)(s*r/2);
+
+    int x3 = dx2+(int)(c*r/2);
+    int y3 = dy2+(int)(s*r/2);
+
+    int x4 = dx1+(int)(c*r/2);
+    int y4 = dy1+(int)(s*r/2);
+
+    g_draw_triangle(g, x1, y1, x2, y2, x3, y3, col);
+    g_draw_triangle(g, x3, y3, x4, y4, x1, y1, col);
+} 
 
 
 // Draw "3D" floor

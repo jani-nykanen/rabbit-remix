@@ -28,6 +28,7 @@ enum {
     PixelFunctionSingleColorSkip = 3,
     PixelFunctionInverseFrame = 4,
     PixelFunctionInverse = 5,
+    PixelFunctionInverseSkip = 6,
 };
 
 // Graphics type
@@ -129,6 +130,10 @@ void g_draw_triangle(Graphics* g,
 // Draw a line
 void g_draw_line(Graphics* g, int x1, int y1, 
     int x2, int y2, uint8 col);
+
+// Draw a thick line
+void g_draw_thick_line(Graphics* g, 
+    int dx1, int dy1, int dx2, int dy2, int r, uint8 col);
 
 // Draw "3D" floor
 void g_draw_3D_floor(Graphics* g, Bitmap* bmp,

@@ -15,9 +15,11 @@ typedef struct
     Vector2 speed;
 
     bool exist;
+    bool dying;
 
     float angle;
     float radius;
+    float deathTimer;
 
 } Bullet;
 
@@ -33,5 +35,7 @@ void bullet_update(Bullet* b, float tm);
 // Draw a bullet
 void bullet_draw(Bullet* b, Graphics* g);
 
+// Kill a bullet
+void bullet_kill(Bullet* b);
 
 #endif // __BULLET__

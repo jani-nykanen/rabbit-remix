@@ -486,11 +486,12 @@ bool pl_jump_collision(Player* pl, float x, float y, float w, float power) {
     const float JUMP_SPEED_MUL_FACTOR = 0.5f;
 
     float mul = pl->speed.y / GRAVITY_TARGET;
+    float s = fabsf(pl->speed.y);
 
     if (pl->speed.y > 0.0f &&
         pl->pos.x > x && pl->pos.x < x+w &&
-        pl->oldPos.y < y+pl->speed.y &&
-        pl->pos.y > y-pl->speed.y) {
+        pl->oldPos.y-s < y+pl->speed.y &&
+        pl->pos.y+s > y-pl->speed.y) {
 
         pl->pos.y = y;
 

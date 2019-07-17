@@ -30,10 +30,10 @@ static const int SPIKEBALL_MIN_TIME[] = {
     2
 };
 static const int SPIKEBALL_MAX_TIME[] = {
-    8
+    10
 };
 static const int SPIKEBALL_SPECIAL_PROB[] = {
-    50
+    25
 };
 
 
@@ -58,6 +58,9 @@ static int spikeballWait;
 static float globalSpeed;
 // Phase
 static int phase;
+
+// Is paused
+static int paused;
 
 
 // Get index by probability
@@ -117,6 +120,9 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     const int PROHIBIT_WAIT = 3;
     const int SPIKEBALL_WAIT_MIN = 2;
     const int SPIKEBALL_WAIT_MAX = 10;
+    // Needed when creating spikeballs
+    const float MUSHROOM_MAX_JUMP = 64;
+    const float MUSHROOM_MAX_FLY = 32;
 
     int i;
     int minor, major;
@@ -127,7 +133,7 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     int end = MUSHROOM_COUNT-1;
     int begin = 0;
 
-    float x;
+    float x, y;
 
     // Update & check the timer
     if ((mushroomTimer -= globalSpeed * tm) <= 0.0f) {
@@ -189,9 +195,16 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
         // Update spikeball counter
         if ((-- spikeballWait) <= 0) {
 
+            y = m->pos.y-m->spr.height;
+            // Jumping
+            if (m->majorType == 3)
+                y -= MUSHROOM_MAX_JUMP;
+            // Flying & stationary
+            else if (m->majorType == 4)
+                y -= MUSHROOM_MAX_FLY;
+
             // Generate a new spikeball
-            gen_spikeball(256 + X_OFF, 
-                m->pos.y-m->spr.height);
+            gen_spikeball(256 + X_OFF, y);
 
             // Set a new wait time
             spikeballWait = (rand() % 
@@ -243,6 +256,7 @@ static int game_on_load(AssetManager* a) {
     prohibitSpecialCount = 0;
     phase = 0;
     spikeballWait = SPIKEBALL_MIN_TIME[phase];
+    paused = false;
 
     return 0;
 }
@@ -258,8 +272,15 @@ static void game_update(void* e, float tm) {
     EventManager* evMan = (EventManager*)e;
     if (evMan->tr->active) return;
 
-    int i;
+    int i, j;
     float speed = globalSpeed * PERSPECTIVE_SPEED_MUL;
+
+    // Pause
+    if (pad_get_button_state(evMan->vpad, "start") == StatePressed) {
+
+        paused = !paused;
+    }
+    if (paused) return; 
 
     // Update stage
     stage_update(&stage, globalSpeed, tm);
@@ -280,6 +301,13 @@ static void game_update(void* e, float tm) {
 
         sb_update(&spikeballs[i], speed, tm);
         sb_player_collision(&spikeballs[i], &player);
+
+        // Bullet collision
+        for (j = 0; j < BULLET_COUNT; ++ j) {
+
+            sb_bullet_collision(&spikeballs[i], 
+                &player.bullets[j]);
+        }
     }
 }
 
@@ -293,6 +321,12 @@ static void game_draw(Graphics* g) {
 
     // Draw stage
     stage_draw(&stage, g);
+
+    // Draw spikeball shadows
+    for (i = 0; i < SPIKEBALL_COUNT; ++ i) {
+
+        sb_draw_shadow(&spikeballs[i], g);
+    }
 
     // Draw player shadow
     pl_draw_shadow(&player, g);

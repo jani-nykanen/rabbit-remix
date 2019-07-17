@@ -10,6 +10,7 @@
 #include <engine/assets.h>
 
 #include "player.h"
+#include "bullet.h"
 
 // Initialize global content
 void init_global_spikeballs(AssetManager* a);
@@ -18,8 +19,11 @@ void init_global_spikeballs(AssetManager* a);
 typedef struct {
 
     Vector2 pos;
-    float startY;
+    Vector2 startPos;
+    Vector2 speed;
     float maxY;
+    float maxDist;
+    float startDist;
     int type;
     bool exist;
 
@@ -38,6 +42,12 @@ void sb_update(Spikeball* b, float globalSpeed, float tm);
 
 // Spikeball-player collision
 void sb_player_collision(Spikeball* b, Player* pl);
+
+// Spikeball-bullet collision
+void sb_bullet_collision(Spikeball* sb, Bullet* b);
+
+// Draw the spikeball shadow
+void sb_draw_shadow(Spikeball* b, Graphics* g) ;
 
 // Draw a spikeball
 void sb_draw(Spikeball* b, Graphics* g);
