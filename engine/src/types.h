@@ -12,6 +12,8 @@
 #define M_PI 3.14159265358979323846f
 #endif
 
+#define FIXED_PREC 256
+
 #define KVPAIR_KEY_LENGTH 64
 #define KVPAIR_VALUE_LENGTH 256
 
@@ -50,5 +52,42 @@ typedef struct {
 // Constructors
 Vector2 vec2(float x, float y);
 Point point(int x, int y);
+
+// 2x2 matrix
+typedef struct {
+
+    float m11, m21,
+          m12, m22;  
+
+} Matrix2;
+
+// 2x2 matrix with fixed point numbers
+typedef struct {
+
+    int m11, m21,
+        m12, m22;
+
+} Mat2Fixed;
+
+// Create a 2x2 matrix
+Matrix2 mat2(float m11, float m21, float m12, float m22);
+
+// Compute the inverse matrix
+Matrix2 mat2_inverse(Matrix2 A);
+
+// Multiply two matrices
+Matrix2 mat2_mul(Matrix2 A, Matrix2 B);
+
+// Multiply with a vector
+Vector2 mat2_mul_vec2(Matrix2 A, Vector2 v);
+
+// Compute determinant
+float mat2_det(Matrix2 A);
+
+// Float matrix to fixed point (=integer) matrix
+Mat2Fixed mat2_to_fixed(Matrix2 A);
+
+// Multiply fixed point matrix with a point
+Point mat2_fixed_mul(Mat2Fixed A, Point p);
 
 #endif // __TYPES__

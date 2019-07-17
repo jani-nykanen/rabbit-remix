@@ -62,6 +62,13 @@ typedef struct {
     int pparam1;
     int pparam2;
 
+    // Things needed for textured triangles
+    Mat2Fixed uvTransf;
+    Point uvTrans;
+    Vector2 uv1, uv2, uv3;
+    Point top;
+    Bitmap* tex;
+
 } Graphics;
 
 // Create a graphics component
@@ -139,6 +146,12 @@ void g_draw_thick_line(Graphics* g,
 void g_draw_3D_floor(Graphics* g, Bitmap* bmp,
     int x, int y, int w, int h, int xdelta, 
     int mx, int my);
+
+// Set UV coordinates
+void g_set_uv_coords(Graphics* g, 
+    float u1, float v1, float u2, float v2, float u3, float v3);
+// Enable texturing (pass NULL texture to disable)
+void g_toggle_texturing(Graphics* g, Bitmap* tex);
 
 
 #endif // __GRAPHICS__

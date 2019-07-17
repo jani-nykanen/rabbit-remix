@@ -7,9 +7,6 @@
 // Maximum value for darkness
 #define MAX_DARKNESS_VALUE 8
 
-// Fixed point math precision
-static const int FIXED_PREC = 256;
-
 // Global darkness palettes
 static uint8 dpalette [MAX_DARKNESS_VALUE] [256];
 // Dithering arrays
@@ -70,6 +67,77 @@ static void pfunc_skip_inverse(void* _g, int offset, uint8 col) {
     if (x % g->pparam1 == 0 || y % g->pparam1 == 0) 
         return;
     g->pdata[offset] = ~g->pdata[offset];
+}
+static void pfunc_texture(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+
+    int x = offset % g->csize.x;
+    int y = offset / g->csize.x;
+
+    int dx = x - g->top.x;
+    int dy = y - g->top.y;
+
+    Point t = point(dx, dy);
+
+    // Get texture coordinates
+    t = mat2_fixed_mul(g->uvTransf, t);
+
+    t.x += g->uvTrans.x;
+    t.y += g->uvTrans.y;
+
+    // Limit the coordinates inside the _BITMAP
+    t.x = neg_mod(t.x, g->tex->width);
+    t.y = neg_mod(t.y, g->tex->height);
+
+    col = g->tex->data[t.y * g->tex->width + t.x];
+    if (col != ALPHA)
+        g->pdata[offset] = col;
+}
+
+
+// Generate texturing matrices etc.
+static void gen_uv_transf(Graphics* g, Bitmap* tex,
+    int x1, int y1, int x2, int y2, int x3, int y3) {
+    
+    if (tex == NULL) return;
+
+    g->tex = tex;
+    g->top = point(x1, y1);
+
+    float w = (float) tex->width;
+    float h = (float) tex->height;
+
+    // Generate UV transform matrix
+    Matrix2 uv = mat2(
+        (g->uv3.x - g->uv1.x), (g->uv2.x - g->uv1.x),
+        (g->uv3.y - g->uv1.y), (g->uv2.y - g->uv1.y)
+    );
+    uv = mat2_inverse(uv);
+
+    Vector2 u = vec2((float)(x3-x1), (float)(y3-y1));
+    Vector2 v = vec2((float)(x2-x1), (float)(y2-y1));
+
+    Matrix2 B = mat2(
+        u.x, v.x,
+        u.y, v.y
+    );
+    Matrix2 S = mat2(
+        1.0f/w, 0.0f,
+        0.0f, 1.0f/h
+    );
+
+    g->uvTrans = point(
+        (int)roundf(g->uv1.x * w), 
+        (int)roundf(g->uv1.y * h)
+    );
+
+    // Final matrix
+    Matrix2 m = mat2_mul(B, uv);
+    m = mat2_mul(S, m);
+    m = mat2_inverse(m);
+
+    g->uvTransf = mat2_to_fixed(m);
 }
 
 
@@ -214,7 +282,6 @@ static bool clip(Graphics* g, int* sx, int* sy, int* sw, int* sh,
 static void draw_triangle_half(Graphics * g,
     int midx, int midy, int endMid, int endy, 
     int stepx, int stepy, int dx, int dend, 
-    int x1, int y1, 
     uint8 col) {
 
     int sx = midx * FIXED_PREC;
@@ -327,6 +394,7 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     g->dvalue = 0;
     g->pfunc = pfunc_default;
     g->pparam1 = 0;
+    g->tex = NULL;
 
     return g;
 }
@@ -731,12 +799,22 @@ void g_draw_triangle(Graphics* g,
     points[2] = point(x3, y3);
     sort_points_3(points);
 
-    // If not in the screen, do not draw
+    // If not on the screen, do not draw
     if (points[0].y >= g->csize.y-1 || points[2].y < 0 ||
         min_int32_3(x1, x2, x3) >= g->csize.x-1 || 
         max_int32_3(x1, x2 ,x3) < 0) {
 
         return;
+    }
+
+    if (g->tex != NULL) {
+
+        // Generate uv transform matrix
+        gen_uv_transf(g, g->tex, 
+            x1, y1, x2, y2, x3, y3);
+
+        // Use the texturing function now
+        g->pfunc = pfunc_texture; 
     }
 
     // Calculate horizontal step(s)
@@ -771,7 +849,7 @@ void g_draw_triangle(Graphics* g,
         draw_triangle_half(g,
             points[1].x, points[1].y, endMid, 
             max_int32_2(points[0].y-1, -1), stepx, -1, 
-            dx1, dend, x1, y1, col);
+            dx1, dend, col);
     }
 
     // Draw the bottom half
@@ -780,7 +858,12 @@ void g_draw_triangle(Graphics* g,
         draw_triangle_half(g, 
             points[1].x,points[1].y+1, endMid, 
             min_int32_2(points[2].y, g->csize.y), stepx, 1, 
-            dx2, -dend, x1, y1, col);
+            dx2, -dend, col);
+    }
+
+    if (g->tex != NULL) {
+
+        g->pfunc = pfunc_default;
     }
 }
 
@@ -878,4 +961,25 @@ void g_draw_3D_floor(Graphics* g, Bitmap* bmp,
         yjump -= yjumpDelta;
         
     }    
+}
+
+
+// Set UV coordinates
+void g_set_uv_coords(Graphics* g, 
+    float u1, float v1, 
+    float u2, float v2, 
+    float u3, float v3) {
+
+    g->uv1 = vec2(u1, v1);
+    g->uv2 = vec2(u2, v2);
+    g->uv3 = vec2(u3, v3);
+}
+
+
+// Enable texturing (pass NULL texture to disable)
+void g_toggle_texturing(Graphics* g, Bitmap* tex) {
+
+    g->tex = tex;
+    if (tex == NULL)
+        g->pfunc = pfunc_default;
 }

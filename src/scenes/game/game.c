@@ -30,7 +30,7 @@ static const int SPIKEBALL_MIN_TIME[] = {
     2
 };
 static const int SPIKEBALL_MAX_TIME[] = {
-    10
+    4
 };
 static const int SPIKEBALL_SPECIAL_PROB[] = {
     25
@@ -255,7 +255,7 @@ static int game_on_load(AssetManager* a) {
     mushroomTimer = 0.0f;
     prohibitSpecialCount = 0;
     phase = 0;
-    spikeballWait = SPIKEBALL_MIN_TIME[phase];
+    spikeballWait = 0; // SPIKEBALL_MIN_TIME[phase];
     paused = false;
 
     return 0;
@@ -347,6 +347,7 @@ static void game_draw(Graphics* g) {
     pl_draw(&player, g);
 
     g_draw_text(g, bmpFont, "ALPHA 0.2.0", 2, 2, 0, 0, false);
+
 }
 
 

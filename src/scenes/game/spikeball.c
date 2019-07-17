@@ -11,6 +11,7 @@ static const float SPECIAL_AMPLITUDE = 24.0f;
 
 // Global bitmaps
 static Bitmap* bmpSpikeball;
+static Bitmap* bmpChain;
 
 
 // Initialize global content
@@ -18,6 +19,7 @@ void init_global_spikeballs(AssetManager* a) {
 
     // Get bitmaps
     bmpSpikeball = (Bitmap*)assets_get(a, "spikeball");
+    bmpChain = (Bitmap*)assets_get(a, "chain");
 }
 
 
@@ -193,10 +195,45 @@ void sb_draw_shadow(Spikeball* b, Graphics* g) {
 }
 
 
+// Draw chain
+static void draw_chain(Graphics* g, 
+    int dx1, int dy1, int dx2, int dy2, int r) {
+
+    float angle = atan2f(dy2-dy1, dx2-dx1) + M_PI/2.0f;
+    float len = hypotf(dx2-dx1, dy2-dy1);
+    float texRepeat = len / (float)bmpChain->height;
+
+    float c = cosf(angle);
+    float s = sinf(angle);
+
+    int x1 = dx1-(int)(c*r/2);
+    int y1 = dy1-(int)(s*r/2);
+
+    int x2 = dx2-(int)(c*r/2);
+    int y2 = dy2-(int)(s*r/2);
+
+    int x3 = dx2+(int)(c*r/2);
+    int y3 = dy2+(int)(s*r/2);
+
+    int x4 = dx1+(int)(c*r/2);
+    int y4 = dy1+(int)(s*r/2);
+
+    g_toggle_texturing(g, bmpChain);
+
+    g_set_uv_coords(g, 0, 0, 0, texRepeat, 1.0f, texRepeat);
+    g_draw_triangle(g, x1, y1, x2, y2, x3, y3, 0);
+
+    g_set_uv_coords(g, 1.0f, texRepeat, 1.0f, 0, 0, 0);
+    g_draw_triangle(g, x3, y3, x4, y4, x1, y1, 0);
+
+    g_toggle_texturing(g, NULL);
+} 
+
+
 // Draw a spikeball
 void sb_draw(Spikeball* b, Graphics* g) {
 
-    const int ROPE_WIDTH = 8;
+    const int ROPE_WIDTH = 24;
     const uint8 COLORS[] = {
         0b01000100,
         0b10101000,
@@ -209,8 +246,7 @@ void sb_draw(Spikeball* b, Graphics* g) {
     int y = (int) roundf(b->pos.y);
     int i;
 
-    // Draw rope
-    for (i = 0; i < 3; ++ i) {
+    /*for (i = 0; i < 3; ++ i) {
         
         g_draw_thick_line(g, 
             (int)roundf(b->startPos.x), 
@@ -218,6 +254,12 @@ void sb_draw(Spikeball* b, Graphics* g) {
             ROPE_WIDTH - i*2, 
             COLORS[i]);
     }
+    */
+   // Draw chain
+   draw_chain(g, 
+            (int)roundf(b->startPos.x), 
+            -ROPE_WIDTH/2, x, y, 
+            ROPE_WIDTH);
 
 
     // Draw sprite
