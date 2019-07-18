@@ -56,6 +56,8 @@ static int spikeballWait;
 
 // Global speed
 static float globalSpeed;
+// Speed target
+static float globalSpeedTarget;
 // Phase
 static int phase;
 
@@ -108,6 +110,58 @@ static void gen_spikeball(float x, float y) {
 }
 
 
+// Get next mushrom
+static Mushroom* get_next_mushroom(int dir) {
+
+    int i;
+    int begin = 0;
+    int end = MUSHROOM_COUNT;
+
+    if (dir == -1) {
+
+        begin = end-1;
+        end = -1;
+    }
+    else 
+        dir = 1;
+
+    // Find the first mushroom that is not active
+    for (i = begin; i != end; i += dir) {
+
+        if (mushrooms[i].exist == false) {
+
+            return &mushrooms[i];
+        }
+    }
+    return NULL;
+}
+
+
+// Create starter mushrooms
+static void create_starter_mushrooms() {
+
+    const int COUNT = 3;
+    const int XPOS[] = {
+        88, 168, 256,
+    };
+    const int ID[] = {
+        1, 0, 0,
+    };
+
+    Mushroom* m;
+    int i;
+    for (i = 0; i < COUNT; ++ i) {
+
+        m = get_next_mushroom(1);
+        if (m == NULL) break;
+
+        mush_activate(m, 
+            vec2(XPOS[i], 192-GROUND_COLLISION_HEIGHT ),
+            ID[i], 0);
+    }
+}
+
+
 // Update mushroom generator
 static void update_mushroom_generator(float globalSpeed, float tm) {
 
@@ -130,9 +184,6 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     Mushroom* m = NULL;
 
     int dir = 1;
-    int end = MUSHROOM_COUNT-1;
-    int begin = 0;
-
     float x, y;
 
     // Update & check the timer
@@ -159,19 +210,10 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
         if (major == 5 || (major == 3 && minor == 1)) {
 
             dir = -1;
-            begin = end;
-            end = 0;
         }
 
         // Find the first mushroom that is not active
-        for (i = begin; i != end; i += dir) {
-
-            if (mushrooms[i].exist == false) {
-
-                m = &mushrooms[i];
-                break;
-            }
-        }
+        m = get_next_mushroom(dir);
         if (m == NULL) return;
 
         // Determine start pos
@@ -228,6 +270,8 @@ static int game_init(void* e) {
 // On load
 static int game_on_load(AssetManager* a) { 
 
+    const float INITIAL_MUSHROOM_WAIT = 60.0f;
+
     bmpFont = (Bitmap*)assets_get(a, "font");
 
     // Initialize global components
@@ -237,7 +281,7 @@ static int game_on_load(AssetManager* a) {
 
     // Create components
     stage = create_stage(a);
-    player = create_player(64, 192-32);
+    player = create_player(64, 64);
 
     // Init arrays
     int i;
@@ -251,12 +295,16 @@ static int game_on_load(AssetManager* a) {
     }
 
     // Set initials
-    globalSpeed = 1.0f;
-    mushroomTimer = 0.0f;
+    globalSpeed = 0.0f;
+    globalSpeedTarget = 1.0f;
+    mushroomTimer = INITIAL_MUSHROOM_WAIT;
     prohibitSpecialCount = 0;
     phase = 0;
-    spikeballWait = 0; // SPIKEBALL_MIN_TIME[phase];
+    spikeballWait = SPIKEBALL_MIN_TIME[phase];
     paused = false;
+
+    // Create starter mushrooms
+    create_starter_mushrooms();
 
     return 0;
 }
@@ -265,6 +313,7 @@ static int game_on_load(AssetManager* a) {
 // Update
 static void game_update(void* e, float tm) {
 
+    const float GSPEED_DELTA = 0.01f;
     // Needed to get proper movement speed
     // for the moving objects
     const float PERSPECTIVE_SPEED_MUL = 1.1f;
@@ -273,7 +322,6 @@ static void game_update(void* e, float tm) {
     if (evMan->tr->active) return;
 
     int i, j;
-    float speed = globalSpeed * PERSPECTIVE_SPEED_MUL;
 
     // Pause
     if (pad_get_button_state(evMan->vpad, "start") == StatePressed) {
@@ -282,11 +330,20 @@ static void game_update(void* e, float tm) {
     }
     if (paused) return; 
 
+    // Update global speed
+    if (globalSpeed < globalSpeedTarget) {
+
+        globalSpeed += GSPEED_DELTA * tm;
+        if (globalSpeed > globalSpeedTarget)
+            globalSpeed = globalSpeedTarget;
+    }
+    float speed = globalSpeed * PERSPECTIVE_SPEED_MUL;
+
     // Update stage
     stage_update(&stage, globalSpeed, tm);
 
     // Update player
-    pl_update(&player, evMan, tm);
+    pl_update(&player, evMan, speed, tm);
 
     // Update mushroom generator
     update_mushroom_generator(speed, tm);

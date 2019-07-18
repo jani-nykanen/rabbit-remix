@@ -68,6 +68,17 @@ static void pfunc_skip_inverse(void* _g, int offset, uint8 col) {
         return;
     g->pdata[offset] = ~g->pdata[offset];
 }
+static void pfunc_skip(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+
+    int x = offset % g->csize.x;
+    int y = offset / g->csize.x;
+
+    if (x % g->pparam1 == 0 || y % g->pparam1 == 0) 
+        return;
+    g->pdata[offset] = col;
+}
 static void pfunc_texture(void* _g, int offset, uint8 col) {
 
     Graphics* g = (Graphics*)_g;
@@ -474,6 +485,10 @@ void g_set_pixel_function(Graphics* g, int func, int param1, int param2) {
     case PixelFunctionInverseSkip:
         g->pfunc = pfunc_skip_inverse;
         break;
+
+    case PixelFunctionSkip:
+        g->pfunc = pfunc_skip;
+        break;
     
     default:
         break;
@@ -792,6 +807,12 @@ void g_draw_triangle(Graphics* g,
     int x3, int y3, 
     uint8 col) {
 
+    // If points are in the same line, do not draw
+    if ( abs((x3-x1)*(y3-y1)-(x2-x1)*(y2-y1)) == 0 ) {
+
+        return;
+    }
+
     // Sort points
     Point points[3];
     points[0] = point(x1, y1);
@@ -970,9 +991,21 @@ void g_set_uv_coords(Graphics* g,
     float u2, float v2, 
     float u3, float v3) {
 
+    const float EPS = 0.001f;
+
+    // Check if coordinates are linearly dependable
+    if ( fabsf((u3-u1)*(v3-v1) - (u2-u1)*(v2-v1)) < EPS ) {
+
+        // Make the coordinates "small"
+        u1 = 0; v1 = 0;
+        u2 = EPS; v2 = EPS;
+        u3 = 0; v3 = EPS;
+    }
+
     g->uv1 = vec2(u1, v1);
     g->uv2 = vec2(u2, v2);
     g->uv3 = vec2(u3, v3);
+
 }
 
 

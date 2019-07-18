@@ -15,6 +15,7 @@ static const float JUMP_EXTEND_TIME = 10.0f;
 static const float DUST_WAIT = 8.0f;
 static const float BLAST_TIME = 10.0f;
 static const float GRAVITY_TARGET = 3.0f;
+static const float RESPAWN_TIME = 30.0f;
 
 
 // Init global data
@@ -201,7 +202,8 @@ static void pl_update_dust(Player* pl, float tm) {
 
     int i;
 
-    if ( (pl->dustTimer += 1.0f * tm) >= DUST_WAIT) {
+    if (!pl->dying && pl->respawnTimer <= 0.0f &&
+        (pl->dustTimer += 1.0f * tm) >= DUST_WAIT) {
 
         pl->dustTimer -= DUST_WAIT;
 
@@ -254,7 +256,8 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
         pl->loading && 
         (s == StateReleased || s == StateUp) && 
         pl->loadTimer >= 0.0f;
-    if (pl->blastTime <= 0.0f && 
+    if (!pl->dying && pl->respawnTimer <= 0.0f && 
+        pl->blastTime <= 0.0f && 
         (s == StatePressed || makeBig)) {
 
         for (i = 0; i < BULLET_COUNT; ++ i) {
@@ -320,6 +323,57 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
 }
 
 
+// Respawn
+static void pl_respawn(Player* pl) {
+
+    pl->respawnTimer = RESPAWN_TIME;
+    pl->spr.frame = 1;
+    pl->spr.row = 0;
+
+    // Reset
+    pl->dying = false;
+    pl->speed = vec2(0, 0);
+    pl->target = vec2(0, 0);
+    pl->loading = false;
+    pl->quickFall = false;
+    pl->doubleJump = true;
+    pl->dustTimer = 0;
+
+    pl->pos = pl->startPos;
+}
+
+
+// Die
+static void pl_die(Player* pl, float globalSpeed, float tm) {
+
+    const float DEATH_ANIM_SPEED = 7.0f;
+
+    int i;
+
+    pl->pos.y = 192-GROUND_COLLISION_HEIGHT;
+    pl->pos.x -= globalSpeed * tm;
+
+    if (pl->spr.frame < 3) {
+
+        spr_animate(&pl->spr, 5, 0, 3, DEATH_ANIM_SPEED, tm);
+    }
+    else {
+
+        // Create a body
+        for (i = 0; i < BODY_COUNT; ++ i) {
+
+            if (pl->bodies[i].exist == false) {
+
+                body_activate(&pl->bodies[i], pl->pos, pl->spr);
+                break;
+            }
+        }
+
+        pl_respawn(pl);
+    }
+}
+
+
 // Create a player
 Player create_player(int x, int y) {
 
@@ -328,12 +382,13 @@ Player create_player(int x, int y) {
     // Set position & speeds
     pl.pos = vec2((float)x, (float)y);
     pl.oldPos = pl.pos;
+    pl.startPos = pl.pos;
     pl.speed = vec2(0, 0);
     pl.target = vec2(0, 0);
 
     // Set other initial values
     pl.jumpTimer = 0.0f;
-    pl.doubleJump = false;
+    pl.doubleJump = true;
     pl.flapping = false;
     pl.djumpReleased = false;
     pl.extendJump = false;
@@ -344,21 +399,31 @@ Player create_player(int x, int y) {
     pl.dustTimer = 0.0f;
     pl.jumpSpeedMul = 1.0f;
     pl.shootWait = 0.0f;
-
+    pl.dying = false;
+    
     // Create sprite
     pl.spr = create_sprite(48, 48);
 
+    // Respawn
+    pl_respawn(&pl);
+
     // Create dust
     int i;
-    for(i = 0; i < DUST_COUNT; ++ i) {
+    for (i = 0; i < DUST_COUNT; ++ i) {
 
         pl.dust[i] = create_dust();
     }
 
     // Create bullets
-    for(i = 0; i < BULLET_COUNT; ++ i) {
+    for (i = 0; i < BULLET_COUNT; ++ i) {
 
         pl.bullets[i] = create_bullet();
+    }
+
+    // Create bodies
+    for (i = 0; i < BODY_COUNT; ++ i) {
+
+        pl.bodies[i] = create_body();
     }
 
     return pl;
@@ -366,24 +431,50 @@ Player create_player(int x, int y) {
 
 
 // Update player
-void pl_update(Player* pl, EventManager* evMan, float tm) {
+void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm) {
 
     const float ARROW_WAVE_SPEED = 0.15f;
+
+    // Update dust
+    pl_update_dust(pl, tm);
+    // Update bullets
+    pl_update_bullets(pl, evMan, tm);
+
+    // Update bodies
+    int i;
+    for (i = 0; i < BODY_COUNT; ++ i) {
+
+        body_update(&pl->bodies[i], globalSpeed, tm);
+    }
+
+    // Respawn
+    if (pl->respawnTimer > 0.0f) {
+
+        pl->respawnTimer -= 1.0f * tm;
+        return;
+    }
+
+    // Die
+    if (pl->dying) {
+
+        pl_die(pl, globalSpeed, tm);
+        return;
+    }
 
     // Do stuff
     pl_control(pl, evMan, tm);
     pl_move(pl, evMan, tm);
-    pl_update_bullets(pl, evMan, tm);
     pl_animate(pl, tm);
-    pl_update_dust(pl, tm);
 
     // Update arrow wave
     pl->arrowWave += ARROW_WAVE_SPEED * tm;
     pl->arrowWave = fmodf(pl->arrowWave, M_PI*2);
 
-    // TEMP
-    // Floor collision
-    pl_jump_collision(pl, 0, 192-GROUND_COLLISION_HEIGHT, 256, 10.0f);
+    // Die
+    if (pl->pos.y > 192-GROUND_COLLISION_HEIGHT) {
+
+        pl_kill(pl, 0);
+    }
 }
 
 
@@ -430,6 +521,52 @@ void pl_draw(Player* pl, Graphics* g) {
     for (i = 0; i < DUST_COUNT; ++ i) {
 
         dust_draw(&pl->dust[i], g, bmpBunny, 255);
+    }
+
+    // Draw bodies
+    for (i = 0; i < BODY_COUNT; ++ i) {
+
+        body_draw(&pl->bodies[i], g, bmpBunny);
+    }
+
+    // Draw respawning
+    int dvalue = 0;
+    int sx, sy;
+    float t1, t2;
+    if (pl->respawnTimer > 0.0f) {
+
+        t1 = 1.0f - pl->respawnTimer / RESPAWN_TIME;
+        dvalue = (int) floorf(t1 * 7);
+
+        // Set scale
+        sx = (int)roundf(pl->spr.width * t1);
+        sy = (int)roundf(pl->spr.height * t1);
+
+        // TODO: Put this to an external function
+        g_set_pixel_function(g, PixelFunctionDarken, dvalue, 0);
+        spr_draw_scaled(&pl->spr, g, bmpBunny, 
+            px - sx/2, 
+            py-24 - sy/2,
+            sx, sy,
+            false);
+        g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+
+        // Draw skipped sprite
+        if (pl->respawnTimer <= RESPAWN_TIME/2) {
+
+            t2 = 1.0f - pl->respawnTimer / (RESPAWN_TIME/2);
+            dvalue =  1 + (int)floorf(t2 * 8);
+
+            g_set_pixel_function(g, PixelFunctionSkip, dvalue, 0);
+            spr_draw_scaled(&pl->spr, g, bmpBunny, 
+                px - sx/2, 
+                py-24 - sy/2,
+                sx, sy,
+                false);
+            g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+        }
+
+        return;
     }
     
     // Draw gun behind the bunny while 
@@ -508,4 +645,19 @@ bool pl_jump_collision(Player* pl, float x, float y, float w, float power) {
     }
 
     return false;
+}
+
+
+// Kill a player
+void pl_kill(Player* pl, int type) {
+
+    pl->dying = true;
+
+    if (type == 0) {
+
+        pl->dying = true;
+        pl->spr.row = 5;
+        pl->spr.frame = 0;
+        pl->spr.count = 0;
+    }
 }

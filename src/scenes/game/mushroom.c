@@ -165,7 +165,7 @@ float mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
     m->jumpTimer = (float) (rand() % JUMP_WAIT_VARY);
     m->gravity = 0.0f;
     m->wave = 0.0f;
-    m->dir = pos.x < 128 ? -1 : 1;
+    m->dir = (minor == 1 && pos.x <= 128) ? -1 : 1;
     m->flip = m->dir < 0;
     m->middlePos = 0.0f;
     m->deathTimer = DEATH_TIME;
@@ -266,7 +266,7 @@ void mush_player_collision(Mushroom* m, Player* pl) {
     const float HEIGHT_MUL = 0.70f;
     const float SPEED_BASE = 3.0f;
     const float POWERS[] = {
-        7.0f, 9.0f, 6.0f, 7.0f, 7.0f, 7.0f,
+        8.0f, 9.0f, 7.0f, 8.0f, 8.0f, 8.0f,
     };
 
     if (!m->exist || m->dying) return;
@@ -287,6 +287,14 @@ void mush_player_collision(Mushroom* m, Player* pl) {
         if (m->minorType == 1 && 
             (m->majorType == 0 || m->majorType == 2))
             m->dying = true;
+
+        // If flying up, make go down. You know
+        // what I mean, no?
+        if ( (m->majorType == 4 || m->majorType == 5) &&
+              m->wave >= M_PI  ) {
+
+            m->wave = M_PI*3 - m->wave;
+        }
     }
 }
 

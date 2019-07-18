@@ -13,11 +13,14 @@
 
 #include "dust.h"
 #include "bullet.h"
+#include "body.h"
 
 // Maximum dust count
 #define DUST_COUNT 16
 // Maximum bullet count
 #define BULLET_COUNT 16
+// Maximum body count (ehhehehe)
+#define BODY_COUNT 4
 
 // Init global data
 void init_global_player(AssetManager* a);
@@ -28,6 +31,7 @@ typedef struct {
     // Position & speed
     Vector2 pos;
     Vector2 oldPos;
+    Vector2 startPos;
     Vector2 speed;
     Vector2 target;
 
@@ -56,8 +60,16 @@ typedef struct {
     bool loading;
     float loadTimer;
 
+    // Bodies
+    Body bodies [BODY_COUNT];
+
     // Arrow "wave" effect
     float arrowWave;
+
+    // If dying
+    bool dying;
+    // Respawn timer
+    float respawnTimer;
 
 } Player;
 
@@ -65,7 +77,7 @@ typedef struct {
 Player create_player(int x, int y);
 
 // Update player
-void pl_update(Player* pl, EventManager* evMan, float tm);
+void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm);
 
 // Draw the player shadow
 void pl_draw_shadow(Player* pl, Graphics* g);
@@ -75,5 +87,8 @@ void pl_draw(Player* pl, Graphics* g);
 
 // Jump collision
 bool pl_jump_collision(Player* pl, float x, float y, float w, float power);
+
+// Kill a player
+void pl_kill(Player* pl, int type);
 
 #endif // __PLAYER__

@@ -241,9 +241,10 @@ void sb_draw(Spikeball* b, Graphics* g) {
     };
 
     if (!b->exist) return;
-
+    
     int x = (int) roundf(b->pos.x);
     int y = (int) roundf(b->pos.y);
+    
     int i;
 
     /*for (i = 0; i < 3; ++ i) {
