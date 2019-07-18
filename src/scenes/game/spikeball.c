@@ -144,7 +144,20 @@ void sb_update(Spikeball* b, float globalSpeed, float tm) {
 // Spikeball-player collision
 void sb_player_collision(Spikeball* b, Player* pl) {
 
-    if (!b->exist) return;
+    const float SELF_RADIUS = 16.0f;
+    const float PL_RADIUS = 16.0f;
+
+    if (!b->exist && !pl->dying && pl->respawnTimer > 0.0f) return;
+
+    float px = pl->pos.x;
+    float py = pl->pos.y - pl->spr.height/2;
+    float bx = b->pos.x;
+    float by = b->pos.y;
+
+    if (hypotf(px - bx, py - by) < SELF_RADIUS + PL_RADIUS) {
+
+        pl_kill(pl, 1);
+    }
 }
 
 

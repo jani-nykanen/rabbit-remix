@@ -346,30 +346,42 @@ static void pl_respawn(Player* pl) {
 // Die
 static void pl_die(Player* pl, float globalSpeed, float tm) {
 
-    const float DEATH_ANIM_SPEED = 7.0f;
+    const float DEATH_ANIM_SPEED[] = {
+        7.0f, 4.0f
+    };
+    const float END_FRAME[] = {
+        3, 5
+    };
 
     int i;
+    int type = pl->spr.row -5;
 
-    pl->pos.y = 192-GROUND_COLLISION_HEIGHT;
+    if (type == 0)
+        pl->pos.y = 192-GROUND_COLLISION_HEIGHT;
     pl->pos.x -= globalSpeed * tm;
 
-    if (pl->spr.frame < 3) {
+    if (pl->spr.frame < END_FRAME[type] ) {
 
-        spr_animate(&pl->spr, 5, 0, 3, DEATH_ANIM_SPEED, tm);
-    }
-    else {
+        spr_animate(&pl->spr, pl->spr.row, 0, END_FRAME[type], 
+            DEATH_ANIM_SPEED[type], tm);
 
-        // Create a body
-        for (i = 0; i < BODY_COUNT; ++ i) {
+        if(pl->spr.frame == END_FRAME[type]) {
 
-            if (pl->bodies[i].exist == false) {
+            if (type == 0) {
+                // Create a body
+                for (i = 0; i < BODY_COUNT; ++ i) {
 
-                body_activate(&pl->bodies[i], pl->pos, pl->spr);
-                break;
+                    if (pl->bodies[i].exist == false) {
+
+                        body_activate(&pl->bodies[i], pl->pos, pl->spr);
+                        break;
+                    }
+                }
             }
-        }
 
-        pl_respawn(pl);
+            pl_respawn(pl);
+            
+        }
     }
 }
 
@@ -651,13 +663,10 @@ bool pl_jump_collision(Player* pl, float x, float y, float w, float power) {
 // Kill a player
 void pl_kill(Player* pl, int type) {
 
+    if (pl->dying || pl->respawnTimer > 0.0f) return;
+
     pl->dying = true;
-
-    if (type == 0) {
-
-        pl->dying = true;
-        pl->spr.row = 5;
-        pl->spr.frame = 0;
-        pl->spr.count = 0;
-    }
+    pl->spr.row = 5 + type;
+    pl->spr.frame = 0;
+    pl->spr.count = 0;
 }

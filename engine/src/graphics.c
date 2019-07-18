@@ -645,6 +645,11 @@ void g_draw_scaled_bitmap_region(Graphics* g, Bitmap* bmp,
     dx += g->translation.x;
     dy += g->translation.y;
 
+    // If outside the screen, do not draw
+    if (dx+dw < 0 || dy+dh < 0 ||
+        dx >= g->csize.x || dy >= g->csize.y  )
+        return;
+
     int tx, ty;
     uint8 col;
 
@@ -1013,6 +1018,6 @@ void g_set_uv_coords(Graphics* g,
 void g_toggle_texturing(Graphics* g, Bitmap* tex) {
 
     g->tex = tex;
-    if (tex == NULL)
+    if (tex == NULL || tex->width <= 0 || tex->height <= 0)
         g->pfunc = pfunc_default;
 }
