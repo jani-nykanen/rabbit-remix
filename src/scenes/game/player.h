@@ -84,6 +84,9 @@ void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm);
 // Draw the player shadow
 void pl_draw_shadow(Player* pl, Graphics* g);
 
+// Draw entrance portal
+void pl_draw_entrance_portal(Player* pl, Graphics* g);
+
 // Draw player
 void pl_draw(Player* pl, Graphics* g);
 

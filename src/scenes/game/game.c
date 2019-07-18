@@ -388,6 +388,9 @@ static void game_draw(Graphics* g) {
     // Draw player shadow
     pl_draw_shadow(&player, g);
 
+    // Draw player entrance portal
+    pl_draw_entrance_portal(&player, g);
+
     // Draw mushrooms
     for (i = 0; i < MUSHROOM_COUNT; ++ i) {
 

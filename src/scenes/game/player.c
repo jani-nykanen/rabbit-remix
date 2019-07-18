@@ -341,6 +341,7 @@ static void pl_respawn(Player* pl) {
     pl->doubleJump = true;
     pl->dustTimer = 0;
     pl->invincibilityTimer = INVINCIBILITY_TIME;
+    pl->djumpReleased = false;
 
     pl->pos = pl->startPos;
 }
@@ -529,6 +530,37 @@ void pl_draw_shadow(Player* pl, Graphics* g) {
 }
 
 
+// Draw entrance portal
+void pl_draw_entrance_portal(Player* pl, Graphics* g) {
+
+    const float RADIUS_MAX = 48.0f;
+
+    if (pl->respawnTimer <= 0.0f) return;
+
+    float t = pl->respawnTimer / RESPAWN_TIME;
+    float r = RADIUS_MAX * (1.0f-t);
+
+    float angle = t * M_PI;
+
+    int cx = (int)roundf(pl->pos.x);
+    int cy = (int)roundf(pl->pos.y) - pl->spr.height/2;
+
+    float step = M_PI*2.0f / 3.0f;
+    int dvalue = (int) floorf(t * 14);
+
+    g_toggle_texturing(g, NULL);
+    g_set_pixel_function(g, PixelFunctionDarken, dvalue, 0);
+    g_draw_triangle(
+        g, 
+        cx + (int)(cosf(angle)*r), cy + (int)(sinf(angle)*r),
+        cx + (int)(cosf(angle+step)*r), cy + (int)(sinf(angle+step)*r),
+        cx + (int)(cosf(angle+step*2)*r), cy + (int)(sinf(angle+step*2)*r),
+        255
+    );
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+}
+
+
 // Draw player
 void pl_draw(Player* pl, Graphics* g) {
 
@@ -540,6 +572,7 @@ void pl_draw(Player* pl, Graphics* g) {
 
     int px = (int)roundf(pl->pos.x);
     int py = (int)roundf(pl->pos.y);
+
 
     // Draw dust
     for (i = 0; i < DUST_COUNT; ++ i) {
@@ -556,40 +589,21 @@ void pl_draw(Player* pl, Graphics* g) {
     // Draw respawning
     int dvalue = 0;
     int sx, sy;
-    float t1, t2;
+    float t;
     if (pl->respawnTimer > 0.0f) {
 
-        t1 = 1.0f - pl->respawnTimer / RESPAWN_TIME;
-        dvalue = (int) floorf(t1 * 7);
+        t = 1.0f - pl->respawnTimer / RESPAWN_TIME;
 
         // Set scale
-        sx = (int)roundf(pl->spr.width * t1);
-        sy = (int)roundf(pl->spr.height * t1);
+        sx = (int)roundf(pl->spr.width * t);
+        sy = (int)roundf(pl->spr.height * t);
 
-        // TODO: Put this to an external function
-        g_set_pixel_function(g, PixelFunctionSkipSimple, dvalue, 0);
+        // Draw sprite
         spr_draw_scaled(&pl->spr, g, bmpBunny, 
             px - sx/2, 
             py-24 - sy/2,
             sx, sy,
             false);
-        g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
-/* 
-        // Draw skipped sprite
-        if (pl->respawnTimer <= RESPAWN_TIME/2) {
-
-            t2 = 1.0f - pl->respawnTimer / (RESPAWN_TIME/2);
-            dvalue =  1 + (int)floorf(t2 * 8);
-
-            g_set_pixel_function(g, PixelFunctionSkip, dvalue, 0);
-            spr_draw_scaled(&pl->spr, g, bmpBunny, 
-                px - sx/2, 
-                py-24 - sy/2,
-                sx, sy,
-                false);
-            g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
-            }*/
-        
 
         return;
     }
@@ -609,9 +623,10 @@ void pl_draw(Player* pl, Graphics* g) {
 
         g_set_pixel_function(g, PixelFunctionInverse, 0, 0);
     }
-    else if(pl->invincibilityTimer > 0.0f) {
+    else if(pl->invincibilityTimer > 0.0f &&
+            (int)floorf(pl->invincibilityTimer/4) % 2 == 1) {
 
-         g_set_pixel_function(g, PixelFunctionSkipSimple, 2, 0);
+         g_set_pixel_function(g, PixelFunctionSkipSimple, 0, 0);
     }
 
     spr_draw(&pl->spr, g, bmpBunny, 
