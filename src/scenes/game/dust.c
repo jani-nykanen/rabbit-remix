@@ -65,7 +65,7 @@ void dust_draw(Dust* d, Graphics* g, Bitmap* bmp, uint8 col) {
     int dw = (int) (d->sw*scale);
     int dh = (int) (d->sh*scale);
 
-    g_set_pixel_function(g, PixelFunctionSingleColorSkip, skip, 0b11110100);
+    g_set_pixel_function(g, PixelFunctionSingleColorSkipSimple, skip, 0b11110100);
     g_draw_scaled_bitmap_region(g, bmp, 
         d->sx, d->sy, d->sw, d->sh, 
         dx, dy, dw, dh, false);

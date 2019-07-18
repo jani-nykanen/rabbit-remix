@@ -79,6 +79,26 @@ static void pfunc_skip(void* _g, int offset, uint8 col) {
         return;
     g->pdata[offset] = col;
 }
+static void pfunc_skip_simple(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+
+    int x = offset % g->csize.x;
+    int y = offset / g->csize.x;
+
+    if (x % 2 == y % 2) 
+        g->pdata[offset] = col;
+}
+static void pfunc_skip_simple_single_color(void* _g, int offset, uint8 col) {
+
+    Graphics* g = (Graphics*)_g;
+
+    int x = offset % g->csize.x;
+    int y = offset / g->csize.x;
+
+    if (x % 2 == y % 2) 
+        g->pdata[offset] = g->pparam2;
+}
 static void pfunc_texture(void* _g, int offset, uint8 col) {
 
     Graphics* g = (Graphics*)_g;
@@ -488,6 +508,14 @@ void g_set_pixel_function(Graphics* g, int func, int param1, int param2) {
 
     case PixelFunctionSkip:
         g->pfunc = pfunc_skip;
+        break;
+
+    case PixelFunctionSkipSimple:
+        g->pfunc = pfunc_skip_simple;
+        break;
+
+    case PixelFunctionSingleColorSkipSimple:
+        g->pfunc = pfunc_skip_simple_single_color;
         break;
     
     default:

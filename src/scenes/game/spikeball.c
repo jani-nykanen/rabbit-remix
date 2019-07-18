@@ -88,7 +88,6 @@ void sb_update(Spikeball* b, float globalSpeed, float tm) {
     const float EPS = 0.1f;
     const float SPEED_DELTA = 0.05f;
 
-
     if (!b->exist) return;
 
     float dist = hypotf(b->pos.x-b->startPos.x, b->pos.y);
@@ -147,7 +146,9 @@ void sb_player_collision(Spikeball* b, Player* pl) {
     const float SELF_RADIUS = 16.0f;
     const float PL_RADIUS = 16.0f;
 
-    if (!b->exist && !pl->dying && pl->respawnTimer > 0.0f) return;
+    if (!b->exist || pl->dying || pl->respawnTimer > 0.0f ||
+        pl->invincibilityTimer > 0.0f) 
+        return;
 
     float px = pl->pos.x;
     float py = pl->pos.y - pl->spr.height/2;

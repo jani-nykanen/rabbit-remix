@@ -281,7 +281,7 @@ static int game_on_load(AssetManager* a) {
 
     // Create components
     stage = create_stage(a);
-    player = create_player(64, 64);
+    player = create_player(48, 64);
 
     // Init arrays
     int i;
@@ -403,7 +403,7 @@ static void game_draw(Graphics* g) {
     // Draw player
     pl_draw(&player, g);
 
-    g_draw_text(g, bmpFont, "ALPHA 0.2.0", 2, 2, 0, 0, false);
+    g_draw_text(g, bmpFont, "ALPHA 0.2.7", 2, 2, 0, 0, false);
 
 }
 

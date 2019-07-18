@@ -326,6 +326,8 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
 // Respawn
 static void pl_respawn(Player* pl) {
 
+    const float INVINCIBILITY_TIME = 120.0f;
+
     pl->respawnTimer = RESPAWN_TIME;
     pl->spr.frame = 1;
     pl->spr.row = 0;
@@ -338,6 +340,7 @@ static void pl_respawn(Player* pl) {
     pl->quickFall = false;
     pl->doubleJump = true;
     pl->dustTimer = 0;
+    pl->invincibilityTimer = INVINCIBILITY_TIME;
 
     pl->pos = pl->startPos;
 }
@@ -419,6 +422,9 @@ Player create_player(int x, int y) {
     // Respawn
     pl_respawn(&pl);
 
+    // No need to be invincible now
+    pl.invincibilityTimer = 0.0f;
+
     // Create dust
     int i;
     for (i = 0; i < DUST_COUNT; ++ i) {
@@ -457,6 +463,12 @@ void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm) {
     for (i = 0; i < BODY_COUNT; ++ i) {
 
         body_update(&pl->bodies[i], globalSpeed, tm);
+    }
+
+    // Update invincibility timer
+    if (pl->invincibilityTimer > 0.0f) {
+
+        pl->invincibilityTimer -= 1.0f * tm;
     }
 
     // Respawn
@@ -555,14 +567,14 @@ void pl_draw(Player* pl, Graphics* g) {
         sy = (int)roundf(pl->spr.height * t1);
 
         // TODO: Put this to an external function
-        g_set_pixel_function(g, PixelFunctionDarken, dvalue, 0);
+        g_set_pixel_function(g, PixelFunctionSkipSimple, dvalue, 0);
         spr_draw_scaled(&pl->spr, g, bmpBunny, 
             px - sx/2, 
             py-24 - sy/2,
             sx, sy,
             false);
         g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
-
+/* 
         // Draw skipped sprite
         if (pl->respawnTimer <= RESPAWN_TIME/2) {
 
@@ -576,7 +588,8 @@ void pl_draw(Player* pl, Graphics* g) {
                 sx, sy,
                 false);
             g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
-        }
+            }*/
+        
 
         return;
     }
@@ -592,14 +605,20 @@ void pl_draw(Player* pl, Graphics* g) {
 
     // Draw sprite
     if (pl->loading && pl->loadTimer > 0.0f && 
-        (int)floorf(pl->loadTimer/4.0f) % 2 == 0) {
+            (int)floorf(pl->loadTimer/4.0f) % 2 == 0) {
 
         g_set_pixel_function(g, PixelFunctionInverse, 0, 0);
     }
+    else if(pl->invincibilityTimer > 0.0f) {
+
+         g_set_pixel_function(g, PixelFunctionSkipSimple, 2, 0);
+    }
+
     spr_draw(&pl->spr, g, bmpBunny, 
         px-24, 
         py-48, false);
     g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+
 
     // Draw bullets
     for (i = 0; i < BULLET_COUNT; ++ i) {

@@ -70,6 +70,8 @@ typedef struct {
     bool dying;
     // Respawn timer
     float respawnTimer;
+    // Gotta love this word
+    float invincibilityTimer;
 
 } Player;
 
