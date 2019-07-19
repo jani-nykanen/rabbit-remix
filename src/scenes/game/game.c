@@ -11,6 +11,7 @@
 #include "player.h"
 #include "mushroom.h"
 #include "spikeball.h"
+#include "stats.h"
 
 // Constants that are actually macros, d'oh!
 #define MUSHROOM_COUNT 8
@@ -39,12 +40,15 @@ static const int SPIKEBALL_SPECIAL_PROB[] = {
 
 // Bitmaps
 static Bitmap* bmpFont;
+static Bitmap* bmpHUD;
+static Bitmap* bmpNumbersBig;
 
 // Components
 static Stage stage;
 static Player player;
 static Mushroom mushrooms [MUSHROOM_COUNT];
 static Spikeball spikeballs [SPIKEBALL_COUNT];
+static Stats stats;
 
 // Mushroom timer & stuff
 static float mushroomTimer;
@@ -63,7 +67,6 @@ static int phase;
 
 // Is paused
 static int paused;
-
 
 // Get index by probability
 static int get_index(int prob) {
@@ -272,7 +275,10 @@ static int game_on_load(AssetManager* a) {
 
     const float INITIAL_MUSHROOM_WAIT = 60.0f;
 
+    // Get bitmaps
     bmpFont = (Bitmap*)assets_get(a, "font");
+    bmpHUD = (Bitmap*)assets_get(a, "hud");
+    bmpNumbersBig = (Bitmap*)assets_get(a, "numbersBig");
 
     // Initialize global components
     init_global_player(a);
@@ -281,7 +287,7 @@ static int game_on_load(AssetManager* a) {
 
     // Create components
     stage = create_stage(a);
-    player = create_player(48, 64);
+    player = create_player(48, 48);
 
     // Init arrays
     int i;
@@ -302,6 +308,9 @@ static int game_on_load(AssetManager* a) {
     phase = 0;
     spikeballWait = SPIKEBALL_MIN_TIME[phase];
     paused = false;
+
+    // Create stats
+    stats = create_default_stats();
 
     // Create starter mushrooms
     create_starter_mushrooms();
@@ -369,6 +378,108 @@ static void game_update(void* e, float tm) {
 }
 
 
+// Draw top-left hud portion
+static void game_draw_top_left_hud(Graphics* g) {
+
+    const int LIVES_X_OFF = 18;
+    const int LIVES_X = 2;
+    const int LIVES_Y = 2;
+
+    const int STAR_Y = 18;
+    const int STAR_X = 2;
+    const int BAR_X_OFF = 16;
+    const int BAR_Y = STAR_Y+2;
+
+    const float PLAYER_LIMIT_X = 96;
+    const float PLAYER_LIMIT_Y = 56;
+
+    int i;
+    int sx, sy;
+
+    // Check if the player is too close the hud
+    if (player.pos.x < PLAYER_LIMIT_X && 
+        player.pos.y < PLAYER_LIMIT_Y &&
+        player.pos.y > 0.0f) {
+
+        g_set_pixel_function(g, 
+            PixelFunctionSkipSimple, 0, 0);
+    }
+
+    // Draw lives
+    for (i = 0; i < stats.maxLives; ++ i) {
+
+        sx = stats.lives-1 >= i ? 0 : 16;
+        g_draw_bitmap_region(g, bmpHUD, sx, 0, 16, 16,
+            LIVES_X + i *LIVES_X_OFF, LIVES_Y,
+            false);
+    }
+
+    // Draw star 
+    g_draw_bitmap_region(g, bmpHUD, 32, 0, 16, 16,
+            STAR_X, STAR_Y, false);
+
+    // Draw bar
+    for (i = 0; i < 3; ++ i) {
+
+        sx = 25;
+        g_draw_bitmap_region(g, bmpHUD, 
+            sx, 16, 25, 10,
+            STAR_X + BAR_X_OFF + i*24,
+            BAR_Y,
+            false);
+    }
+
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+}
+
+
+// Draw score
+static void game_draw_hud_score(Graphics* g) {
+
+    const int SCORE_DELTA_X = 16;
+    const int SCORE_TEXT_Y = 2;
+    const int SCORE_Y_OFF = 8;
+    const int SMALL_FONT_X_OFF = -1;
+    const int BIG_FONT_X_OFF = -5;
+
+    const float PLAYER_LIMIT_X = 32;
+    const float PLAYER_LIMIT_Y = 48;
+
+    // Check if the player is too close the text
+    int mid = g->csize.x/2;
+    if (player.pos.x > mid-PLAYER_LIMIT_X &&
+        player.pos.x < mid+PLAYER_LIMIT_X && 
+        player.pos.y < PLAYER_LIMIT_Y &&
+        player.pos.y > 0.0f) {
+
+        g_set_pixel_function(g, 
+            PixelFunctionSkipSimple, 0, 0);
+    }
+
+    g_draw_text(g, bmpFont, "SCORE", 
+        mid + SCORE_DELTA_X, 
+        SCORE_TEXT_Y, 
+        SMALL_FONT_X_OFF, 0, 
+        true);
+
+    g_draw_text(g, bmpNumbersBig, "123456", 
+        mid + SCORE_DELTA_X, 
+        SCORE_TEXT_Y+SCORE_Y_OFF,
+        BIG_FONT_X_OFF, 0, true);
+
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+}
+
+
+// Draw hud
+static void game_draw_hud(Graphics* g) {
+
+    // Draw different portions
+    game_draw_top_left_hud(g);
+    game_draw_hud_score(g);
+}
+
+
 // Draw
 static void game_draw(Graphics* g) {
     
@@ -406,7 +517,8 @@ static void game_draw(Graphics* g) {
     // Draw player
     pl_draw(&player, g);
 
-    g_draw_text(g, bmpFont, "ALPHA 0.2.7", 2, 2, 0, 0, false);
+    // Draw HUD
+    game_draw_hud(g);
 
 }
 

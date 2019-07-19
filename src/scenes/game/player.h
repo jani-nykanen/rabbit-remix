@@ -72,7 +72,7 @@ typedef struct {
     float respawnTimer;
     // Gotta love this word
     float invincibilityTimer;
-
+    
 } Player;
 
 // Create a player

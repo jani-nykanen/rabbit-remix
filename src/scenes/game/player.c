@@ -342,6 +342,7 @@ static void pl_respawn(Player* pl) {
     pl->dustTimer = 0;
     pl->invincibilityTimer = INVINCIBILITY_TIME;
     pl->djumpReleased = false;
+    pl->jumpTimer = 0.0f;
 
     pl->pos = pl->startPos;
 }
