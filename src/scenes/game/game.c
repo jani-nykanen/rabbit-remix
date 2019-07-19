@@ -31,7 +31,7 @@ static const int SPIKEBALL_MIN_TIME[] = {
     2
 };
 static const int SPIKEBALL_MAX_TIME[] = {
-    4
+    10
 };
 static const int SPIKEBALL_SPECIAL_PROB[] = {
     25
@@ -382,13 +382,8 @@ static void game_update(void* e, float tm) {
 static void game_draw_top_left_hud(Graphics* g) {
 
     const int LIVES_X_OFF = 18;
-    const int LIVES_X = 2;
-    const int LIVES_Y = 2;
-
-    const int STAR_Y = 18;
-    const int STAR_X = 2;
-    const int BAR_X_OFF = 16;
-    const int BAR_Y = STAR_Y+2;
+    const int LIVES_X = 4;
+    const int LIVES_Y = 4;
 
     const float PLAYER_LIMIT_X = 96;
     const float PLAYER_LIMIT_Y = 56;
@@ -398,8 +393,7 @@ static void game_draw_top_left_hud(Graphics* g) {
 
     // Check if the player is too close the hud
     if (player.pos.x < PLAYER_LIMIT_X && 
-        player.pos.y < PLAYER_LIMIT_Y &&
-        player.pos.y > 0.0f) {
+        player.pos.y < PLAYER_LIMIT_Y) {
 
         g_set_pixel_function(g, 
             PixelFunctionSkipSimple, 0, 0);
@@ -411,21 +405,6 @@ static void game_draw_top_left_hud(Graphics* g) {
         sx = stats.lives-1 >= i ? 0 : 16;
         g_draw_bitmap_region(g, bmpHUD, sx, 0, 16, 16,
             LIVES_X + i *LIVES_X_OFF, LIVES_Y,
-            false);
-    }
-
-    // Draw star 
-    g_draw_bitmap_region(g, bmpHUD, 32, 0, 16, 16,
-            STAR_X, STAR_Y, false);
-
-    // Draw bar
-    for (i = 0; i < 3; ++ i) {
-
-        sx = 25;
-        g_draw_bitmap_region(g, bmpHUD, 
-            sx, 16, 25, 10,
-            STAR_X + BAR_X_OFF + i*24,
-            BAR_Y,
             false);
     }
 
@@ -443,14 +422,13 @@ static void game_draw_hud_score(Graphics* g) {
     const int BIG_FONT_X_OFF = -5;
 
     const float PLAYER_LIMIT_X = 32;
-    const float PLAYER_LIMIT_Y = 48;
+    const float PLAYER_LIMIT_Y = 56;
 
     // Check if the player is too close the text
     int mid = g->csize.x/2;
     if (player.pos.x > mid-PLAYER_LIMIT_X &&
         player.pos.x < mid+PLAYER_LIMIT_X && 
-        player.pos.y < PLAYER_LIMIT_Y &&
-        player.pos.y > 0.0f) {
+        player.pos.y < PLAYER_LIMIT_Y) {
 
         g_set_pixel_function(g, 
             PixelFunctionSkipSimple, 0, 0);
@@ -471,12 +449,89 @@ static void game_draw_hud_score(Graphics* g) {
 }
 
 
+// Draw coins
+static void game_draw_hud_coins(Graphics* g) {
+
+    const int ICON_X = 200;
+    const int ICON_Y = 4;
+
+    const int TEXT_X = 216;
+    const int TEXT_Y = 4;
+    const int TEXT_X_OFF = -5;
+
+    const float PLAYER_LIMIT_X = 192;
+    const float PLAYER_LIMIT_Y = 48;
+
+    if (player.pos.x > PLAYER_LIMIT_X &&
+        player.pos.y < PLAYER_LIMIT_Y) {
+
+        g_set_pixel_function(g, 
+            PixelFunctionSkipSimple, 0, 0);
+    }
+
+    // Draw icon
+    g_draw_bitmap_region(g, bmpHUD,
+        48, 0, 16, 16, ICON_X, ICON_Y, false);
+
+    // Draw text    
+    g_draw_text(g, bmpNumbersBig, ":99", 
+        TEXT_X, TEXT_Y, TEXT_X_OFF, 0, false);
+
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+}
+
+
+// Draw bottom bars
+static void game_draw_bottom_bars(Graphics* g) {
+
+    const int STAR_Y = 192-18;
+    const int STAR_X = 256-92;
+    const int STAR_BAR_X_OFF = 17;
+    const int STAR_BAR_Y = STAR_Y+4;
+
+    const int GEM_X = 4;
+    const int GEM_Y = STAR_Y;
+
+    const int POWER_BAR_X_OFF = 18;
+    const int POWER_BAR_Y = STAR_BAR_Y;
+
+    int i, sx;
+
+    // Draw star 
+    g_draw_bitmap_region(g, bmpHUD, 32, 0, 16, 16,
+            STAR_X, STAR_Y, false);
+
+    // Draw gem 
+    g_draw_bitmap_region(g, bmpHUD, 64, 0, 16, 16,
+            GEM_X, GEM_Y, false);
+
+    // Draw star bar
+    for (i = 0; i < 3; ++ i) {
+
+        sx = 25;
+        g_draw_bitmap_region(g, bmpHUD, 
+            sx, 16, 25, 10,
+            STAR_X + STAR_BAR_X_OFF + i*24,
+            STAR_BAR_Y,
+            false);
+    }
+
+    // Draw power bar
+    g_draw_bitmap_region(g, bmpHUD,
+        0, 26, 72, 10, GEM_X + POWER_BAR_X_OFF,
+        POWER_BAR_Y,
+        false);
+}
+
+
 // Draw hud
 static void game_draw_hud(Graphics* g) {
 
     // Draw different portions
     game_draw_top_left_hud(g);
     game_draw_hud_score(g);
+    game_draw_hud_coins(g);
+    game_draw_bottom_bars(g);
 }
 
 

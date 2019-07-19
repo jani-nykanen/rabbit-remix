@@ -16,6 +16,7 @@ Stats create_default_stats() {
     s.gunPower = 1.0f;
 
     s.score = 0;
+    s.coins = 0;
 
     return s;
 }
