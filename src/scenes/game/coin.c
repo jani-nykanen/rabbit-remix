@@ -22,7 +22,7 @@ Coin create_coin() {
     Coin c;
     c.exist = false;
 
-    c.spr = create_sprite(16, 16);
+    c.spr = create_sprite(20, 20);
 
     return c;
 }
@@ -40,11 +40,11 @@ void coin_activate(Coin* c, Vector2 pos, Vector2 speed) {
 // Update a coin
 void coin_update(Coin* c, float globalSpeed, float tm) {
 
-    const float SPEED_LIMIT = 0.5f;
+    const float SPEED_LIMIT = 1.25f;
     const float COLLISION_MUL = 0.90f;
-    const float GRAVITY_DELTA = 0.15f;
-    const float GRAVITY_MAX = 3.0f;
-    const float SPEED_DELTA = 0.01f;
+    const float GRAVITY_DELTA = 0.05f;
+    const float GRAVITY_MAX = 2.0f;
+    const float SPEED_DELTA = 0.005f;
     const float ANIM_SPEED = 6.0f;
 
     if (!c->exist) return;
@@ -103,11 +103,36 @@ void coin_update(Coin* c, float globalSpeed, float tm) {
 // Coin-player collision
 void coin_player_collision(Coin* c, Player* pl) {
 
+    const float HIT_W = 12.0f;
+    const float HIT_H = 12.0f;
+
     if (!c->exist || pl->dying || pl->respawnTimer > 0.0f) 
         return;
 
     // REMEMBER: Three times collision, for looping
     // positions also
+
+    float px = pl->pos.x;
+    float py = pl->pos.y;
+
+    float pw = pl->spr.width;
+    float ph = pl->spr.height;
+
+    float cx = c->pos.x;
+    float cy = c->pos.y - c->spr.height/2;
+
+    int i;
+    for (i = -1; i <= 1; ++ i) {
+
+        if (px + pw/2 > cx+i*256-HIT_W/2 &&
+            px - pw/2 < cx+i*256+HIT_W/2 &&
+            py > cy - HIT_H/2 &&
+            py - ph < cy + HIT_H/2) {
+
+            c->exist = false;
+            break;
+        }
+    }
 }
 
 
@@ -122,8 +147,8 @@ void coin_draw(Coin* c, Graphics* g) {
 
         // Draw sprite
         spr_draw(&c->spr, g, bmpCoin, 
-            (int)roundf(c->pos.x)-8 + i*g->csize.x,
-            (int)roundf(c->pos.y)-16,
+            (int)roundf(c->pos.x)-10 + i*g->csize.x,
+            (int)roundf(c->pos.y)-20,
             false);
     }
 }   

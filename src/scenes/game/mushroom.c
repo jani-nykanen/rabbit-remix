@@ -264,10 +264,11 @@ void mush_update(Mushroom* m, float globalSpeed, float tm) {
 static void mush_create_coins(Mushroom* m, 
     Coin* coins, int len, int min, int max) {
 
-    const float SPEED_VARY_X = 2.0f;
-    const float SPEED_VARY_Y = -4.5f;
+    const float SPEED_VARY_X_RIGHT = 2.5f;
+    const float SPEED_VARY_X_LEFT = -1.5f;
+    const float SPEED_VARY_Y = -2.25f;
     const float SPEED_Y_BASE = -1.5f;
-    const float Y_OFF = -8.0f;
+    const float Y_OFF = 0.0f;
 
     int i;
     int loop = (rand() % (max-min)) + min;
@@ -279,7 +280,8 @@ static void mush_create_coins(Mushroom* m,
 
     for (i = 0 ; i < loop; ++ i) {
 
-        speed.x = (float)(rand() % 100)/100.0f * SPEED_VARY_X;
+        speed.x = (float)(rand() % 100)/100.0f * 
+            (SPEED_VARY_X_RIGHT - SPEED_VARY_X_LEFT) + SPEED_VARY_X_LEFT ;
         speed.y = SPEED_Y_BASE +
             (float)(rand() % 100)/100.0f * SPEED_VARY_Y;
 
@@ -301,6 +303,12 @@ void mush_player_collision(Mushroom* m, Player* pl,
     const float POWERS[] = {
         8.0f, 9.0f, 7.0f, 8.0f, 8.0f, 8.0f,
     };
+    const int GOLDEN_MIN[] = {
+        3, 0, 4
+    };
+    const int GOLDEN_MAX[] = {
+        5, 0, 6
+    };
 
     if (!m->exist || m->dying) return;
 
@@ -318,8 +326,15 @@ void mush_player_collision(Mushroom* m, Player* pl,
 
         // Die if golden mushroom
         if (m->minorType == 1 && 
-            (m->majorType == 0 || m->majorType == 2))
+            (m->majorType == 0 || m->majorType == 2)) {
+
             m->dying = true;
+
+            // Create coins
+            mush_create_coins(m, coins, len, 
+                GOLDEN_MIN[m->majorType], 
+                GOLDEN_MAX[m->majorType]);
+        }
 
         // If flying up, make go down. You know
         // what I mean, no?
@@ -329,7 +344,7 @@ void mush_player_collision(Mushroom* m, Player* pl,
             m->wave = M_PI*3 - m->wave;
         }
 
-        mush_create_coins(m, coins, len, 1, 3);
+        
     }
 }
 

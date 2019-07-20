@@ -199,7 +199,8 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
         major = get_index(rand() % 100);
         minor = get_minor_index(major, rand() % 100);
 
-        if (minor == 1) {
+        if (major != 0 && major != 2 &&
+            minor == 1) {
 
             if (prohibitSpecialCount > 0) {
 
