@@ -5,7 +5,7 @@
 #include <math.h>
 
 // Constants
-static const float DEATH_TIME = 20.0f;
+static const float DEATH_TIME = 15.0f;
 
 // Bitmaps
 static Bitmap* bmpCoin;
@@ -187,6 +187,7 @@ void coin_draw(Coin* c, Graphics* g) {
             sy = (int)((1.0f + (1.0f-t)*(DEATH_SCALE-1.0f)) * c->spr.height);
 
             skip = 1 + (int) floorf( t * 10);
+            
             g_set_pixel_function(g, PixelFunctionSkip, skip, 0);
 
             // Draw scaled sprite
