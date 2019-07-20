@@ -23,6 +23,12 @@ typedef struct {
     Sprite spr;
     bool exist;
 
+    // Could be "disappearing" as well 
+    bool dying;
+    float deathTimer;
+
+    float wait;
+
 } Coin;
 
 // Create a coin
