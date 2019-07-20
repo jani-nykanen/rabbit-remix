@@ -11,6 +11,7 @@
 #include <engine/sprite.h>
 
 #include "player.h"
+#include "coin.h"
 
 // Initialize global content
 void init_global_mushrooms(AssetManager* a);
@@ -60,7 +61,8 @@ float mush_activate(Mushroom* m, Vector2 pos, int major, int minor);
 void mush_update(Mushroom* m, float globalSpeed, float tm);
 
 // Player collision
-void mush_player_collision(Mushroom* m, Player* pl);
+void mush_player_collision(Mushroom* m, Player* pl,
+    Coin* coins, int len);
 
 // Draw a mushroom
 void mush_draw(Mushroom* m, Graphics* g);

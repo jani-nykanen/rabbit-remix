@@ -260,8 +260,41 @@ void mush_update(Mushroom* m, float globalSpeed, float tm) {
 }
 
 
+// Create coins
+static void mush_create_coins(Mushroom* m, 
+    Coin* coins, int len, int min, int max) {
+
+    const float SPEED_VARY_X = 2.0f;
+    const float SPEED_VARY_Y = -4.5f;
+    const float SPEED_Y_BASE = -1.5f;
+    const float Y_OFF = -8.0f;
+
+    int i;
+    int loop = (rand() % (max-min)) + min;
+
+    Vector2 speed;
+    Vector2 pos = m->pos;
+    pos.y += Y_OFF;
+    Coin* c;
+
+    for (i = 0 ; i < loop; ++ i) {
+
+        speed.x = (float)(rand() % 100)/100.0f * SPEED_VARY_X;
+        speed.y = SPEED_Y_BASE +
+            (float)(rand() % 100)/100.0f * SPEED_VARY_Y;
+
+        c = coin_get_next(coins, len);
+        if (c == NULL) break;
+
+        // Activate
+        coin_activate(c, pos, speed);
+    }
+}
+
+
 // Player collision
-void mush_player_collision(Mushroom* m, Player* pl) {
+void mush_player_collision(Mushroom* m, Player* pl,
+    Coin* coins, int len) {
 
     const float HEIGHT_MUL = 0.70f;
     const float SPEED_BASE = 3.0f;
@@ -295,6 +328,8 @@ void mush_player_collision(Mushroom* m, Player* pl) {
 
             m->wave = M_PI*3 - m->wave;
         }
+
+        mush_create_coins(m, coins, len, 1, 3);
     }
 }
 
