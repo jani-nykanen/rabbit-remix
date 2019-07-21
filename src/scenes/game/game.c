@@ -13,11 +13,13 @@
 #include "spikeball.h"
 #include "coin.h"
 #include "stats.h"
+#include "message.h"
 
 // Constants that are actually macros, d'oh!
 #define MUSHROOM_COUNT 8
 #define SPIKEBALL_COUNT 8
 #define COIN_COUNT 32
+#define MSG_COUNT 16
 
 // Constants
 static const float MUSHROOM_GEN_TIME = 90.0f;
@@ -51,6 +53,7 @@ static Player player;
 static Mushroom mushrooms [MUSHROOM_COUNT];
 static Spikeball spikeballs [SPIKEBALL_COUNT];
 static Coin coins [COIN_COUNT];
+static Message messages [MSG_COUNT];
 static Stats stats;
 
 // Mushroom timer & stuff
@@ -311,6 +314,10 @@ static int game_on_load(AssetManager* a) {
 
         coins[i] = create_coin();
     }
+    for (i = 0; i < MSG_COUNT; ++ i) {
+
+        messages[i] = create_message();
+    }
 
     // Set initials
     globalSpeed = 0.0f;
@@ -370,7 +377,8 @@ static void game_update(void* e, float tm) {
 
         mush_update(&mushrooms[i], speed, tm);
         mush_player_collision(&mushrooms[i], &player,
-            coins, COIN_COUNT);
+            coins, COIN_COUNT,
+            messages, MSG_COUNT);
     }
     // Update spikeballs
     for (i = 0; i < SPIKEBALL_COUNT; ++ i) {
@@ -390,6 +398,12 @@ static void game_update(void* e, float tm) {
 
         coin_update(&coins[i], speed, tm);
         coin_player_collision(&coins[i], &player);
+    }
+    
+    // Update messages
+    for (i = 0; i < MSG_COUNT; ++ i) {
+
+        msg_update(&messages[i], tm);
     }
 
     // Update stats
@@ -617,6 +631,12 @@ static void game_draw(Graphics* g) {
     for (i = 0; i < COIN_COUNT; ++ i) {
 
         coin_draw(&coins[i], g);
+    }
+
+    // Draw messages
+    for (i = 0; i < MSG_COUNT; ++ i) {
+
+        msg_draw(&messages[i], g, bmpFont);
     }
 
     // Draw HUD

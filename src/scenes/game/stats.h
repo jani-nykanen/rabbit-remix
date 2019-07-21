@@ -33,6 +33,9 @@ void stats_add_coins(Stats* s, int count);
 // Modify gun power
 void stats_change_gun_power(Stats* s, float delta);
 
+// Add points
+void stats_add_points(Stats* s, int points);
+
 // Update
 void stats_update(Stats* s, float tm);
 

@@ -17,12 +17,13 @@ void init_global_coins(AssetManager* a);
 // Coin type
 typedef struct {
 
+    bool exist;
+
     Vector2 pos;
     Vector2 speed;
 
     Sprite spr;
-    bool exist;
-
+    
     // Could be "disappearing" as well 
     bool dying;
     float deathTimer;

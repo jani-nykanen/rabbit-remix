@@ -170,6 +170,7 @@ float mush_activate(Mushroom* m, Vector2 pos, int major, int minor) {
     m->middlePos = 0.0f;
     m->deathTimer = DEATH_TIME;
     m->dying = false;
+    m->stompCount = 0;
 
     // Set dimensions
     int w = WIDTHS[major];
@@ -296,7 +297,11 @@ static void mush_create_coins(Mushroom* m,
 
 // Player collision
 void mush_player_collision(Mushroom* m, Player* pl,
-    Coin* coins, int len) {
+    Coin* coins, int coinLen,
+    Message* messages, int msgLen) {
+
+    const int BASE_SCORE = 100;
+    const int GOLDEN_SCORE = 1000;
 
     const float HEIGHT_MUL = 0.70f;
     const float SPEED_BASE = 3.0f;
@@ -313,6 +318,7 @@ void mush_player_collision(Mushroom* m, Player* pl,
     if (!m->exist || m->dying) return;
 
     float mul = pl->speed.y / SPEED_BASE;
+    int score;
 
     if (pl_jump_collision(
         pl,
@@ -331,7 +337,7 @@ void mush_player_collision(Mushroom* m, Player* pl,
             m->dying = true;
 
             // Create coins
-            mush_create_coins(m, coins, len, 
+            mush_create_coins(m, coins, coinLen, 
                 GOLDEN_MIN[m->majorType], 
                 GOLDEN_MAX[m->majorType]);
         }
@@ -344,7 +350,21 @@ void mush_player_collision(Mushroom* m, Player* pl,
             m->wave = M_PI*3 - m->wave;
         }
 
-        
+        // Compute score
+        score = BASE_SCORE;
+        if (m->minorType == 1 && 
+            (m->majorType == 0 || m->majorType == 2) ){
+
+            score = GOLDEN_SCORE;
+        }
+        score += (score / 10) * pl->stats->coins;
+        score = max_int32_2(1, score/(m->stompCount+1));
+
+        // Create a score message
+        msg_create_score_message(messages, msgLen,
+            score, vec2(pl->pos.x, m->pos.y-m->spr.height));
+
+        ++ m->stompCount;
     }
 }
 

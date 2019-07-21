@@ -12,6 +12,7 @@
 
 #include "player.h"
 #include "coin.h"
+#include "message.h"
 
 // Initialize global content
 void init_global_mushrooms(AssetManager* a);
@@ -49,6 +50,10 @@ typedef struct {
     float deathTimer;
     bool dying;
 
+    // How many times the player has
+    // stomped this mushroom
+    int stompCount;
+
 } Mushroom;
 
 // Create a mushroom
@@ -62,7 +67,8 @@ void mush_update(Mushroom* m, float globalSpeed, float tm);
 
 // Player collision
 void mush_player_collision(Mushroom* m, Player* pl,
-    Coin* coins, int len);
+    Coin* coins, int coinLen,
+    Message* messages, int msgLen);
 
 // Draw a mushroom
 void mush_draw(Mushroom* m, Graphics* g);
