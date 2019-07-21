@@ -20,10 +20,20 @@ typedef struct {
     int coins;
     float bonus;
     float gunPower;
+    float gunPowerRenderPos;
 
 } Stats;
 
 // Create defaults stats
 Stats create_default_stats();
+
+// Add coins (if room)
+void stats_add_coins(Stats* s, int count);
+
+// Modify gun power
+void stats_change_gun_power(Stats* s, float delta);
+
+// Update
+void stats_update(Stats* s, float tm);
 
 #endif // __STATS__

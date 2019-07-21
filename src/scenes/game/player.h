@@ -14,6 +14,7 @@
 #include "dust.h"
 #include "bullet.h"
 #include "body.h"
+#include "stats.h"
 
 // Maximum dust count
 #define DUST_COUNT 16
@@ -72,11 +73,14 @@ typedef struct {
     float respawnTimer;
     // Gotta love this word
     float invincibilityTimer;
+
+    // Stats
+    Stats* stats;
     
 } Player;
 
 // Create a player
-Player create_player(int x, int y);
+Player create_player(int x, int y, Stats* stats);
 
 // Update player
 void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm);

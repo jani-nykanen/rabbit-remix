@@ -247,6 +247,9 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
     const float BULLET_X_OFF = 16;
     const float BULLET_Y_OFF = -21;
 
+    const float REDUCE_POWER_NORMAL = 0.1f;
+    const float REDUCE_POWER_BIG = 0.4f;
+
     int i;
     int s = pad_get_button_state(evMan->vpad, "fire2");
 
@@ -283,6 +286,10 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
 
             pl->shootWait = SHOOT_ANIM_TIME;
             pl->blastTime = BLAST_TIME;
+
+            // Reduce power
+            stats_change_gun_power(pl->stats,
+                makeBig ? -REDUCE_POWER_BIG : -REDUCE_POWER_NORMAL);
         }
     }
 
@@ -392,7 +399,7 @@ static void pl_die(Player* pl, float globalSpeed, float tm) {
 
 
 // Create a player
-Player create_player(int x, int y) {
+Player create_player(int x, int y, Stats* stats) {
 
     Player pl;
 
@@ -417,6 +424,7 @@ Player create_player(int x, int y) {
     pl.jumpSpeedMul = 1.0f;
     pl.shootWait = 0.0f;
     pl.dying = false;
+    pl.stats = stats;
     
     // Create sprite
     pl.spr = create_sprite(48, 48);
@@ -704,4 +712,7 @@ void pl_kill(Player* pl, int type) {
     pl->spr.row = 5 + type;
     pl->spr.frame = 0;
     pl->spr.count = 0;
+
+    if (pl->stats->lives > 0)
+        -- pl->stats->lives;
 }

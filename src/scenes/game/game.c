@@ -290,9 +290,12 @@ static int game_on_load(AssetManager* a) {
     init_global_spikeballs(a);
     init_global_coins(a);
 
+    // Create stats
+    stats = create_default_stats();
+
     // Create components
     stage = create_stage(a);
-    player = create_player(48, 48);
+    player = create_player(48, 48, &stats);
 
     // Init arrays
     int i;
@@ -317,9 +320,6 @@ static int game_on_load(AssetManager* a) {
     phase = 0;
     spikeballWait = SPIKEBALL_MIN_TIME[phase];
     paused = false;
-
-    // Create stats
-    stats = create_default_stats();
 
     // Create starter mushrooms
     create_starter_mushrooms();
@@ -391,6 +391,9 @@ static void game_update(void* e, float tm) {
         coin_update(&coins[i], speed, tm);
         coin_player_collision(&coins[i], &player);
     }
+
+    // Update stats
+    stats_update(&stats, tm);
 }
 
 
@@ -490,7 +493,10 @@ static void game_draw_hud_coins(Graphics* g) {
         48, 0, 16, 16, ICON_X, ICON_Y, false);
 
     // Draw text    
-    g_draw_text(g, bmpNumbersBig, ":99", 
+    char buf[5];
+    snprintf(buf, 5, 
+        stats.coins < 10 ? ":0%d" : ":%d", stats.coins);
+    g_draw_text(g, bmpNumbersBig, buf, 
         TEXT_X, TEXT_Y, TEXT_X_OFF, 0, false);
 
     g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
@@ -511,7 +517,7 @@ static void game_draw_bottom_bars(Graphics* g) {
     const int POWER_BAR_X_OFF = 18;
     const int POWER_BAR_Y = STAR_BAR_Y;
 
-    int i, sx;
+    int i, sx, sy;
 
     // Draw star 
     g_draw_bitmap_region(g, bmpHUD, 32, 0, 16, 16,
@@ -533,10 +539,29 @@ static void game_draw_bottom_bars(Graphics* g) {
     }
 
     // Draw power bar
+    sx = (int)roundf(fabsf(stats.gunPowerRenderPos * 70));
+    sy = stats.gunPowerRenderPos < 0.0f ? 46 : 26;
+
+    // Back
     g_draw_bitmap_region(g, bmpHUD,
-        0, 26, 72, 10, GEM_X + POWER_BAR_X_OFF,
+        0, 36, 72, 10, GEM_X + POWER_BAR_X_OFF,
         POWER_BAR_Y,
         false);
+
+    // Front
+    g_draw_bitmap_region(g, bmpHUD,
+        0, sy, 2 + sx, 10, GEM_X + POWER_BAR_X_OFF,
+        POWER_BAR_Y,
+        false);
+
+    // Draw bar end
+    if (sx < 70) {
+
+        g_fill_rect(g, 
+            GEM_X + POWER_BAR_X_OFF + sx +1, 
+            POWER_BAR_Y+1,
+            1, 8, 0);
+    }
 }
 
 

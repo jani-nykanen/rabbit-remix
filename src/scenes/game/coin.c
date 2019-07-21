@@ -159,6 +159,10 @@ void coin_player_collision(Coin* c, Player* pl) {
 
             c->dying = true;
             c->deathTimer = DEATH_TIME;
+
+            // Add a coin to stats
+            stats_add_coins(pl->stats, 1);
+
             break;
         }
     }
