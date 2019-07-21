@@ -885,6 +885,10 @@ void g_draw_triangle(Graphics* g,
     else 
         dx2 = 0;
     
+    // TODO: Maybe set dend = 0?
+    if ((points[2].y - points[0].y) == 0)
+        return;
+
     dend = (points[2].x - points[0].x)*FIXED_PREC / 
            (points[2].y - points[0].y);
 

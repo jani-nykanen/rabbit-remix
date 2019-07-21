@@ -9,6 +9,8 @@
 
 #include <engine/types.h>
 
+#define SCORE_STR_MAX_LEN 8
+
 // Stats type
 typedef struct {
 
@@ -17,10 +19,16 @@ typedef struct {
     float powerMeter;
     int powerLevel;
     int score;
+    int oldScore;
     int coins;
     float bonus;
     float gunPower;
     float gunPowerRenderPos;
+
+    // Score string (let's put it here so
+    // we do not have to regenerate it every
+    // frame)
+    char scoreStr [SCORE_STR_MAX_LEN];
 
 } Stats;
 

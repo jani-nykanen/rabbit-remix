@@ -473,7 +473,7 @@ static void game_draw_hud_score(Graphics* g) {
         SMALL_FONT_X_OFF, 0, 
         true);
 
-    g_draw_text(g, bmpNumbersBig, "123456", 
+    g_draw_text(g, bmpNumbersBig, stats.scoreStr, 
         mid + SCORE_DELTA_X, 
         SCORE_TEXT_Y+SCORE_Y_OFF,
         BIG_FONT_X_OFF, 0, true);

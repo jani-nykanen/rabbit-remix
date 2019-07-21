@@ -360,6 +360,9 @@ void mush_player_collision(Mushroom* m, Player* pl,
         score += (score / 10) * pl->stats->coins;
         score = max_int32_2(1, score/(m->stompCount+1));
 
+        // Add score
+        stats_add_points(pl->stats, score);
+
         // Create a score message
         msg_create_score_message(messages, msgLen,
             score, vec2(pl->pos.x, m->pos.y-m->spr.height));

@@ -2,6 +2,33 @@
 
 #include <engine/mathext.h>
 
+#include <stdio.h>
+#include <math.h>
+
+// Constants
+static const int DIGIT_COUNT = 6;
+
+
+// Update score string
+static void update_score_string(Stats* s) {
+
+    int zeroCount = 0;
+    int i;
+    char zeroes [SCORE_STR_MAX_LEN];
+
+    for (i = 1 ; i < DIGIT_COUNT; ++ i) {
+
+        if (s->score < (int)powf(10, i) ) {
+
+            zeroes[zeroCount ++] = '0';
+        }
+    }
+    zeroes[zeroCount] = '\0';
+    
+    snprintf(s->scoreStr, 
+        SCORE_STR_MAX_LEN, "%s%d", zeroes, s->score);
+}
+
 
 // Create defaults stats
 Stats create_default_stats() {
@@ -20,7 +47,11 @@ Stats create_default_stats() {
     s.gunPowerRenderPos = 1.0f;
 
     s.score = 0;
+    s.oldScore = s.score;
     s.coins = 0;
+
+    // Set score string
+    update_score_string(&s);
 
     return s;
 }
@@ -73,4 +104,11 @@ void stats_update(Stats* s, float tm) {
             s->gunPowerRenderPos = s->gunPower;
         }
     }
+
+    // Check if score has changed
+    if (s->score != s->oldScore) {
+
+        update_score_string(s);
+    }
+    s->oldScore = s->score;
 }
