@@ -531,7 +531,7 @@ static void game_draw_bottom_bars(Graphics* g) {
     const int POWER_BAR_X_OFF = 18;
     const int POWER_BAR_Y = STAR_BAR_Y;
 
-    int i, sx, sy;
+    int i, sx, sy, sw;
 
     // Draw star 
     g_draw_bitmap_region(g, bmpHUD, 32, 0, 16, 16,
@@ -544,10 +544,22 @@ static void game_draw_bottom_bars(Graphics* g) {
     // Draw star bar
     for (i = 0; i < 3; ++ i) {
 
-        sx = 25;
+        sx = i < stats.powerLevel ? 50 : 25;
+
         g_draw_bitmap_region(g, bmpHUD, 
             sx, 16, 25, 10,
             STAR_X + STAR_BAR_X_OFF + i*24,
+            STAR_BAR_Y,
+            false);
+    }
+    if (stats.powerLevel < 3) {
+
+        sx = 0;
+        sw = (int)(25.0f * stats.powerMeter);
+
+        g_draw_bitmap_region(g, bmpHUD, 
+            sx, 16, sw, 10,
+            STAR_X + STAR_BAR_X_OFF + stats.powerLevel*24,
             STAR_BAR_Y,
             false);
     }

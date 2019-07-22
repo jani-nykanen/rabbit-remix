@@ -302,6 +302,7 @@ void mush_player_collision(Mushroom* m, Player* pl,
 
     const int BASE_SCORE = 100;
     const int GOLDEN_SCORE = 1000;
+    const float BASE_POWER = 0.10f;
 
     const float HEIGHT_MUL = 0.70f;
     const float SPEED_BASE = 3.0f;
@@ -318,7 +319,9 @@ void mush_player_collision(Mushroom* m, Player* pl,
     if (!m->exist || m->dying) return;
 
     float mul = pl->speed.y / SPEED_BASE;
+    float power;
     int score;
+    int div = 1 << m->stompCount;
 
     if (pl_jump_collision(
         pl,
@@ -350,18 +353,25 @@ void mush_player_collision(Mushroom* m, Player* pl,
             m->wave = M_PI*3 - m->wave;
         }
 
+        // Compute power
+        power = BASE_POWER;
+        power /= div;
+
         // Compute score
         score = BASE_SCORE;
         if (m->minorType == 1 && 
             (m->majorType == 0 || m->majorType == 2) ){
 
             score = GOLDEN_SCORE;
+            power *= GOLDEN_SCORE / BASE_SCORE;
         }
         score += (score / 10) * pl->stats->coins;
-        score = max_int32_2(1, score/(m->stompCount+1));
+        score = max_int32_2(1, score/div);
 
         // Add score
         stats_add_points(pl->stats, score);
+        // Add power
+        stats_modify_power(pl->stats, power);
 
         // Create a score message
         msg_create_score_message(messages, msgLen,

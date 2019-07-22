@@ -69,8 +69,9 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
 
         pl->quickFall = true;
         pl->speed.y = pl->target.y * QUICK_FALL_MUL;
+        pl->jumpTimer = 0.0f;
     }
-    if (evMan->vpad->stick.y < 0.0f) {
+    if (evMan->vpad->stick.y <= QUICK_FALL_EPS) {
 
         pl->quickFall = false;
     }

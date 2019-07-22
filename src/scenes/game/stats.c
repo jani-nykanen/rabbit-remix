@@ -74,6 +74,19 @@ void stats_change_gun_power(Stats* s, float delta) {
 }
 
 
+// Modify power meter
+void stats_modify_power(Stats* s, float delta) {
+
+    if (s->powerLevel >= 3) return;
+
+    if ((s->powerMeter += delta) >= 1.0f) {
+
+        ++ s->powerLevel;
+        s->powerMeter -= 1.0f;
+    }
+}
+
+
 // Add points
 void stats_add_points(Stats* s, int points) {
 
