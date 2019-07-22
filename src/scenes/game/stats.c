@@ -9,6 +9,28 @@
 static const int DIGIT_COUNT = 6;
 
 
+// Update a value (uh what)
+static void update_value(float* v, float t, float d, float tm) {
+
+    if (*v < t) {
+
+        *v += d * tm;
+        if (*v > t) {
+
+            *v = t;
+        }
+    }
+    else if (*v > t) {
+
+        *v -= d * tm;
+        if (*v < t) {
+
+            *v = t;
+        }
+    }
+} 
+
+
 // Update score string
 static void update_score_string(Stats* s) {
 
@@ -43,6 +65,7 @@ Stats create_default_stats() {
 
     s.powerLevel = 0;
     s.powerMeter = 0.0f;
+    s.powerMeterRenderPos = 0.0f;
     s.gunPower = 1.0f;
     s.gunPowerRenderPos = 1.0f;
 
@@ -87,6 +110,14 @@ void stats_modify_power(Stats* s, float delta) {
 }
 
 
+// Reset power 
+void stats_reset_power(Stats* s) {
+
+    s->powerLevel = 0;
+    s->powerMeter = 0.0f;
+}
+
+
 // Add points
 void stats_add_points(Stats* s, int points) {
 
@@ -101,22 +132,11 @@ void stats_update(Stats* s, float tm) {
 
     // Update render positions of the different
     // bars
-    if (s->gunPowerRenderPos < s->gunPower) {
-
-        s->gunPowerRenderPos += DELTA * tm;
-        if (s->gunPowerRenderPos > s->gunPower) {
-
-            s->gunPowerRenderPos = s->gunPower;
-        }
-    }
-    else if (s->gunPowerRenderPos > s->gunPower) {
-
-        s->gunPowerRenderPos -= DELTA * tm;
-        if (s->gunPowerRenderPos < s->gunPower) {
-
-            s->gunPowerRenderPos = s->gunPower;
-        }
-    }
+    update_value(&s->gunPowerRenderPos, s->gunPower,
+        DELTA, tm);
+    update_value(&s->powerMeterRenderPos, 
+        (float)s->powerLevel + s->powerMeter,
+        DELTA*3, tm);
 
     // Check if score has changed
     if (s->score != s->oldScore) {

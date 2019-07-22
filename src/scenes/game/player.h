@@ -15,6 +15,7 @@
 #include "bullet.h"
 #include "body.h"
 #include "stats.h"
+#include "explosion.h"
 
 // Maximum dust count
 #define DUST_COUNT 16
@@ -74,6 +75,11 @@ typedef struct {
     // Gotta love this word
     float invincibilityTimer;
 
+    // Self-destruct timer ('cause why not)
+    float selfDestructTimer;
+    // Explosion
+    Explosion exp;
+
     // Stats
     Stats* stats;
     
@@ -93,6 +99,9 @@ void pl_draw_entrance_portal(Player* pl, Graphics* g);
 
 // Draw player
 void pl_draw(Player* pl, Graphics* g);
+
+// Draw player explosion
+void pl_draw_explosion(Player* pl, Graphics* g);
 
 // Jump collision
 bool pl_jump_collision(Player* pl, float x, float y, float w, float power);

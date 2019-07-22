@@ -48,6 +48,17 @@ static void update_axis(float* axis,
 }
 
 
+// Create an explosion
+static void pl_create_explosion(Player* pl) {
+
+    static const float BASE_RADIUS = 64.0f;
+
+    exp_activate(&pl->exp,
+        vec2(pl->pos.x, pl->pos.y-pl->spr.height/2),
+        BASE_RADIUS);
+}
+
+
 // Control
 static void pl_control(Player* pl, EventManager* evMan, float tm) {
 
@@ -57,6 +68,8 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
 
     const float QUICK_FALL_EPS = 0.5f;
     const float QUICK_FALL_MUL = 1.5f;
+
+    const float SELF_DESTRUCT_SPEED = 1.0f / 60.0f;
 
     // Set target speed
     pl->target.x = evMan->vpad->stick.x * MOVE_TARGET;
@@ -114,6 +127,21 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
 
         pl->speed.y = FLAP_SPEED;
         pl->target.y = pl->speed.y;
+    }
+
+    // Self-destruct
+    if (pad_get_button_state(evMan->vpad, "fire3") == StateDown) {
+
+        pl->selfDestructTimer += SELF_DESTRUCT_SPEED * tm;
+        if (pl->selfDestructTimer >= 1.0f) {
+
+            pl_kill(pl, 1);
+            pl_create_explosion(pl);
+        }
+    }
+    else {
+
+        pl->selfDestructTimer = 0.0f;
     }
 }
 
@@ -351,6 +379,7 @@ static void pl_respawn(Player* pl) {
     pl->invincibilityTimer = INVINCIBILITY_TIME;
     pl->djumpReleased = false;
     pl->jumpTimer = 0.0f;
+    pl->selfDestructTimer = 0.0f;
 
     pl->pos = pl->startPos;
 }
@@ -455,6 +484,9 @@ Player create_player(int x, int y, Stats* stats) {
         pl.bodies[i] = create_body();
     }
 
+    // Create explosion
+    pl.exp = create_explosion();
+
     return pl;
 }
 
@@ -463,6 +495,9 @@ Player create_player(int x, int y, Stats* stats) {
 void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm) {
 
     const float ARROW_WAVE_SPEED = 0.15f;
+
+    // Update explosion
+    exp_update(&pl->exp, tm);
 
     // Update dust
     pl_update_dust(pl, tm);
@@ -498,6 +533,9 @@ void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm) {
 
     // Do stuff
     pl_control(pl, evMan, tm);
+    // Might happen if self-destructing
+    if (pl->dying) return;
+
     pl_move(pl, evMan, tm);
     pl_animate(pl, tm);
 
@@ -596,6 +634,10 @@ void pl_draw(Player* pl, Graphics* g) {
         body_draw(&pl->bodies[i], g, bmpBunny);
     }
 
+    // If exploding, stop here
+    if (pl->exp.exist)
+        return;
+
     // Draw respawning
     int dvalue = 0;
     int sx, sy;
@@ -673,6 +715,13 @@ void pl_draw(Player* pl, Graphics* g) {
 }
 
 
+// Draw player explosion
+void pl_draw_explosion(Player* pl, Graphics* g) {
+
+    exp_draw(&pl->exp, g);
+}
+
+
 // Jump collision
 bool pl_jump_collision(Player* pl, float x, float y, float w, float power) {
 
@@ -713,6 +762,7 @@ void pl_kill(Player* pl, int type) {
     pl->spr.row = 5 + type;
     pl->spr.frame = 0;
     pl->spr.count = 0;
+    stats_reset_power(pl->stats);
 
     if (pl->stats->lives > 0)
         -- pl->stats->lives;

@@ -32,6 +32,7 @@ enum {
     PixelFunctionSkip = 7,
     PixelFunctionSkipSimple = 8,
     PixelFunctionSingleColorSkipSimple = 9,
+    PixelFunctionLighten = 10,
 };
 
 // Graphics type

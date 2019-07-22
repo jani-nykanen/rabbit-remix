@@ -542,9 +542,10 @@ static void game_draw_bottom_bars(Graphics* g) {
             GEM_X, GEM_Y, false);
 
     // Draw star bar
+    int level = (int)floorf(stats.powerMeterRenderPos);
     for (i = 0; i < 3; ++ i) {
 
-        sx = i < stats.powerLevel ? 50 : 25;
+        sx = i < level ? 50 : 25;
 
         g_draw_bitmap_region(g, bmpHUD, 
             sx, 16, 25, 10,
@@ -552,14 +553,14 @@ static void game_draw_bottom_bars(Graphics* g) {
             STAR_BAR_Y,
             false);
     }
-    if (stats.powerLevel < 3) {
+    if (level < 3) {
 
         sx = 0;
-        sw = (int)(25.0f * stats.powerMeter);
+        sw = (int)(25.0f * (stats.powerMeterRenderPos - (float)level));
 
         g_draw_bitmap_region(g, bmpHUD, 
             sx, 16, sw, 10,
-            STAR_X + STAR_BAR_X_OFF + stats.powerLevel*24,
+            STAR_X + STAR_BAR_X_OFF + level*24,
             STAR_BAR_Y,
             false);
     }
@@ -602,12 +603,78 @@ static void game_draw_hud(Graphics* g) {
 }
 
 
+// Draw self-destruct
+static void game_draw_self_destruct(Graphics* g) {
+
+    const int BOX_W = 120;
+    const int BOX_H = 24;
+    const int BOX_Y = 144;
+    const int BOX_DVALUE = 5;
+
+    const int TEXT_Y = 2;
+    const int TEXT_XOFF = -1;
+
+    const int ICON_Y = 12;
+    const int ICON_X = 2;
+
+    const int BAR_X = ICON_X + 12;
+    const int BAR_Y = ICON_Y + 1;
+    const int BAR_WIDTH = 96;
+    const int BAR_HEIGHT = 8;
+    const uint8 BAR_COLORS[] = {
+        0b01011110,
+        0b10011001,
+        0b11010000,
+        0b11101000
+    };
+
+    int boxX = g->csize.x/2 - BOX_W/2;
+
+    float t = player.selfDestructTimer;
+    if (t <= 0.0f) return;
+    t = 1.0f - t,
+
+    // Draw box
+    g_set_pixel_function(g, PixelFunctionDarken, BOX_DVALUE, 0);
+    g_fill_rect(g, boxX, BOX_Y, BOX_W, BOX_H, 0);
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+
+    // Draw text
+    g_draw_text(g, bmpFont, "SELF-DESTRUCT IN", 
+        g->csize.x/2, BOX_Y + TEXT_Y,
+        TEXT_XOFF, 0, true);
+
+    // Draw icon
+    g_draw_bitmap_region(g, bmpHUD, 83, 3, 10, 10,
+        boxX + ICON_X, BOX_Y + ICON_Y, false);
+
+    // Draw bar
+    uint8 col = (uint8)min_int32_2((int)floorf(4 * (1.0f-t)), 3);
+    g_fill_rect(g, 
+        boxX + BAR_X, BOX_Y + BAR_Y, (int)roundf(BAR_WIDTH * t),
+        BAR_HEIGHT, BAR_COLORS[col]);
+}
+
+
 // Draw
 static void game_draw(Graphics* g) {
-    
+
+    const int SHAKE_VARY = 4;
+
+    g_move_to(g, 0, 0);    
     g_clear_screen(g, 0b10110110);
 
     int i;
+
+    // Shake!
+    // TODO: Put this elsewhere
+    if (player.exp.exist) {
+
+        // Shake
+        g_move_to(g, 
+            (rand() % SHAKE_VARY*2) - SHAKE_VARY,
+            (rand() % SHAKE_VARY*2) - SHAKE_VARY);
+    }
 
     // Draw stage
     stage_draw(&stage, g);
@@ -638,6 +705,11 @@ static void game_draw(Graphics* g) {
 
     // Draw player
     pl_draw(&player, g);
+    // Draw explosion
+    pl_draw_explosion(&player, g);
+
+    // Remove shaking
+    g_move_to(g, 0, 0);
 
     // Draw coins
     for (i = 0; i < COIN_COUNT; ++ i) {
@@ -653,6 +725,9 @@ static void game_draw(Graphics* g) {
 
     // Draw HUD
     game_draw_hud(g);
+
+    // Draw self-destruct box
+    game_draw_self_destruct(g);
 
 }
 

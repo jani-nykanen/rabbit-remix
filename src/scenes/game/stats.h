@@ -17,6 +17,7 @@ typedef struct {
     int lives;
     int maxLives;
     float powerMeter;
+    float powerMeterRenderPos;
     int powerLevel;
     int score;
     int oldScore;
@@ -43,6 +44,9 @@ void stats_change_gun_power(Stats* s, float delta);
 
 // Modify power meter
 void stats_modify_power(Stats* s, float delta);
+
+// Reset power 
+void stats_reset_power(Stats* s);
 
 // Add points
 void stats_add_points(Stats* s, int points);

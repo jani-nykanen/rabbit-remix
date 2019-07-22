@@ -4,13 +4,14 @@
 #include "err.h"
 #include "mathext.h"
 
-// Maximum value for darkness
-#define MAX_DARKNESS_VALUE 8
+// Maximum value for darkness & light effects
+#define MAX_PALETTE_MOD 8
 
-// Global darkness palettes
-static uint8 dpalette [MAX_DARKNESS_VALUE] [256];
-// Dithering arrays
-static uint8 ditherArray [MAX_DARKNESS_VALUE*2] [2];
+// Global darkness & light palettes
+static uint8 dpalette [MAX_PALETTE_MOD] [256];
+static uint8 lpalette [MAX_PALETTE_MOD] [256];
+// Dithering array
+static uint8 ditherArray [MAX_PALETTE_MOD*2] [2];
 
 
 //
@@ -98,6 +99,16 @@ static void pfunc_skip_simple_single_color(void* _g, int offset, uint8 col) {
 
     if (x % 2 == y % 2) 
         g->pdata[offset] = g->pparam2;
+}
+static void pfunc_lighten(void* _g, int offset, uint8 c) {
+
+    Graphics* g = (Graphics*)_g;
+    uint8 col = g->pdata[offset];
+    int x = offset % g->csize.x;
+    int y = offset / g->csize.x;
+
+    g->pdata[offset] 
+         = lpalette[ ditherArray[g->pparam1] [ x % 2 == y % 2] ] [col];
 }
 static void pfunc_texture(void* _g, int offset, uint8 col) {
 
@@ -205,16 +216,50 @@ static uint8 get_darkened_color(uint8 col, int amount)
 }
 
 
-// Generate darkness palettes
-static void gen_darkness_palettes() {
+// Get lightened color index
+static uint8 get_lightened_color(uint8 col, int amount)
+{
+    uint8 r,g,b;
+
+    r = col >> 5;
+    g = col << 3;
+    g = g >> 5;
+    b = col << 6;
+    b = b >> 6; 
+
+    int i = 0;
+    for (; i < amount; ++ i)
+    {
+        if (r < 7) 
+            ++ r;
+        if (g < 7) 
+            ++ g;
+        
+        if (i % 2 == 1) {
+
+            if (b < 3) 
+                ++ b;
+        }
+    }
+
+    r = r << 5;
+    g = g << 2;
+
+    return r | g | b;
+}
+
+
+// Generate darkness & light palettes
+static void get_palette_mods() {
 
     int i, j;
 
-    for(i = 0; i < MAX_DARKNESS_VALUE; ++ i)
+    for(i = 0; i < MAX_PALETTE_MOD; ++ i)
     {
         for(j = 0; j < 256; ++ j)
         {
             dpalette[i][j] = get_darkened_color(j, i);
+            lpalette[i][j] = get_lightened_color(j, i);
         }
     }
 }
@@ -225,7 +270,7 @@ static void gen_dither_array() {
 
     int i, j;
 
-    for (i = 0; i < MAX_DARKNESS_VALUE*2; ++ i) {
+    for (i = 0; i < MAX_PALETTE_MOD*2; ++ i) {
 
         j = i / 2;
 
@@ -356,7 +401,7 @@ static void draw_triangle_half(Graphics * g,
 int init_graphics_global() {
 
     // Initialize global arrays
-    gen_darkness_palettes();
+    get_palette_mods();
     gen_dither_array();
 
     return 0;
@@ -516,6 +561,10 @@ void g_set_pixel_function(Graphics* g, int func, int param1, int param2) {
 
     case PixelFunctionSingleColorSkipSimple:
         g->pfunc = pfunc_skip_simple_single_color;
+        break;
+
+    case PixelFunctionLighten:
+        g->pfunc = pfunc_lighten;
         break;
     
     default:
@@ -779,7 +828,7 @@ void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
     // Center the text
     if (center) {
 
-        dx -= ((len + 1) / 2.0f * (cw + xoff));
+        dx -= (len + 1) * (cw + xoff) / 2;
         x = dx;
     }
 
@@ -813,7 +862,7 @@ void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
 void g_fill_rect(Graphics* g, int dx, int dy, 
     int dw, int dh, uint8 col) {
 
-    int y;
+    int x, y;
     uint64 offset;
 
     dx += g->translation.x;
@@ -825,10 +874,13 @@ void g_fill_rect(Graphics* g, int dx, int dy,
 
     // Draw
     offset = g->csize.x*dy + dx;
-    for(y = dy; y < dy+dh; ++ y) {
+    for (y = dy; y < dy+dh; ++ y) {
 
-        memset(g->pdata + offset, col, dw);
-        offset += (int64) g->csize.x;
+        for (x = dx; x < dx+dw; ++ x) {
+
+            g->pfunc(g, offset ++, col);
+        }
+        offset += g->csize.x-dw;
     }
 }
 
@@ -845,6 +897,14 @@ void g_draw_triangle(Graphics* g,
 
         return;
     }
+
+    // Translate
+    x1 += g->translation.x;
+    y1 += g->translation.y;
+    x2 += g->translation.x;
+    y2 += g->translation.y;
+    x3 += g->translation.x;
+    y3 += g->translation.y;
 
     // Sort points
     Point points[3];
@@ -992,6 +1052,12 @@ void g_draw_3D_floor(Graphics* g, Bitmap* bmp,
     int tx, ty;
     int px, py;
     uint8 col;
+
+    // Translate
+    dx += g->translation.x;
+    dy += g->translation.y;
+    w -= g->translation.x;
+    h -= g->translation.y;
 
     int yjumpDelta = (int)mx / h;
     int yjump = FIXED_PREC;
