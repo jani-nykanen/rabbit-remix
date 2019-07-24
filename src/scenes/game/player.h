@@ -89,7 +89,8 @@ typedef struct {
 Player create_player(int x, int y, Stats* stats);
 
 // Update player
-void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm);
+void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm,
+    void* coins, int coinLen);
 
 // Shake
 void pl_shake(Player* pl, Graphics* g);

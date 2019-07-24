@@ -40,7 +40,7 @@ Stats create_default_stats();
 void stats_add_coins(Stats* s, int count);
 
 // Modify gun power
-void stats_change_gun_power(Stats* s, float delta);
+void stats_modify_gun_power(Stats* s, float delta);
 
 // Modify power meter
 void stats_modify_power(Stats* s, float delta);
@@ -50,6 +50,9 @@ void stats_reset_power(Stats* s);
 
 // Add points
 void stats_add_points(Stats* s, int points);
+
+// Add a life
+void stats_add_life(Stats* s);
 
 // Update
 void stats_update(Stats* s, float tm);

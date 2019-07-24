@@ -1,5 +1,5 @@
 //
-// Coin
+// Coin (and gem and 1UP)
 // (c) 2019 Jani Nykänen
 //
 
@@ -28,6 +28,12 @@ typedef struct {
     bool dying;
     float deathTimer;
 
+    // Type
+    int type;
+    // Is floating 
+    bool floating;
+    float floatTimer;
+
     float wait;
 
 } Coin;
@@ -36,7 +42,8 @@ typedef struct {
 Coin create_coin();
 
 // Activate a coin
-void coin_activate(Coin* c, Vector2 pos, Vector2 speed);
+void coin_activate(Coin* c, Vector2 pos, Vector2 speed, 
+    int type, bool floating);
 
 // Update a coin
 void coin_update(Coin* c, float globalSpeed, float tm);

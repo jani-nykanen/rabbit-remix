@@ -88,7 +88,7 @@ void exp_shake(Explosion* e,  Graphics* g) {
 
     if (!e->exist) return;
 
-    int a = BASE_SHAKE * (e->magnitude - 1);
+    int a = BASE_SHAKE * (e->magnitude);
     if (a != 0) {
         
         g_move_to(

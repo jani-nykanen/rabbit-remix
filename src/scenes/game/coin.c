@@ -32,7 +32,9 @@ Coin create_coin() {
 }
 
 // Activate a coin
-void coin_activate(Coin* c, Vector2 pos, Vector2 speed) {
+void coin_activate(Coin* c, Vector2 pos, Vector2 speed, 
+    int type, bool floating) {
+
 
     const float WAIT_TIME = 20.0f;
 
@@ -43,6 +45,17 @@ void coin_activate(Coin* c, Vector2 pos, Vector2 speed) {
     c->dying = false;
 
     c->wait = WAIT_TIME;
+
+    if (type == 0) {
+
+        c->spr = create_sprite(20, 20);
+    }
+    else {
+
+        c->spr = create_sprite(24, 24);
+    }
+    c->type = type;
+    c->floating = floating;
 }
 
 
@@ -52,7 +65,7 @@ void coin_update(Coin* c, float globalSpeed, float tm) {
     const float SPEED_LIMIT = 1.25f;
     const float COLLISION_MUL = 0.90f;
     const float GRAVITY_DELTA = 0.05f;
-    const float GRAVITY_MAX = 2.0f;
+    const float GRAVITY_MAX = 4.0f;
     const float SPEED_DELTA = 0.005f;
     const float ANIM_SPEED = 6.0f;
 
@@ -123,15 +136,15 @@ void coin_update(Coin* c, float globalSpeed, float tm) {
         c->pos.x -= 256;
 
     // Animate
-    spr_animate(&c->spr, 0, 0, 3, ANIM_SPEED, tm);
+    spr_animate(&c->spr, c->type, 
+        0, 3, ANIM_SPEED, tm);
 }
 
 
 // Coin-player collision
 void coin_player_collision(Coin* c, Player* pl) {
 
-    const float HIT_W = 12.0f;
-    const float HIT_H = 12.0f;
+    const float GUN_POWER_BONUS = 0.5f;
 
     if (c->wait > 0 || !c->exist || c->dying || 
         pl->dying || pl->respawnTimer > 0.0f) 
@@ -149,19 +162,36 @@ void coin_player_collision(Coin* c, Player* pl) {
     float cx = c->pos.x;
     float cy = c->pos.y - c->spr.height/2;
 
+    int hitW = c->spr.width/2;
+    int hitH = c->spr.height/2;
+
     int i;
     for (i = -1; i <= 1; ++ i) {
 
-        if (px + pw/2 > cx+i*256-HIT_W/2 &&
-            px - pw/2 < cx+i*256+HIT_W/2 &&
-            py > cy - HIT_H/2 &&
-            py - ph < cy + HIT_H/2) {
+        if (px + pw/2 > cx+i*256-hitW/2 &&
+            px - pw/2 < cx+i*256+hitW/2 &&
+            py > cy - hitH/2 &&
+            py - ph < cy + hitH/2) {
 
             c->dying = true;
             c->deathTimer = DEATH_TIME;
 
-            // Add a coin to stats
-            stats_add_coins(pl->stats, 1);
+            // switch? Why bother
+            if (c->type == 0) {
+                    
+                // Add a coin to stats  
+                stats_add_coins(pl->stats, 1);
+            }
+            else if(c->type == 1) {
+
+                // Add some energy
+                stats_modify_gun_power(pl->stats, GUN_POWER_BONUS);
+            }
+            else {
+
+                // Add a life
+                stats_add_life(pl->stats);
+            }
 
             break;
         }

@@ -290,7 +290,7 @@ static void mush_create_coins(Mushroom* m,
         if (c == NULL) break;
 
         // Activate
-        coin_activate(c, pos, speed);
+        coin_activate(c, pos, speed, 0, false);
     }
 }
 
@@ -317,7 +317,9 @@ void mush_player_collision(Mushroom* m, Player* pl,
         5, 0, 6
     };
 
-    if (!m->exist || m->dying) return;
+    if (!m->exist || m->dying || 
+        pl->dying || pl->respawnTimer > 0.0f) 
+        return;
 
     float mul = pl->speed.y / SPEED_BASE;
     float power;

@@ -3,6 +3,7 @@
 #include <engine/mathext.h>
 
 #include "stage.h"
+#include "coin.h"
 
 // Shared pointers to bitmaps
 static Bitmap* bmpBunny;
@@ -48,6 +49,67 @@ static void update_axis(float* axis,
 }
 
 
+// Create coins
+static void pl_create_coins(Player* pl, 
+    Coin* coins, int len, int min, int max,
+    int gemMax, bool makeLife, float globalSpeed) {
+
+    const float SPEED_VARY_X_RIGHT = 2.5f;
+    const float SPEED_VARY_X_LEFT = -1.5f;
+    const float SPEED_VARY_Y_UP = -3.0f;
+    const float SPEED_VARY_Y_DOWN = 0.0f;
+    const float Y_OFF = 0.0f;
+    const int GEM_PROB = 50;
+    const float LIFE_SPEED_Y = -2.5f;
+
+    int i;
+    int loop = (rand() % (max-min)) + min;
+
+    Vector2 speed;
+    Vector2 pos = pl->pos;
+    pos.y += Y_OFF;
+    Coin* c;
+    int type;
+
+    for (i = 0 ; i < loop; ++ i) {
+
+        // Get the next coin
+        c = coin_get_next(coins, len);
+        if (c == NULL) break;
+
+        speed.x = (float)(rand() % 100)/100.0f * 
+            (SPEED_VARY_X_RIGHT - SPEED_VARY_X_LEFT) + SPEED_VARY_X_LEFT ;
+        speed.y = (float)(rand() % 100)/100.0f * 
+            (SPEED_VARY_Y_DOWN - SPEED_VARY_Y_UP) + SPEED_VARY_Y_UP ;
+
+        // Determine type
+        type = 0;
+        if (gemMax > 0 && (rand() % 100) >= GEM_PROB) {
+
+            type = 1;
+            -- gemMax;
+        }
+
+        // Activate
+        coin_activate(c, pos, speed, type, false);
+    }
+
+    // Create life
+    if (makeLife) {
+
+        // Get the next coin
+        c = coin_get_next(coins, len);
+        if (c == NULL) return;
+
+        // Activate
+        coin_activate(c, pos, 
+            vec2(globalSpeed, LIFE_SPEED_Y), 
+            2, false);
+    }
+}
+
+
+
 // Create an explosion
 static void pl_create_explosion(Player* pl) {
 
@@ -58,7 +120,8 @@ static void pl_create_explosion(Player* pl) {
 
 
 // Control
-static void pl_control(Player* pl, EventManager* evMan, float tm) {
+static void pl_control(Player* pl, EventManager* evMan, float tm,
+    Coin* coins, int coinLen, float globalSpeed) {
 
     const float MOVE_TARGET = 1.5f;
     const float FLAP_SPEED = 0.5f;
@@ -68,6 +131,16 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
     const float QUICK_FALL_MUL = 1.5f;
 
     const float SELF_DESTRUCT_SPEED = 1.0f / 60.0f;
+
+    const int GEM_MAX[] = {
+        0, 0, 1, 2
+    };
+    const int COIN_MIN[] = {
+        2, 3, 4, 5
+    };
+    const int COIN_MAX[] = {
+        3, 5, 6, 8
+    };
 
     // Set target speed
     pl->target.x = evMan->vpad->stick.x * MOVE_TARGET;
@@ -128,11 +201,19 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
     }
 
     // Self-destruct
+    int level = pl->stats->powerLevel;
     if (pad_get_button_state(evMan->vpad, "fire3") == StateDown) {
 
         pl->selfDestructTimer += SELF_DESTRUCT_SPEED * tm;
         if (pl->selfDestructTimer >= 1.0f) {
 
+            // Spawn some coins
+            pl_create_coins(pl, coins, coinLen, 
+                COIN_MIN[level], COIN_MAX[level],
+                GEM_MAX[level], level == 3,
+                globalSpeed);
+
+            // Create explosion and die
             pl_create_explosion(pl);
             pl_kill(pl, 1);
         }
@@ -315,7 +396,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
             pl->blastTime = BLAST_TIME;
 
             // Reduce power
-            stats_change_gun_power(pl->stats,
+            stats_modify_gun_power(pl->stats,
                 makeBig ? -REDUCE_POWER_BIG : -REDUCE_POWER_NORMAL);
         }
     }
@@ -502,7 +583,8 @@ Player create_player(int x, int y, Stats* stats) {
 
 
 // Update player
-void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm) {
+void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm,
+    void* coins, int coinLen) {
 
     const float ARROW_WAVE_SPEED = 0.15f;
 
@@ -542,7 +624,8 @@ void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm) {
     }
 
     // Do stuff
-    pl_control(pl, evMan, tm);
+    pl_control(pl, evMan, tm, 
+        (Coin*)coins, coinLen, globalSpeed);
     // Might happen if self-destructing
     if (pl->dying) return;
 
@@ -779,6 +862,7 @@ void pl_kill(Player* pl, int type) {
     pl->spr.row = 5 + type;
     pl->spr.frame = 0;
     pl->spr.count = 0;
+    pl->selfDestructTimer = 0.0f;
     stats_reset_power(pl->stats);
 
     if (pl->stats->lives > 0)

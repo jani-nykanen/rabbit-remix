@@ -88,7 +88,7 @@ void stats_add_coins(Stats* s, int count) {
 
 
 // Modify gun power
-void stats_change_gun_power(Stats* s, float delta) {
+void stats_modify_gun_power(Stats* s, float delta) {
 
     s->gunPower += delta;
     s->gunPower = max_float_2(-1.0f, 
@@ -122,6 +122,14 @@ void stats_reset_power(Stats* s) {
 void stats_add_points(Stats* s, int points) {
 
     s->score += points;
+}
+
+
+// Add a life
+void stats_add_life(Stats* s) {
+
+    if (s->lives < s->maxLives)
+        ++ s->lives;
 }
 
 

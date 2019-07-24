@@ -18,7 +18,7 @@
 // Constants that are actually macros, d'oh!
 #define MUSHROOM_COUNT 8
 #define SPIKEBALL_COUNT 8
-#define COIN_COUNT 32
+#define COIN_COUNT 64
 #define MSG_COUNT 16
 
 // Constants
@@ -368,7 +368,8 @@ static void game_update(void* e, float tm) {
     stage_update(&stage, globalSpeed, tm);
 
     // Update player
-    pl_update(&player, evMan, speed, tm);
+    pl_update(&player, evMan, speed, tm,    
+        (void*)coins, COIN_COUNT);
 
     // Update mushroom generator
     update_mushroom_generator(speed, tm);
