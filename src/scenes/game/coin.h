@@ -20,6 +20,7 @@ typedef struct {
     bool exist;
 
     Vector2 pos;
+    Vector2 startPos;
     Vector2 speed;
 
     Sprite spr;

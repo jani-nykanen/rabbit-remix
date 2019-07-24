@@ -23,6 +23,10 @@
 
 // Constants
 static const float MUSHROOM_GEN_TIME = 90.0f;
+static const int ITEM_WAIT_MIN = 2;
+static const int ITEM_WAIT_MAX = 6;
+static const int LIFE_WAIT_MIN = 3;
+static const int LIFE_WAIT_MAX = 6;
 
 // Probabilities & other phase-specific things
 static const int MUSHROOM_PROB[][6] = {
@@ -63,6 +67,10 @@ static float mushroomTimer;
 static int prohibitSpecialCount;
 // Spikeball wait counter
 static int spikeballWait;
+// Item counter
+static int itemCounter;
+// Life counter
+static int lifeCounter;
 
 // Global speed
 static float globalSpeed;
@@ -73,6 +81,7 @@ static int phase;
 
 // Is paused
 static int paused;
+
 
 // Get index by probability
 static int get_index(int prob) {
@@ -186,17 +195,25 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
     // Needed when creating spikeballs
     const float MUSHROOM_MAX_JUMP = 64;
     const float MUSHROOM_MAX_FLY = 32;
+    const int ITEM_Y_OFF = -16;
+    const int COIN_PROB = 50;
 
     int i;
     int minor, major;
     float wait = 1.0f;
     Mushroom* m = NULL;
 
+    int type;
+    Coin* c = NULL;
+
     int dir = 1;
     float x, y;
 
     // Update & check the timer
     if ((mushroomTimer -= globalSpeed * tm) <= 0.0f) {
+
+        // Reduce counters
+        -- itemCounter;
 
         // Determine types
         major = get_index(rand() % 100);
@@ -244,16 +261,17 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
             (float) ( (rand() % (TIME_VARY_MAX-TIME_VARY_MIN)) 
             + TIME_VARY_MIN));
 
+        // Determine positions for spikeballs & items
+        y = m->pos.y-m->spr.height;
+        // Jumping
+        if (m->majorType == 3)
+                y -= MUSHROOM_MAX_JUMP;
+        // Flying & stationary
+        else if (m->majorType == 4)
+            y -= MUSHROOM_MAX_FLY;
+
         // Update spikeball counter
         if ((-- spikeballWait) <= 0) {
-
-            y = m->pos.y-m->spr.height;
-            // Jumping
-            if (m->majorType == 3)
-                y -= MUSHROOM_MAX_JUMP;
-            // Flying & stationary
-            else if (m->majorType == 4)
-                y -= MUSHROOM_MAX_FLY;
 
             // Generate a new spikeball
             gen_spikeball(256 + X_OFF, y);
@@ -263,6 +281,35 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
                 (SPIKEBALL_MAX_TIME[phase]-SPIKEBALL_MIN_TIME[phase])) 
                 + SPIKEBALL_MIN_TIME[phase];
         }
+        else if (itemCounter <= 0) {
+
+            c = coin_get_next(coins, COIN_COUNT);
+            if (c == NULL) return;
+
+            // Determine type
+            if (-- lifeCounter <= 0) {
+
+                type = 2;
+                lifeCounter = LIFE_WAIT_MIN 
+                    + (rand() % (LIFE_WAIT_MAX-LIFE_WAIT_MIN));
+            }
+            else {
+
+                type = (rand() % 100) <= COIN_PROB ? 0 : 1;
+            }
+
+            // Create coin
+            y += ITEM_Y_OFF;
+            coin_activate(c, vec2(256 + X_OFF, y), vec2(0, 0),
+                type, true);
+
+            // Set new item time
+            if (type == 0)
+                itemCounter = ITEM_WAIT_MIN;
+            else
+                itemCounter = ITEM_WAIT_MIN 
+                    + (rand() % (ITEM_WAIT_MAX-ITEM_WAIT_MIN));
+        }   
     }
 }
 
@@ -274,7 +321,6 @@ static int game_init(void* e) {
 
     return 0;
 }
-
 
 
 // On load
@@ -327,6 +373,10 @@ static int game_on_load(AssetManager* a) {
     phase = 0;
     spikeballWait = SPIKEBALL_MIN_TIME[phase];
     paused = false;
+    itemCounter = ITEM_WAIT_MIN 
+        + (rand() % (ITEM_WAIT_MAX-ITEM_WAIT_MIN));
+    lifeCounter = LIFE_WAIT_MIN 
+        + (rand() % (LIFE_WAIT_MAX-LIFE_WAIT_MIN));
 
     // Create starter mushrooms
     create_starter_mushrooms();

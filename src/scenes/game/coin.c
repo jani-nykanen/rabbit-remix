@@ -19,6 +19,22 @@ void init_global_coins(AssetManager* a) {
 }
 
 
+// Float
+static void coin_float(Coin* c, float globalSpeed, float tm) {
+
+    const float AMPLITUDE = 4.0f;
+    const float FLOAT_SPEED = 0.1f;
+
+    // Update floating
+    c->floatTimer += FLOAT_SPEED * tm;
+    c->floatTimer = fmodf(c->floatTimer, 2 * M_PI);
+    c->pos.y = c->startPos.y + sinf(c->floatTimer) * AMPLITUDE;
+
+    // Move
+    c->pos.x -= globalSpeed * tm;
+}
+
+
 // Create a coin
 Coin create_coin() {
 
@@ -35,20 +51,20 @@ Coin create_coin() {
 void coin_activate(Coin* c, Vector2 pos, Vector2 speed, 
     int type, bool floating) {
 
-
     const float WAIT_TIME = 20.0f;
 
     c->pos = pos;
+    c->startPos = pos;
     c->speed = speed;
 
     c->exist = true;
     c->dying = false;
-
-    c->wait = WAIT_TIME;
+    c->wait = floating ? 0.0f : WAIT_TIME;
 
     if (type == 0) {
 
         c->spr = create_sprite(20, 20);
+        
     }
     else {
 
@@ -82,6 +98,17 @@ void coin_update(Coin* c, float globalSpeed, float tm) {
 
         c->pos.x -= globalSpeed * tm;
 
+        return;
+    }
+
+    // Animate
+    spr_animate(&c->spr, c->type, 
+        0, 3, ANIM_SPEED, tm);
+
+    // Float
+    if (c->floating) {
+
+        coin_float(c, globalSpeed, tm);
         return;
     }
 
@@ -134,10 +161,6 @@ void coin_update(Coin* c, float globalSpeed, float tm) {
         c->pos.x += 256;
     else if(c->pos.x > 256)
         c->pos.x -= 256;
-
-    // Animate
-    spr_animate(&c->spr, c->type, 
-        0, 3, ANIM_SPEED, tm);
 }
 
 
@@ -212,7 +235,10 @@ void coin_draw(Coin* c, Graphics* g) {
     float t;
     int skip;
 
-    for (i = -1; i <= 1; ++ i) {
+    int begin = !c->floating ? -1 : 0;
+    int end = !c->floating ? 1 : 0;
+
+    for (i = begin; i <= end; ++ i) {
 
         if (c->dying) {
 
@@ -220,14 +246,14 @@ void coin_draw(Coin* c, Graphics* g) {
             sx = (int)((1.0f + (1.0f-t)*(DEATH_SCALE-1.0f)) * c->spr.width);
             sy = (int)((1.0f + (1.0f-t)*(DEATH_SCALE-1.0f)) * c->spr.height);
 
-            skip = 1 + (int) floorf( t * 10);
+            skip = 1 + (int) floorf( t * c->spr.height/2);
             
             g_set_pixel_function(g, PixelFunctionSkip, skip, 0);
 
             // Draw scaled sprite
             spr_draw_scaled(&c->spr, g, bmpCoin, 
                 (int)roundf(c->pos.x)-sx/2 + i*g->csize.x,
-                (int)roundf(c->pos.y)-10 - sy/2,
+                (int)roundf(c->pos.y)-c->spr.height/2 - sy/2,
                 sx, sy,
                 false);
 
@@ -237,8 +263,8 @@ void coin_draw(Coin* c, Graphics* g) {
 
             // Draw sprite
             spr_draw(&c->spr, g, bmpCoin, 
-                (int)roundf(c->pos.x)-10 + i*g->csize.x,
-                (int)roundf(c->pos.y)-20,
+                (int)roundf(c->pos.x)-c->spr.width/2 + i*g->csize.x,
+                (int)roundf(c->pos.y)-c->spr.height,
                 false);
         }
     }
