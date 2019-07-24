@@ -302,7 +302,8 @@ void mush_player_collision(Mushroom* m, Player* pl,
 
     const int BASE_SCORE = 100;
     const int GOLDEN_SCORE = 1000;
-    const float BASE_POWER = 0.10f;
+    const float BASE_POWER = 0.20f;
+    const float GOLDEN_POWER = 1.0f;
 
     const float HEIGHT_MUL = 0.70f;
     const float SPEED_BASE = 3.0f;
@@ -322,6 +323,8 @@ void mush_player_collision(Mushroom* m, Player* pl,
     float power;
     int score;
     int div = 1 << m->stompCount;
+    bool golden = m->minorType == 1 && 
+            (m->majorType == 0 || m->majorType == 2);
 
     if (pl_jump_collision(
         pl,
@@ -334,8 +337,7 @@ void mush_player_collision(Mushroom* m, Player* pl,
         m->gravity = fabsf(m->gravity);
 
         // Die if golden mushroom
-        if (m->minorType == 1 && 
-            (m->majorType == 0 || m->majorType == 2)) {
+        if (golden) {
 
             m->dying = true;
 
@@ -354,16 +356,14 @@ void mush_player_collision(Mushroom* m, Player* pl,
         }
 
         // Compute power
-        power = BASE_POWER;
+        power = golden ? GOLDEN_POWER : BASE_POWER;
         power /= div;
 
         // Compute score
         score = BASE_SCORE;
-        if (m->minorType == 1 && 
-            (m->majorType == 0 || m->majorType == 2) ){
+        if (golden){
 
             score = GOLDEN_SCORE;
-            power *= GOLDEN_SCORE / BASE_SCORE;
         }
         score += (score / 10) * pl->stats->coins;
         score = max_int32_2(1, score/div);

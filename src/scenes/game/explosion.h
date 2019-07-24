@@ -14,8 +14,10 @@ typedef struct {
     Vector2 pos;
     float timer;
     float radius;
+    int magnitude;
 
     bool exist;
+    bool dead;
 
 } Explosion;
 
@@ -23,12 +25,18 @@ typedef struct {
 Explosion create_explosion();
 
 // Activate an explosion
-void exp_activate(Explosion* e, Vector2 pos, float radius);
+void exp_activate(Explosion* e, Vector2 pos, int magnitude);
 
 // Update an explosion
 void exp_update(Explosion* e, float tm);
 
 // Draw an explosion
 void exp_draw(Explosion* e, Graphics* g);
+
+// Shake
+void exp_shake(Explosion* e,  Graphics* g);
+
+// Is dead
+bool exp_dead(Explosion* e);
 
 #endif // __EXPLOSION__

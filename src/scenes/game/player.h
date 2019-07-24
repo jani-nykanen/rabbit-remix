@@ -91,6 +91,9 @@ Player create_player(int x, int y, Stats* stats);
 // Update player
 void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm);
 
+// Shake
+void pl_shake(Player* pl, Graphics* g);
+
 // Draw the player shadow
 void pl_draw_shadow(Player* pl, Graphics* g);
 

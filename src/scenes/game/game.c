@@ -667,14 +667,7 @@ static void game_draw(Graphics* g) {
     int i;
 
     // Shake!
-    // TODO: Put this elsewhere
-    if (player.exp.exist) {
-
-        // Shake
-        g_move_to(g, 
-            (rand() % SHAKE_VARY*2) - SHAKE_VARY,
-            (rand() % SHAKE_VARY*2) - SHAKE_VARY);
-    }
+    pl_shake(&player, g);
 
     // Draw stage
     stage_draw(&stage, g);

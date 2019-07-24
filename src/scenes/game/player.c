@@ -51,11 +51,9 @@ static void update_axis(float* axis,
 // Create an explosion
 static void pl_create_explosion(Player* pl) {
 
-    static const float BASE_RADIUS = 64.0f;
-
     exp_activate(&pl->exp,
         vec2(pl->pos.x, pl->pos.y-pl->spr.height/2),
-        BASE_RADIUS);
+        pl->stats->powerLevel+1);
 }
 
 
@@ -135,8 +133,8 @@ static void pl_control(Player* pl, EventManager* evMan, float tm) {
         pl->selfDestructTimer += SELF_DESTRUCT_SPEED * tm;
         if (pl->selfDestructTimer >= 1.0f) {
 
-            pl_kill(pl, 1);
             pl_create_explosion(pl);
+            pl_kill(pl, 1);
         }
     }
     else {
@@ -398,6 +396,18 @@ static void pl_die(Player* pl, float globalSpeed, float tm) {
     int i;
     int type = pl->spr.row -5;
 
+    // Explosion, do not animate a thing
+    bool dead = exp_dead(&pl->exp);
+    if (pl->exp.exist || dead) {
+
+        if (dead) {
+            
+            pl_respawn(pl);
+        }
+
+        return;
+    }
+
     if (type == 0)
         pl->pos.y = 192-GROUND_COLLISION_HEIGHT;
     pl->pos.x -= globalSpeed * tm;
@@ -548,6 +558,13 @@ void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm) {
 
         pl_kill(pl, 0);
     }
+}
+
+
+// Shake
+void pl_shake(Player* pl, Graphics* g) {
+
+    exp_shake(&pl->exp, g);
 }
 
 

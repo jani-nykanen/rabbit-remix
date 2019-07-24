@@ -3,7 +3,7 @@
 #include <math.h>
 
 // Constants
-static const float EXP_TIME = 30.0f;
+static const float EXP_TIME_BASE = 15.0f;
 
 
 // Create an explosion
@@ -18,13 +18,17 @@ Explosion create_explosion() {
 
 
 // Activate an explosion
-void exp_activate(Explosion* e, Vector2 pos, float radius) {
+void exp_activate(Explosion* e, Vector2 pos, int magnitude) {
+
+    const float RADIUS_BASE = 32.0f;
 
     e->pos = pos;
-    e->radius = radius;
-    e->timer = EXP_TIME;
+    e->radius = RADIUS_BASE * magnitude;
+    e->timer = EXP_TIME_BASE * magnitude;
+    e->magnitude = magnitude;
 
     e->exist = true;
+    e->dead = false;
 }
 
 
@@ -36,6 +40,7 @@ void exp_update(Explosion* e, float tm) {
     if ((e->timer -= 1.0f * tm) <= 0.0f) {
 
         e->exist = false;
+        e->dead = true;
     }
 }
 
@@ -54,7 +59,7 @@ void exp_draw(Explosion* e, Graphics* g) {
     float angle;
     float step = 2*M_PI / (float)DIV;
 
-    float t = e->timer / EXP_TIME;
+    float t = e->timer / (EXP_TIME_BASE * e->magnitude);
     float r = e->radius * (1.0f-t);
 
     float lvalue = (int)floorf(t * 14);
@@ -73,4 +78,33 @@ void exp_draw(Explosion* e, Graphics* g) {
             );
     }
     g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+}
+
+
+// Shake
+void exp_shake(Explosion* e,  Graphics* g) {
+
+    const int BASE_SHAKE = 2;
+
+    if (!e->exist) return;
+
+    int a = BASE_SHAKE * (e->magnitude - 1);
+    if (a != 0) {
+        
+        g_move_to(
+            g,
+            (rand() % (a*2) ) - a,
+            (rand() % (a*2) ) - a
+        );
+    }
+}
+
+
+// Is dead
+bool exp_dead(Explosion* e) {
+
+    bool r = e->dead;
+    e->dead = false;
+
+    return r;
 }
