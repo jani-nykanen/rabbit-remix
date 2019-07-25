@@ -32,6 +32,9 @@ static void coin_float(Coin* c, float globalSpeed, float tm) {
 
     // Move
     c->pos.x -= globalSpeed * tm;
+
+    if (c->pos.x + c->spr.width/2 < 0)
+        c->exist = false;
 }
 
 

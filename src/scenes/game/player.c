@@ -367,7 +367,8 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
         pl->loading && 
         (s == StateReleased || s == StateUp) && 
         pl->loadTimer >= 0.0f;
-    if (!pl->dying && pl->respawnTimer <= 0.0f && 
+    if (pl->stats->gunPower > 0.0f &&
+        !pl->dying && pl->respawnTimer <= 0.0f && 
         pl->blastTime <= 0.0f && 
         (s == StatePressed || makeBig)) {
 

@@ -137,6 +137,7 @@ void stats_add_life(Stats* s) {
 void stats_update(Stats* s, float tm) {
 
     const float DELTA = 0.01f;
+    const float GUN_POWER_BONUS = 0.0005f;
 
     // Update render positions of the different
     // bars
@@ -152,4 +153,7 @@ void stats_update(Stats* s, float tm) {
         update_score_string(s);
     }
     s->oldScore = s->score;
+
+    // Add some power to the gun
+    stats_modify_gun_power(s, GUN_POWER_BONUS*tm);
 }
