@@ -36,6 +36,9 @@ void exp_draw(Explosion* e, Graphics* g);
 // Shake
 void exp_shake(Explosion* e,  Graphics* g);
 
+// Get radius
+float exp_get_radius(Explosion* e);
+
 // Is dead
 bool exp_dead(Explosion* e);
 

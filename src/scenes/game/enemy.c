@@ -19,16 +19,85 @@ void init_global_enemies(AssetManager* a) {
 }
 
 
+// Create coins
+static void enemy_create_coins(Enemy* e, 
+    Coin* coins, int len, int min, int max,
+    bool stomp) {
+
+    const float SPEED_VARY_X_RIGHT = 2.5f;
+    const float SPEED_VARY_X_LEFT = -1.5f;
+    const float SPEED_VARY_Y_UP = -3.0f;
+    const float SPEED_VARY_Y_DOWN = 1.0f;
+    const float Y_OFF = 0.0f;
+    const int GEM_PROB = 25;
+    const float GEM_SPEED_Y = 0.0f;
+
+    int i;
+    int loop = (rand() % (max-min)) + min;
+
+    Vector2 speed;
+    Vector2 pos = e->pos;
+    pos.y += Y_OFF;
+    Coin* c;
+
+    for (i = 0 ; i < loop; ++ i) {
+
+        speed.x = (float)(rand() % 100)/100.0f * 
+            (SPEED_VARY_X_RIGHT - SPEED_VARY_X_LEFT) + SPEED_VARY_X_LEFT ;
+        speed.y = (float)(rand() % 100)/100.0f * 
+            (SPEED_VARY_Y_DOWN - SPEED_VARY_Y_UP) + SPEED_VARY_Y_UP ;
+
+        if (stomp) {
+
+            speed.y = fabsf(speed.y);
+        }
+
+        c = coin_get_next(coins, len);
+        if (c == NULL) break;
+
+        // Activate
+        coin_activate(c, pos, speed, 0, false);
+    }
+
+    // Might create a gem, if not stomped
+    if (!stomp && rand() % 100 < GEM_PROB) {
+
+        c = coin_get_next(coins, len);
+        if (c == NULL) return;
+
+        coin_activate(c, pos, 
+            vec2(0.0f, GEM_SPEED_Y), 
+            1, false);
+    }
+}
+
+
+
 // Kill
 static void enemy_kill(Enemy* e, Stats* s, 
-    Coin* coins, int coinLen, bool stomped) {
+    Coin* coins, int coinLen, 
+    bool stomped,
+    Message* msgs, int msgLen) {
 
     const float POWER_PLUS = 0.25f;
+    const int COIN_MIN = 1;
+    const int COIN_MAX = 3;
+    const int SCORE = 250;
 
     e->deathTimer = DEATH_TIME;
     e->dying = true;
 
+    // Add power to the star meter
     stats_modify_power(s, POWER_PLUS);
+    // Create coins
+    enemy_create_coins(e, coins, coinLen,
+        COIN_MIN, COIN_MAX, stomped);
+
+    // Create message & add points
+    int score = SCORE;
+    score += (SCORE/10) * s->coins;
+    msg_create_score_message(msgs, msgLen, score, e->pos);
+    stats_add_points(s, score);
 }
 
 
@@ -190,7 +259,9 @@ void enemy_update(Enemy* e, float globalSpeed, float tm){
 
 // Bullet-enemy collision
 void enemy_bullet_collision(
-    Enemy* e, Bullet* b, Stats* s, Coin* coins, int coinLen){
+    Enemy* e, Bullet* b, Stats* s, 
+    Coin* coins, int coinLen,
+    Message* msgs, int msgLen){
         
     const float HURT_TIME = 30.0f;
 
@@ -204,7 +275,8 @@ void enemy_bullet_collision(
 
         if (--e->health <= 0) {
 
-            enemy_kill(e, s, coins, coinLen, false);
+            enemy_kill(e, s, coins, coinLen, false,
+                msgs, msgLen);
         }
         else {
 
@@ -217,7 +289,8 @@ void enemy_bullet_collision(
 
 // Player-enemy collision
 void enemy_player_collision(Enemy* e, Player* pl, 
-    Coin* coins, int coinLen) {
+    Coin* coins, int coinLen,
+    Message* msgs, int msgLen) {
 
     const float STOMP_POWER = 6.0f;
     const float PL_RADIUS = 16.0f;
@@ -231,9 +304,25 @@ void enemy_player_collision(Enemy* e, Player* pl,
         16.0f
     };
 
-    if (e->dying || !e->exist || 
-        pl->dying || pl->respawnTimer > 0.0f) 
+    if (e->dying || !e->exist) 
         return;   
+
+    // Check player explosion
+    if (pl->exp.exist) {
+
+        if (hypotf(pl->exp.pos.x - e->pos.x,  
+            pl->exp.pos.y - e->pos.y) 
+            < SELF_RADIUS[e->id] + exp_get_radius(&pl->exp)) {
+
+            enemy_kill(e, pl->stats, coins, coinLen, false,
+                msgs, msgLen);
+        }
+
+        return;
+    }
+
+    if (pl->dying || pl->respawnTimer > 0.0f)
+        return;
 
     float w = STOMP_WIDTH[e->id];
     float y = e->pos.y + STOMP_Y[e->id];
@@ -243,7 +332,8 @@ void enemy_player_collision(Enemy* e, Player* pl,
         e->pos.x - w/2,
         y, w, STOMP_POWER)) {
 
-        enemy_kill(e, pl->stats, coins, coinLen, true);
+        enemy_kill(e, pl->stats, coins, coinLen, true,
+                msgs, msgLen);
     }
 
 

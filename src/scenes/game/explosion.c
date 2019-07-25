@@ -60,7 +60,7 @@ void exp_draw(Explosion* e, Graphics* g) {
     float step = 2*M_PI / (float)DIV;
 
     float t = e->timer / (EXP_TIME_BASE * e->magnitude);
-    float r = e->radius * (1.0f-t);
+    float r = exp_get_radius(e);
 
     float lvalue = (int)floorf(t * 14);
 
@@ -97,6 +97,16 @@ void exp_shake(Explosion* e,  Graphics* g) {
             (rand() % (a*2) ) - a
         );
     }
+}
+
+
+// Get radius
+float exp_get_radius(Explosion* e) {
+
+    float t = e->timer / (EXP_TIME_BASE * e->magnitude);
+    float r = e->radius * (1.0f-t);
+
+    return r;
 }
 
 

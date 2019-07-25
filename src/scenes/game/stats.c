@@ -63,7 +63,7 @@ Stats create_default_stats() {
     s.lives = DEF_LIVES;
     s.maxLives = MAX_LIVES;
 
-    s.powerLevel = 3;
+    s.powerLevel = 0;
     s.powerMeter = 0.0f;
     s.powerMeterRenderPos = 0.0f;
     s.gunPower = 1.0f;

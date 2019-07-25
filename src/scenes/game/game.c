@@ -524,14 +524,16 @@ static void game_update(void* e, float tm) {
 
         enemy_update(&enemies[i], speed, tm);
         enemy_player_collision(&enemies[i], &player,
-            coins, COIN_COUNT);
+            coins, COIN_COUNT,
+            messages, MSG_COUNT);
 
         // Bullet collision
         for (j = 0; j < ENEMY_COUNT; ++ j) {
 
             enemy_bullet_collision(&enemies[i], 
                 &player.bullets[j], &stats, 
-                coins, COIN_COUNT);
+                coins, COIN_COUNT,
+                messages, MSG_COUNT);
         }
     }
 
@@ -760,9 +762,9 @@ static void game_draw_self_destruct(Graphics* g) {
     const int ICON_X = 2;
 
     const int BAR_X = ICON_X + 12;
-    const int BAR_Y = ICON_Y + 1;
+    const int BAR_Y = ICON_Y;
     const int BAR_WIDTH = 96;
-    const int BAR_HEIGHT = 8;
+    const int BAR_HEIGHT = 10;
     const uint8 BAR_COLORS[] = {
         0b01011110,
         0b10011001,
@@ -795,6 +797,15 @@ static void game_draw_self_destruct(Graphics* g) {
     g_fill_rect(g, 
         boxX + BAR_X, BOX_Y + BAR_Y, (int)roundf(BAR_WIDTH * t),
         BAR_HEIGHT, BAR_COLORS[col]);
+
+    // Create time string
+    char timeStr[4];
+    int s = (int)floorf( (1.0f-player.selfDestructTimer) * 10.0f);
+    snprintf(timeStr, 4, "0.%d", s);
+    
+    g_draw_text(g, bmpFont, timeStr, 
+        boxX + BAR_X + BAR_WIDTH/2, BOX_Y + BAR_Y +1,
+        TEXT_XOFF, 0, true);
 }
 
 

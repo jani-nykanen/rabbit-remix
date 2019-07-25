@@ -109,7 +109,6 @@ static void pl_create_coins(Player* pl,
 }
 
 
-
 // Create an explosion
 static void pl_create_explosion(Player* pl) {
 

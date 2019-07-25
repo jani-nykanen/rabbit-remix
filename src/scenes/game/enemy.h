@@ -12,6 +12,7 @@
 #include "coin.h"
 #include "bullet.h"
 #include "player.h"
+#include "message.h"
 
 // Initialize global enemy content
 void init_global_enemies(AssetManager* a); 
@@ -48,11 +49,14 @@ void enemy_update(Enemy* e, float globalSpeed, float tm);
 
 // Bullet-enemy collision
 void enemy_bullet_collision(
-    Enemy* e, Bullet* b, Stats* s, Coin* coins, int coinLen);
+    Enemy* e, Bullet* b, Stats* s, 
+    Coin* coins, int coinLen,
+    Message* msgs, int msgLen);
 
 // Player-enemy collision
 void enemy_player_collision(Enemy* e, Player* pl,
-    Coin* coins, int coinLen);
+    Coin* coins, int coinLen,
+    Message* msgs, int msgLen);
 
 // Draw an enemy
 void enemy_draw(Enemy* e, Graphics* g);
