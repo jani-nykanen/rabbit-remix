@@ -169,7 +169,7 @@ void sb_bullet_collision(Spikeball* sb, Bullet* b) {
     const float SPEED_MUL = 2.0f;
     const float SPEED_COMP = 12.0f;
 
-    if (!sb->exist || !b->exist) return;
+    if (!sb->exist || !b->exist || b->dying) return;
 
     // Check if inside the collision area
     if (hypotf(b->pos.x-sb->pos.x, b->pos.y-sb->pos.y) < RADIUS+b->radius) {
@@ -261,15 +261,6 @@ void sb_draw(Spikeball* b, Graphics* g) {
     
     int i;
 
-    /*for (i = 0; i < 3; ++ i) {
-        
-        g_draw_thick_line(g, 
-            (int)roundf(b->startPos.x), 
-            -ROPE_WIDTH/2, x, y, 
-            ROPE_WIDTH - i*2, 
-            COLORS[i]);
-    }
-    */
    // Draw chain
    draw_chain(g, 
             (int)roundf(b->startPos.x), 

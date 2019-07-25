@@ -24,11 +24,16 @@ typedef struct {
     Vector2 speed;
 
     Sprite spr;
+    float radius;
     int id;
 
-    float wave;
+    Vector2 wave;
 
+    float hurtTimer;
+    float deathTimer;
+    int health;
     bool exist;
+    bool dying;
 
 } Enemy;
 
@@ -43,7 +48,7 @@ void enemy_update(Enemy* e, float globalSpeed, float tm);
 
 // Bullet-enemy collision
 void enemy_bullet_collision(
-    Enemy* e, Bullet* b, Coin* coins, int coinLen);
+    Enemy* e, Bullet* b, Stats* s, Coin* coins, int coinLen);
 
 // Player-enemy collision
 void enemy_player_collision(Enemy* e, Player* pl,

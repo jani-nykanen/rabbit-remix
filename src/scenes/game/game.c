@@ -342,8 +342,8 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
 static void update_enemy_generator(float globalSpeed, float tm) {
 
     const int POS_X = 256 + 48;
-    const int MIN_Y = 48;
-    const int MAX_Y = 192-GROUND_COLLISION_HEIGHT -24;
+    const int MIN_Y = 32;
+    const int MAX_Y = 192-GROUND_COLLISION_HEIGHT -32;
 
     int loop;
     int i;
@@ -442,7 +442,9 @@ static int game_on_load(AssetManager* a) {
             +  ENEMY_WAIT_MIN[0]);
     prohibitSpecialCount = 0;
     phase = 0;
-    spikeballWait = SPIKEBALL_MIN_TIME[phase];
+    spikeballWait = (rand() % 
+                (SPIKEBALL_MAX_TIME[phase]-SPIKEBALL_MIN_TIME[phase])) 
+                + SPIKEBALL_MIN_TIME[phase];
     paused = false;
     itemCounter = ITEM_WAIT_MIN 
         + (rand() % (ITEM_WAIT_MAX-ITEM_WAIT_MIN));
@@ -528,7 +530,8 @@ static void game_update(void* e, float tm) {
         for (j = 0; j < ENEMY_COUNT; ++ j) {
 
             enemy_bullet_collision(&enemies[i], 
-                &player.bullets[j], coins, COIN_COUNT);
+                &player.bullets[j], &stats, 
+                coins, COIN_COUNT);
         }
     }
 
