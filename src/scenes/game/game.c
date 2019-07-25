@@ -46,6 +46,12 @@ static const int SPIKEBALL_MAX_TIME[] = {
 static const int SPIKEBALL_SPECIAL_PROB[] = {
     25
 };
+static const int ENEMY_WAIT_MIN[] = {
+    120
+};
+static const int ENEMY_WAIT_MAX[] = {
+    300
+};
 
 
 // Bitmaps
@@ -74,6 +80,8 @@ static int spikeballWait;
 static int itemCounter;
 // Life counter
 static int lifeCounter;
+// Enemy timer
+static float enemyTimer;
 
 // Global speed
 static float globalSpeed;
@@ -153,6 +161,19 @@ static Mushroom* get_next_mushroom(int dir) {
 
             return &mushrooms[i];
         }
+    }
+    return NULL;
+}
+
+
+// Get next enemy
+static Enemy* get_next_enemy() {
+
+    int i;
+    for (i = 0; i < ENEMY_COUNT; ++ i) {
+
+        if (enemies[i].exist == false)
+            return &enemies[i];
     }
     return NULL;
 }
@@ -317,6 +338,45 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
 }
 
 
+// Update enemy generator
+static void update_enemy_generator(float globalSpeed, float tm) {
+
+    const int POS_X = 256 + 48;
+    const int MIN_Y = 48;
+    const int MAX_Y = 192-GROUND_COLLISION_HEIGHT -24;
+
+    int loop;
+    int i;
+    Vector2 pos;
+    Enemy* e;
+
+    if ((enemyTimer -= 1.0f * tm) <= 0.0f) {
+
+        loop = 1;
+
+        // Compute position
+        pos.x = POS_X;
+
+        for (i = 0; i < loop; ++ i) {
+
+            pos.y = (float)(rand() % (MAX_Y-MIN_Y)) + MIN_Y;
+
+            e = get_next_enemy();
+            if (e == NULL) return;
+
+            enemy_activate(e, pos, 0);
+        }
+
+        // Compute new time
+        enemyTimer = (float)(
+            (rand() % (ENEMY_WAIT_MAX[phase] - ENEMY_WAIT_MIN[phase]))
+            +  ENEMY_WAIT_MIN[phase] * loop
+        );
+
+    }
+}
+
+
 // Initialize
 static int game_init(void* e) {
 
@@ -377,6 +437,9 @@ static int game_on_load(AssetManager* a) {
     globalSpeed = 0.0f;
     globalSpeedTarget = 1.0f;
     mushroomTimer = INITIAL_MUSHROOM_WAIT;
+    enemyTimer = (float)(
+            (rand() % (ENEMY_WAIT_MAX[0] - ENEMY_WAIT_MIN[0]))
+            +  ENEMY_WAIT_MIN[0]);
     prohibitSpecialCount = 0;
     phase = 0;
     spikeballWait = SPIKEBALL_MIN_TIME[phase];
@@ -429,6 +492,8 @@ static void game_update(void* e, float tm) {
     pl_update(&player, evMan, speed, tm,    
         (void*)coins, COIN_COUNT);
 
+    // Update enemy generator
+    update_enemy_generator(speed, tm);
     // Update mushroom generator
     update_mushroom_generator(speed, tm);
     // Update mushrooms

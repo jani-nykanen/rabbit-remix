@@ -26,6 +26,8 @@ typedef struct {
     Sprite spr;
     int id;
 
+    float wave;
+
     bool exist;
 
 } Enemy;

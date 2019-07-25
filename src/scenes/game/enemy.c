@@ -12,6 +12,29 @@ void init_global_enemies(AssetManager* a) {
 }
 
 
+// Update special behavior
+static void enemy_update_special(Enemy* e, float globalSpeed, float tm) {
+
+    const float WAVE_SPEED = 0.05f;
+    const float AMPLITUDE = 12.0f;
+
+    switch (e->id)
+    {
+    case 0:
+        // Waves
+        e->wave += WAVE_SPEED * tm;
+        e->pos.y = e->startPos.y + sinf(e->wave) * AMPLITUDE;
+
+        // Move
+        e->pos.x -= 1.0f * globalSpeed * tm;
+        break;
+    
+    default:
+        break;
+    }
+}
+
+
 // Create an enemy
 Enemy create_enemy(){
 
@@ -37,10 +60,15 @@ void enemy_activate(Enemy* e, Vector2 pos, int id){
 // Update an enemy
 void enemy_update(Enemy* e, float globalSpeed, float tm){
     
+    const float ANIM_SPEED = 6.0f;
+
     if (!e->exist) return;
 
-    // TEMP
-    e->pos.x -= globalSpeed * tm;
+    // Update special
+    enemy_update_special(e, globalSpeed, tm);
+
+    // Animate
+    spr_animate(&e->spr, e->id, 0, 3, ANIM_SPEED, tm);
 
     // See if has "gone too far"
     if (e->pos.x + e->spr.width/2 < 0) {
@@ -72,7 +100,7 @@ void enemy_player_collision(Enemy* e, Player* pl,
 // Draw an enemy
 void enemy_draw(Enemy* e, Graphics* g) {
     
-    const int DVALUE = 8;
+    const int DVALUE = 10;
 
     if (!e->exist) return;
 
