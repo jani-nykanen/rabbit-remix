@@ -29,37 +29,51 @@ static const int ITEM_WAIT_MIN = 2;
 static const int ITEM_WAIT_MAX = 6;
 static const int LIFE_WAIT_MIN = 3;
 static const int LIFE_WAIT_MAX = 6;
+static const int MAX_PHASE = 4;
 
 // Probabilities & other phase-specific things
 static const int MUSHROOM_PROB[][6] = {
-    {25, 15, 20, 15, 15, 10},
+    {35, 20, 30, 15, 0, 0},
+    {30, 20, 25, 15, 10, 0},
     {25, 15, 20, 15, 15, 10},
     {25, 15, 20, 15, 15, 10},
     {25, 15, 20, 15, 15, 10},
 };
 static const int MINOR_PROB[][6] = {
+    {10, 0, 10, 0, 0, 0},
+    {10, 0, 10, 10, 0, 0},
+    {10, 0, 10, 15, 0, 10},
+    {10, 0, 10, 20, 0, 20},
     {10, 0, 10, 25, 0, 25},
-    {10, 0, 10, 25, 0, 25},
-    {10, 0, 10, 25, 0, 25},
-    {10, 0, 10, 25, 0, 25},
+};
+static const int ENEMY_PROB[][5] = {
+    {50, 50, 0, 0, 0},
+    {30, 30, 20, 0, 20},
+    {25, 25, 20, 10, 20},
+    {20, 20, 20, 20, 20},
+    {20, 20, 20, 20, 20},
 };
 static const int SPIKEBALL_MIN_TIME[] = {
-    2, 2, 2, 2
+    6, 5, 4, 3, 2
 };
 static const int SPIKEBALL_MAX_TIME[] = {
-    10, 10, 10, 10
+    12, 11, 10, 9, 8
 };
 static const int SPIKEBALL_SPECIAL_PROB[] = {
-    25, 25, 25, 25
+    0, 20, 30, 40, 50
 };
 static const int ENEMY_WAIT_MIN[] = {
-    60, 60, 60, 60
+    90, 75, 60, 60, 60,
 };
 static const int ENEMY_WAIT_MAX[] = {
-    300, 300, 300, 300
+    300, 300, 300, 300, 300
 };
 static const int ENEMY_CREATE_MAX[] = {
-    3, 3, 3, 3
+    1, 1, 2, 2, 3
+};
+// In seconds
+static const float PHASE_LENGTH[] = {
+    20, 20, 20, 20, 20
 };
 
 
@@ -98,6 +112,8 @@ static float globalSpeed;
 static float globalSpeedTarget;
 // Phase
 static int phase;
+// Phase timer
+static float phaseTimer;
 
 // Is paused
 static int paused;
@@ -186,6 +202,24 @@ static Enemy* get_next_enemy() {
     }
     return NULL;
 }
+
+
+// Generate enemy id
+static int gen_enemy_id(int prob) {
+
+    int i;
+    int p = ENEMY_PROB[phase][0];
+    for (i = 1; i < 5; ++ i) {
+
+        if (prob < p) {
+
+            return i-1;
+        }
+        p += ENEMY_PROB[phase][i];
+    }
+    return 4;
+}
+
 
 
 // Create starter mushrooms
@@ -370,9 +404,7 @@ static void update_enemy_generator(float globalSpeed, float tm) {
 
     if ((enemyTimer -= 1.0f * tm) <= 0.0f) {
 
-        loop = rand() % (ENEMY_CREATE_MAX[phase] +1) +1;
-
-        
+        loop = rand() % ENEMY_CREATE_MAX[phase] +1;
 
         // Compute position
         pos.x = POS_X;
@@ -380,9 +412,10 @@ static void update_enemy_generator(float globalSpeed, float tm) {
         for (i = 0; i < loop; ++ i) {
 
             // Determine id
-            id = rand() % (MAX_ID+1);
+            id = gen_enemy_id(rand() % 100);
             // If id is already generated, get next
-            while (generated[id]) {
+            while (generated[id] || 
+                ENEMY_PROB[phase][id] == 0) {
 
                 ++ id;
                 id %= MAX_ID;
@@ -406,6 +439,23 @@ static void update_enemy_generator(float globalSpeed, float tm) {
             +  minTime
         );
 
+    }
+}
+
+
+// Update phase
+static void update_phase(float tm) {
+
+    const float SPEED_INCREASE = 0.25f;
+
+    phaseTimer += 1.0f * tm;
+    if (phaseTimer >= PHASE_LENGTH[phase] * 60) {
+
+        phaseTimer -= PHASE_LENGTH[phase] * 60;
+        globalSpeedTarget += SPEED_INCREASE;
+
+        if (phase < MAX_PHASE)
+            ++ phase;
     }
 }
 
@@ -510,6 +560,9 @@ static void game_update(void* e, float tm) {
         paused = !paused;
     }
     if (paused) return; 
+
+    // Update phase
+    update_phase(tm);
 
     // Update global speed
     if (globalSpeed < globalSpeedTarget) {
