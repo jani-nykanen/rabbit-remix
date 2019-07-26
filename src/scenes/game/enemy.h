@@ -26,6 +26,7 @@ typedef struct {
     Vector2 speed;
 
     Sprite spr;
+    bool flip;
     float radius;
     int id;
 

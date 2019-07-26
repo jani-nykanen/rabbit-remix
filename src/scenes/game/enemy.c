@@ -206,7 +206,6 @@ static void enemy_update_type2(Enemy* e,
         if (e->speed.y < target)
             e->speed.y = target;
     } 
-    // e->pos.y += e->speed.y * tm;
 
     // Check bounds
     if ( (e->phase == -1 && e->pos.y < UPPER_BOUND) ||
@@ -217,6 +216,35 @@ static void enemy_update_type2(Enemy* e,
 }
 
 
+// Type 4
+static void enemy_update_type4(Enemy* e, 
+    float globalSpeed, float tm) {
+
+    const float GRAVITY_MAX = 2.5f;
+    const float GRAVITY_DELTA = 0.075f;
+    const float JUMP_MIN = -1.5f;
+    const float JUMP_MAX = -4.0f;
+    const float SPEED_LEFT = 1.5f;
+    const float SPEED_RIGHT = -0.25f;
+
+    // Update gravity
+    e->speed.y = min_float_2(GRAVITY_MAX, 
+        e->speed.y + GRAVITY_DELTA * tm);
+
+    // Check floor collision
+    if (e->pos.y+e->spr.height/2 > 
+        192-GROUND_COLLISION_HEIGHT) {
+
+        e->pos.y = 192-GROUND_COLLISION_HEIGHT - e->spr.height/2;
+        e->speed.y = (float)((rand() % 100))/100.0f * (JUMP_MAX-JUMP_MIN)
+            + JUMP_MIN;
+
+        e->phase = !e->phase;
+        e->flip = !e->flip;
+    }
+
+    e->speed.x = (1-e->phase) * SPEED_LEFT + e->phase * SPEED_RIGHT;
+}
 
 
 // Update special behavior
@@ -234,6 +262,9 @@ static void enemy_update_special(Enemy* e, float globalSpeed, float tm) {
         break;
     case 2:
         enemy_update_type2(e, globalSpeed, tm);
+        break;
+    case 4:
+        enemy_update_type4(e, globalSpeed, tm);
         break;
     
     default:
@@ -264,7 +295,7 @@ static void enemy_draw_dying(Enemy* e, Graphics* g) {
 
     // Draw scaled sprite
     spr_draw_scaled(&e->spr, g, bmpEnemy,
-        x, y, sx, sy, false);
+        x, y, sx, sy, e->flip);
 
     g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
 }
@@ -284,7 +315,7 @@ Enemy create_enemy(){
 void enemy_activate(Enemy* e, Vector2 pos, int id){
     
     const float RADIUS[] = {
-        16.0f, 12.0f, 16.0f, 12.0f, 16.0f,
+        16.0f, 12.0f, 16.0f, 12.0f, 14.0f,
     };
     const int HIT_POINTS[] = {
         2, 1, 2, 1, 2
@@ -307,6 +338,7 @@ void enemy_activate(Enemy* e, Vector2 pos, int id){
     e->phase = 0.0f;
     e->stomped = false;
     e->totalSpeed = 0.0f;
+    e->flip = false;
 
     switch(e->id) {
 
@@ -367,7 +399,7 @@ void enemy_update(Enemy* e, float globalSpeed, float tm){
 
         if (!e->stomped)
             sx = KNOCKBACK_SPEED_X;
-        else 
+        else if (e->id != 4)
             sy = KNOCKBACK_SPEED_Y;
     }
 
@@ -421,10 +453,10 @@ void enemy_player_collision(Enemy* e, Player* pl,
     const float STOMP_POWER = 5.0f;
     const float PL_RADIUS = 16.0f;
     const float STOMP_WIDTH[] = {
-        64, 64, 64, 64, 64,
+        64, 64, 64, 64, 56,
     };
     const float STOMP_Y[] = {
-        -12, -4, -12, -4, -12,
+        -12, -4, -12, -4, -8,
     };
     
     if (e->dying || !e->exist) 
@@ -466,6 +498,11 @@ void enemy_player_collision(Enemy* e, Player* pl,
 
             e->stomped = true;
             e->hurtTimer = HURT_TIME;
+
+            if (e->id == 4) {
+
+                e->speed.y = fabsf(e->speed.y);
+            }
         }
     }
 
@@ -508,7 +545,7 @@ void enemy_draw(Enemy* e, Graphics* g) {
 
     // Draw sprite
     spr_draw(&e->spr, g, bmpEnemy, 
-        x - e->spr.width/2, y - e->spr.height/2, false);
+        x - e->spr.width/2, y - e->spr.height/2, e->flip);
 
     g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
 }
