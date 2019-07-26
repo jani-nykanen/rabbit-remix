@@ -32,25 +32,34 @@ static const int LIFE_WAIT_MAX = 6;
 
 // Probabilities & other phase-specific things
 static const int MUSHROOM_PROB[][6] = {
-    {25, 15, 20, 15, 15, 10}
+    {25, 15, 20, 15, 15, 10},
+    {25, 15, 20, 15, 15, 10},
+    {25, 15, 20, 15, 15, 10},
+    {25, 15, 20, 15, 15, 10},
 };
 static const int MINOR_PROB[][6] = {
-    {10, 0, 10, 25, 0, 25}
+    {10, 0, 10, 25, 0, 25},
+    {10, 0, 10, 25, 0, 25},
+    {10, 0, 10, 25, 0, 25},
+    {10, 0, 10, 25, 0, 25},
 };
 static const int SPIKEBALL_MIN_TIME[] = {
-    2
+    2, 2, 2, 2
 };
 static const int SPIKEBALL_MAX_TIME[] = {
-    10
+    10, 10, 10, 10
 };
 static const int SPIKEBALL_SPECIAL_PROB[] = {
-    25
+    25, 25, 25, 25
 };
 static const int ENEMY_WAIT_MIN[] = {
-    60
+    60, 60, 60, 60
 };
 static const int ENEMY_WAIT_MAX[] = {
-    300
+    300, 300, 300, 300
+};
+static const int ENEMY_CREATE_MAX[] = {
+    3, 3, 3, 3
 };
 
 
@@ -345,24 +354,41 @@ static void update_enemy_generator(float globalSpeed, float tm) {
     const int MIN_Y = 32;
     const int MAX_Y = 192-GROUND_COLLISION_HEIGHT -32;
     const int MAX_ID = 4;
+    const int LOOP_OFF = 32;
 
     int loop;
     int i;
     int id;
+    int startID;
     Vector2 pos;
     Enemy* e;
+    int minTime;
+
+    bool generated[] = {
+        false, false, false, false, false
+    };
 
     if ((enemyTimer -= 1.0f * tm) <= 0.0f) {
 
-        loop = 1;
+        loop = rand() % (ENEMY_CREATE_MAX[phase] +1) +1;
 
-        // Determine id
-        id = rand() % (MAX_ID+1);
+        
 
         // Compute position
         pos.x = POS_X;
 
         for (i = 0; i < loop; ++ i) {
+
+            // Determine id
+            id = rand() % (MAX_ID+1);
+            // If id is already generated, get next
+            while (generated[id]) {
+
+                ++ id;
+                id %= MAX_ID;
+                if (id == startID) break;
+            }
+            generated[id] = true;
 
             pos.y = (float)(rand() % (MAX_Y-MIN_Y)) + MIN_Y;
 
@@ -370,12 +396,14 @@ static void update_enemy_generator(float globalSpeed, float tm) {
             if (e == NULL) return;
 
             enemy_activate(e, pos, id);
+            pos.x += LOOP_OFF;
         }
 
+        minTime = ENEMY_WAIT_MIN[phase] * loop;
         // Compute new time
         enemyTimer = (float)(
-            (rand() % (ENEMY_WAIT_MAX[phase] - ENEMY_WAIT_MIN[phase]))
-            +  ENEMY_WAIT_MIN[phase] * loop
+            (rand() % (ENEMY_WAIT_MAX[phase] -ENEMY_WAIT_MIN[phase] ))
+            +  minTime
         );
 
     }

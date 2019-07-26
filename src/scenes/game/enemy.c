@@ -167,7 +167,7 @@ static void enemy_update_types_1_3(Enemy* e,
             angle = atan2f(e->plPos.y - e->pos.y, 
                 e->plPos.x - e->pos.x);
 
-            e->speed.x -= cosf(angle) * SPEED_DELTA * tm;    
+            e->speed.x += fabsf(cosf(angle)) * SPEED_DELTA * tm;    
             e->speed.y += sinf(angle) * SPEED_DELTA * tm;    
         }
     }

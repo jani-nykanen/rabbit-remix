@@ -390,15 +390,16 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
                 makeBig ? BIG_RADIUS : BULLET_RADIUS,
                 makeBig);
 
-            pl->loading = (makeBig ? false : true);
+            // Reduce power
+            stats_modify_gun_power(pl->stats,
+                makeBig ? -REDUCE_POWER_BIG : -REDUCE_POWER_NORMAL);
+
+            pl->loading = ( (makeBig || pl->stats->gunPower <= 0.0f) 
+                ? false : true);
             pl->loadTimer = LOAD_INITIAL;
 
             pl->shootWait = SHOOT_ANIM_TIME;
             pl->blastTime = BLAST_TIME;
-
-            // Reduce power
-            stats_modify_gun_power(pl->stats,
-                makeBig ? -REDUCE_POWER_BIG : -REDUCE_POWER_NORMAL);
         }
     }
 

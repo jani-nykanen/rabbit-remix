@@ -311,10 +311,10 @@ void mush_player_collision(Mushroom* m, Player* pl,
         8.0f, 9.0f, 7.0f, 8.0f, 8.0f, 8.0f,
     };
     const int GOLDEN_MIN[] = {
-        3, 0, 4
+        2, 0, 3
     };
     const int GOLDEN_MAX[] = {
-        5, 0, 6
+        4, 0, 4
     };
 
     if (!m->exist || m->dying || 
