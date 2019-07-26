@@ -86,7 +86,7 @@ static void enemy_kill(Enemy* e, Stats* s,
     const int COIN_MIN = 1;
     const int COIN_MAX = 3;
     const int SCORE[] = {
-        250, 150, 300, 250
+        250, 150, 300, 200, 250,
     };
 
     e->deathTimer = DEATH_TIME;
@@ -133,12 +133,14 @@ static void enemy_update_type0(Enemy* e,
 }
 
 
-// Type 1
-static void enemy_update_type1(Enemy* e, 
+// Type 1 & 3
+static void enemy_update_types_1_3(Enemy* e, 
     float globalSpeed, float tm) {
 
     const float STOP_X = 256;
     const float SPEED_DELTA = 0.05f;
+
+    float angle = 0.0f;
 
     if (e->phase == 0) {
 
@@ -149,12 +151,27 @@ static void enemy_update_type1(Enemy* e,
             e->speed.x = 0.0f;
             ++ e->phase;
         }
+        e->speed.y = 0.0f;
     }
     else {
 
-        e->speed.x += SPEED_DELTA * tm;
+        e->totalSpeed += SPEED_DELTA * tm;
+
+        if (e->id == 1) {
+
+            e->speed.x += SPEED_DELTA * tm;
+            e->speed.y = 0.0f;
+        }
+        else if(e->id == 3) {
+
+            angle = atan2f(e->plPos.y - e->pos.y, 
+                e->plPos.x - e->pos.x);
+
+            e->speed.x -= cosf(angle) * SPEED_DELTA * tm;    
+            e->speed.y += sinf(angle) * SPEED_DELTA * tm;    
+        }
     }
-    e->speed.y = 0.0f;
+    
 }
 
 
@@ -211,8 +228,9 @@ static void enemy_update_special(Enemy* e, float globalSpeed, float tm) {
     case 0:
         enemy_update_type0(e, globalSpeed, tm);
         break;
+    case 3:
     case 1:
-        enemy_update_type1(e, globalSpeed, tm);
+        enemy_update_types_1_3(e, globalSpeed, tm);
         break;
     case 2:
         enemy_update_type2(e, globalSpeed, tm);
@@ -266,15 +284,16 @@ Enemy create_enemy(){
 void enemy_activate(Enemy* e, Vector2 pos, int id){
     
     const float RADIUS[] = {
-        16.0f, 12.0f, 16.0f,
+        16.0f, 12.0f, 16.0f, 12.0f, 16.0f,
     };
     const int HIT_POINTS[] = {
-        2, 1, 2
+        2, 1, 2, 1, 2
     };
 
     // Set stuff
     e->spr = create_sprite(48, 48);
     e->pos = pos;
+    e->plPos = e->pos;
     e->startPos = pos;
     e->id = id;
     e->radius = RADIUS[id];
@@ -287,6 +306,7 @@ void enemy_activate(Enemy* e, Vector2 pos, int id){
     e->hurtTimer = 0.0f;
     e->phase = 0.0f;
     e->stomped = false;
+    e->totalSpeed = 0.0f;
 
     switch(e->id) {
 
@@ -401,14 +421,16 @@ void enemy_player_collision(Enemy* e, Player* pl,
     const float STOMP_POWER = 5.0f;
     const float PL_RADIUS = 16.0f;
     const float STOMP_WIDTH[] = {
-        64, 64, 64,
+        64, 64, 64, 64, 64,
     };
     const float STOMP_Y[] = {
-        -12, -4, -12,
+        -12, -4, -12, -4, -12,
     };
-
+    
     if (e->dying || !e->exist) 
         return;   
+
+    e->plPos = pl->pos;
 
     // Check player explosion
     if (pl->exp.exist) {

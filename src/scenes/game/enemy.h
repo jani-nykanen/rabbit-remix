@@ -22,6 +22,7 @@ typedef struct {
 
     Vector2 pos;
     Vector2 startPos;
+    Vector2 plPos;
     Vector2 speed;
 
     Sprite spr;
@@ -30,6 +31,7 @@ typedef struct {
 
     Vector2 wave;
     int phase;
+    float totalSpeed;
 
     float hurtTimer;
     float deathTimer;

@@ -344,7 +344,7 @@ static void update_enemy_generator(float globalSpeed, float tm) {
     const int POS_X = 256 + 48;
     const int MIN_Y = 32;
     const int MAX_Y = 192-GROUND_COLLISION_HEIGHT -32;
-    const int MAX_ID = 2;
+    const int MAX_ID = 3;
 
     int loop;
     int i;
