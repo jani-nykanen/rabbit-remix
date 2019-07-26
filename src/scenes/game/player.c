@@ -18,7 +18,6 @@ static const float BLAST_TIME = 10.0f;
 static const float GRAVITY_TARGET = 3.0f;
 static const float RESPAWN_TIME = 30.0f;
 
-
 // Init global data
 void init_global_player(AssetManager* a) {
 
@@ -343,7 +342,7 @@ static void pl_update_dust(Player* pl, float tm) {
 static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
 
     const float BULLET_RADIUS = 12;
-    const float BIG_RADIUS = 24;
+    const float BIG_RADIUS = 32;
     const float LOAD_INITIAL = -60.0f;
     const float LOAD_BASE_WAIT = 30.0f;
     const float SPEED_MOD = 0.25f;
@@ -354,8 +353,8 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
     const float BULLET_X_OFF = 16;
     const float BULLET_Y_OFF = -21;
 
-    const float REDUCE_POWER_NORMAL = 0.1f;
-    const float REDUCE_POWER_BIG = 0.4f;
+    const float REDUCE_POWER_NORMAL = 0.15f;
+    const float REDUCE_POWER_BIG = 0.6f;
 
     int i;
     int s = pad_get_button_state(evMan->vpad, "fire2");

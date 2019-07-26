@@ -27,11 +27,15 @@
 static const float MUSHROOM_GEN_TIME = 90.0f;
 static const int ITEM_WAIT_MIN = 2;
 static const int ITEM_WAIT_MAX = 6;
-static const int LIFE_WAIT_MIN = 3;
-static const int LIFE_WAIT_MAX = 6;
 static const int MAX_PHASE = 4;
 
 // Probabilities & other phase-specific things
+static const int LIFE_WAIT_MIN[] = {
+    3, 4, 5, 6, 7
+};
+static const int LIFE_WAIT_MAX[] = {
+    6, 8, 10, 12, 14
+};
 static const int MUSHROOM_PROB[][6] = {
     {35, 20, 30, 15, 0, 0},
     {30, 20, 25, 15, 10, 0},
@@ -66,10 +70,10 @@ static const int ENEMY_WAIT_MIN[] = {
     90, 75, 60, 60, 60,
 };
 static const int ENEMY_WAIT_MAX[] = {
-    300, 300, 300, 300, 300
+    300, 300, 300, 270, 240
 };
 static const int ENEMY_CREATE_MAX[] = {
-    1, 1, 2, 2, 3
+    1, 2, 2, 2, 3
 };
 // In seconds
 static const float PHASE_LENGTH[] = {
@@ -357,8 +361,8 @@ static void update_mushroom_generator(float globalSpeed, float tm) {
             if (-- lifeCounter <= 0) {
 
                 type = 2;
-                lifeCounter = LIFE_WAIT_MIN 
-                    + (rand() % (LIFE_WAIT_MAX-LIFE_WAIT_MIN));
+                lifeCounter = LIFE_WAIT_MIN[phase]
+                    + (rand() % (LIFE_WAIT_MAX[phase]-LIFE_WAIT_MIN[phase]));
             }
             else {
 
@@ -531,8 +535,8 @@ static int game_on_load(AssetManager* a) {
     paused = false;
     itemCounter = ITEM_WAIT_MIN 
         + (rand() % (ITEM_WAIT_MAX-ITEM_WAIT_MIN));
-    lifeCounter = LIFE_WAIT_MIN 
-        + (rand() % (LIFE_WAIT_MAX-LIFE_WAIT_MIN));
+    lifeCounter = LIFE_WAIT_MIN[phase]
+            + (rand() % (LIFE_WAIT_MAX[phase]-LIFE_WAIT_MIN[phase]));
 
     // Create starter mushrooms
     create_starter_mushrooms();
