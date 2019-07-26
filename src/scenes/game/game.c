@@ -35,7 +35,7 @@ static const int MUSHROOM_PROB[][6] = {
     {25, 15, 20, 15, 15, 10}
 };
 static const int MINOR_PROB[][6] = {
-    {20, 0, 20, 25, 0, 25}
+    {10, 0, 10, 25, 0, 25}
 };
 static const int SPIKEBALL_MIN_TIME[] = {
     2
@@ -344,6 +344,7 @@ static void update_enemy_generator(float globalSpeed, float tm) {
     const int POS_X = 256 + 48;
     const int MIN_Y = 32;
     const int MAX_Y = 192-GROUND_COLLISION_HEIGHT -32;
+    const int MAX_ID = 2;
 
     int loop;
     int i;
@@ -356,7 +357,7 @@ static void update_enemy_generator(float globalSpeed, float tm) {
         loop = 1;
 
         // Determine id
-        id = rand() % 2;
+        id = rand() % (MAX_ID+1);
 
         // Compute position
         pos.x = POS_X;

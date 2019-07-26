@@ -36,6 +36,7 @@ typedef struct {
     int health;
     bool exist;
     bool dying;
+    bool stomped;
 
 } Enemy;
 

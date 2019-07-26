@@ -1,11 +1,14 @@
 #include "enemy.h"
 
+#include "stage.h"
+
 #include <engine/mathext.h>
 
 #include <math.h>
 
 // Constants
 static const float DEATH_TIME = 20.0f;
+const float HURT_TIME = 30.0f;
 
 // Global bitmaps
 static Bitmap* bmpEnemy;
@@ -82,7 +85,9 @@ static void enemy_kill(Enemy* e, Stats* s,
     const float POWER_PLUS = 0.25f;
     const int COIN_MIN = 1;
     const int COIN_MAX = 3;
-    const int SCORE = 250;
+    const int SCORE[] = {
+        250, 150, 300, 250
+    };
 
     e->deathTimer = DEATH_TIME;
     e->dying = true;
@@ -94,8 +99,8 @@ static void enemy_kill(Enemy* e, Stats* s,
         COIN_MIN, COIN_MAX, stomped);
 
     // Create message & add points
-    int score = SCORE;
-    score += (SCORE/10) * s->coins;
+    int score = SCORE[e->id];
+    score += (SCORE[e->id]/10) * s->coins;
     msg_create_score_message(msgs, msgLen, score, e->pos);
     stats_add_points(s, score);
 }
@@ -123,6 +128,8 @@ static void enemy_update_type0(Enemy* e,
 
     e->wave.y += WAVE_SPEED_Y * tm;
     e->pos.y = e->startPos.y + sinf(e->wave.y) * AMPLITUDE_Y;    
+
+    e->speed.y = 0.0f;
 }
 
 
@@ -147,7 +154,51 @@ static void enemy_update_type1(Enemy* e,
 
         e->speed.x += SPEED_DELTA * tm;
     }
+    e->speed.y = 0.0f;
 }
+
+
+// Type 2
+static void enemy_update_type2(Enemy* e, 
+    float globalSpeed, float tm) {
+
+    const float WAVE_SPEED = 0.025f;
+    const float AMPLITUDE = 0.75f;
+    const float BASE_SPEED_X = 0.5f;
+    const float SPEED_TARGET_Y = 0.75f;
+    const float SPEED_DELTA_Y = 0.025f;
+
+    const float LOWER_BOUND = 192 - GROUND_COLLISION_HEIGHT - 48;
+    const float UPPER_BOUND = 48;
+
+    // Waves
+    e->wave.x += WAVE_SPEED * tm;
+    e->speed.x = BASE_SPEED_X + sinf(e->wave.x) * AMPLITUDE;  
+
+    // Update speed y
+    float target = SPEED_TARGET_Y * e->phase;
+    if (e->speed.y < target) {
+
+        e->speed.y += SPEED_DELTA_Y * tm;
+        if (e->speed.y > target)
+            e->speed.y = target;
+    }  
+    else if (e->speed.y > target) {
+
+        e->speed.y -= SPEED_DELTA_Y * tm;
+        if (e->speed.y < target)
+            e->speed.y = target;
+    } 
+    // e->pos.y += e->speed.y * tm;
+
+    // Check bounds
+    if ( (e->phase == -1 && e->pos.y < UPPER_BOUND) ||
+         (e->phase == 1 && e->pos.y > LOWER_BOUND)) {
+
+        e->phase *= -1;
+    }
+}
+
 
 
 
@@ -162,6 +213,9 @@ static void enemy_update_special(Enemy* e, float globalSpeed, float tm) {
         break;
     case 1:
         enemy_update_type1(e, globalSpeed, tm);
+        break;
+    case 2:
+        enemy_update_type2(e, globalSpeed, tm);
         break;
     
     default:
@@ -212,10 +266,10 @@ Enemy create_enemy(){
 void enemy_activate(Enemy* e, Vector2 pos, int id){
     
     const float RADIUS[] = {
-        16.0f, 12.0f,
+        16.0f, 12.0f, 16.0f,
     };
     const int HIT_POINTS[] = {
-        2, 1
+        2, 1, 2
     };
 
     // Set stuff
@@ -232,11 +286,16 @@ void enemy_activate(Enemy* e, Vector2 pos, int id){
     );
     e->hurtTimer = 0.0f;
     e->phase = 0.0f;
+    e->stomped = false;
 
     switch(e->id) {
 
     case 0:
         e->speed.x = 0.5f;
+        break;
+
+    case 2:
+        e->phase = rand() % 2 == 0 ? -1 : 1;
         break;
 
     default:    
@@ -252,7 +311,8 @@ void enemy_activate(Enemy* e, Vector2 pos, int id){
 void enemy_update(Enemy* e, float globalSpeed, float tm){
     
     const float ANIM_SPEED = 6.0f;
-    const float KNOCKBACK_SPEED = -0.5f;
+    const float KNOCKBACK_SPEED_X = -1.0f;
+    const float KNOCKBACK_SPEED_Y = 1.0f;
 
     if (!e->exist) return;
 
@@ -281,13 +341,19 @@ void enemy_update(Enemy* e, float globalSpeed, float tm){
     spr_animate(&e->spr, e->id, 0, 3, ANIM_SPEED, tm);
 
     // Move
-    float s = e->speed.x;
+    float sx = e->speed.x;
+    float sy = e->speed.y;
     if (e->hurtTimer > 0.0f) {
 
-        s *= KNOCKBACK_SPEED;
+        if (!e->stomped)
+            sx = KNOCKBACK_SPEED_X;
+        else 
+            sy = KNOCKBACK_SPEED_Y;
     }
 
-    e->pos.x -= s * globalSpeed * tm;
+    e->pos.x -= sx * globalSpeed * tm;
+    e->pos.y += sy * tm;
+    e->startPos.y += sy * tm;
 
     // See if has "gone too far"
     if (e->pos.x + e->spr.width/2 < 0) {
@@ -302,8 +368,6 @@ void enemy_bullet_collision(
     Enemy* e, Bullet* b, Stats* s, 
     Coin* coins, int coinLen,
     Message* msgs, int msgLen){
-        
-    const float HURT_TIME = 30.0f;
 
     if (!e->exist || !b->exist || b->dying || e->dying) 
         return;
@@ -321,6 +385,7 @@ void enemy_bullet_collision(
         }
         else {
 
+            e->stomped = false;
             e->hurtTimer = HURT_TIME;
             e->wave.x = fmodf(e->wave.x, M_PI);
         }
@@ -333,13 +398,13 @@ void enemy_player_collision(Enemy* e, Player* pl,
     Coin* coins, int coinLen,
     Message* msgs, int msgLen) {
 
-    const float STOMP_POWER = 6.0f;
+    const float STOMP_POWER = 5.0f;
     const float PL_RADIUS = 16.0f;
     const float STOMP_WIDTH[] = {
-        64, 64,
+        64, 64, 64,
     };
     const float STOMP_Y[] = {
-        -12, -4,
+        -12, -4, -12,
     };
 
     if (e->dying || !e->exist) 
@@ -370,8 +435,16 @@ void enemy_player_collision(Enemy* e, Player* pl,
         e->pos.x - w/2,
         y, w, STOMP_POWER)) {
 
-        enemy_kill(e, pl->stats, coins, coinLen, true,
-                msgs, msgLen);
+        if (--e->health <= 0) {
+
+            enemy_kill(e, pl->stats, coins, coinLen, true,
+                    msgs, msgLen);
+        }
+        else {
+
+            e->stomped = true;
+            e->hurtTimer = HURT_TIME;
+        }
     }
 
 
