@@ -387,7 +387,8 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
                
                 vec2(pl->speed.x*SPEED_MOD + (makeBig ? SPEED_BIG : SPEED_NORMAL),
                      pl->speed.y*SPEED_MOD), 
-                makeBig ? BIG_RADIUS : BULLET_RADIUS);
+                makeBig ? BIG_RADIUS : BULLET_RADIUS,
+                makeBig);
 
             pl->loading = (makeBig ? false : true);
             pl->loadTimer = LOAD_INITIAL;

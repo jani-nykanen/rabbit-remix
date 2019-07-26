@@ -16,6 +16,7 @@ typedef struct
 
     bool exist;
     bool dying;
+    bool isSpecial;
 
     float angle;
     float radius;
@@ -27,7 +28,8 @@ typedef struct
 Bullet create_bullet();
 
 // Activate a bullet
-void bullet_activate(Bullet* b, Vector2 pos, Vector2 speed, float radius);
+void bullet_activate(Bullet* b, Vector2 pos, Vector2 speed, 
+    float radius, bool spc);
 
 // Update a bullet
 void bullet_update(Bullet* b, float tm);

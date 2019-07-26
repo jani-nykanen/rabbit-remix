@@ -29,6 +29,7 @@ typedef struct {
     int id;
 
     Vector2 wave;
+    int phase;
 
     float hurtTimer;
     float deathTimer;

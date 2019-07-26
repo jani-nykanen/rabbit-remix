@@ -47,7 +47,7 @@ static const int SPIKEBALL_SPECIAL_PROB[] = {
     25
 };
 static const int ENEMY_WAIT_MIN[] = {
-    120
+    60
 };
 static const int ENEMY_WAIT_MAX[] = {
     300
@@ -347,12 +347,16 @@ static void update_enemy_generator(float globalSpeed, float tm) {
 
     int loop;
     int i;
+    int id;
     Vector2 pos;
     Enemy* e;
 
     if ((enemyTimer -= 1.0f * tm) <= 0.0f) {
 
         loop = 1;
+
+        // Determine id
+        id = rand() % 2;
 
         // Compute position
         pos.x = POS_X;
@@ -364,7 +368,7 @@ static void update_enemy_generator(float globalSpeed, float tm) {
             e = get_next_enemy();
             if (e == NULL) return;
 
-            enemy_activate(e, pos, 0);
+            enemy_activate(e, pos, id);
         }
 
         // Compute new time

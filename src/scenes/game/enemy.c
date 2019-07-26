@@ -101,8 +101,12 @@ static void enemy_kill(Enemy* e, Stats* s,
 }
 
 
-// Update special behavior
-static void enemy_update_special(Enemy* e, float globalSpeed, float tm) {
+//
+// Enemy AI
+//
+// Type 0
+static void enemy_update_type0(Enemy* e, 
+    float globalSpeed, float tm) {
 
     const float WAVE_SPEED_X = 0.025f;
     const float WAVE_SPEED_Y = 0.05f;
@@ -110,20 +114,54 @@ static void enemy_update_special(Enemy* e, float globalSpeed, float tm) {
     const float AMPLITUDE_X = 0.5f;
     const float AMPLITUDE_Y = 12.0f;
 
+    // Waves
+    if (e->hurtTimer <= 0.0f) {
+            
+        e->wave.x += WAVE_SPEED_X * tm;
+        e->speed.x = 1.0f + sinf(e->wave.x) * AMPLITUDE_X;
+    }
+
+    e->wave.y += WAVE_SPEED_Y * tm;
+    e->pos.y = e->startPos.y + sinf(e->wave.y) * AMPLITUDE_Y;    
+}
+
+
+// Type 1
+static void enemy_update_type1(Enemy* e, 
+    float globalSpeed, float tm) {
+
+    const float STOP_X = 256;
+    const float SPEED_DELTA = 0.05f;
+
+    if (e->phase == 0) {
+
+        e->speed.x = 1.0f;  
+        if (e->pos.x < STOP_X) {
+
+            e->pos.x = STOP_X;
+            e->speed.x = 0.0f;
+            ++ e->phase;
+        }
+    }
+    else {
+
+        e->speed.x += SPEED_DELTA * tm;
+    }
+}
+
+
+
+// Update special behavior
+static void enemy_update_special(Enemy* e, float globalSpeed, float tm) {
+
+    
     switch (e->id)
     {
     case 0:
-
-        // Waves
-        if (e->hurtTimer <= 0.0f) {
-            
-            e->wave.x += WAVE_SPEED_X * tm;
-            e->speed.x = 1.0f + sinf(e->wave.x) * AMPLITUDE_X;
-        }
-
-        e->wave.y += WAVE_SPEED_Y * tm;
-        e->pos.y = e->startPos.y + sinf(e->wave.y) * AMPLITUDE_Y;
-        
+        enemy_update_type0(e, globalSpeed, tm);
+        break;
+    case 1:
+        enemy_update_type1(e, globalSpeed, tm);
         break;
     
     default:
@@ -174,10 +212,10 @@ Enemy create_enemy(){
 void enemy_activate(Enemy* e, Vector2 pos, int id){
     
     const float RADIUS[] = {
-        16.0f
+        16.0f, 12.0f,
     };
     const int HIT_POINTS[] = {
-        2
+        2, 1
     };
 
     // Set stuff
@@ -193,6 +231,7 @@ void enemy_activate(Enemy* e, Vector2 pos, int id){
         (float)(rand() % 100)/100.0f * M_PI * 2.0f
     );
     e->hurtTimer = 0.0f;
+    e->phase = 0.0f;
 
     switch(e->id) {
 
@@ -200,7 +239,8 @@ void enemy_activate(Enemy* e, Vector2 pos, int id){
         e->speed.x = 0.5f;
         break;
 
-    default:
+    default:    
+        e->speed.x = 1.0f;
         break;
     }
 
@@ -270,10 +310,11 @@ void enemy_bullet_collision(
 
     // Check if inside the collision area
     if (hypotf(b->pos.x-e->pos.x, b->pos.y-e->pos.y) < e->radius+b->radius) {
+         
+        if (!b->isSpecial)
+            bullet_kill(b);
 
-        bullet_kill(b);
-
-        if (--e->health <= 0) {
+        if (b->isSpecial || --e->health <= 0) {
 
             enemy_kill(e, s, coins, coinLen, false,
                 msgs, msgLen);
@@ -295,13 +336,10 @@ void enemy_player_collision(Enemy* e, Player* pl,
     const float STOMP_POWER = 6.0f;
     const float PL_RADIUS = 16.0f;
     const float STOMP_WIDTH[] = {
-        64,
+        64, 64,
     };
     const float STOMP_Y[] = {
-        -12
-    };
-    const float SELF_RADIUS[] = {
-        16.0f
+        -12, -4,
     };
 
     if (e->dying || !e->exist) 
@@ -312,7 +350,7 @@ void enemy_player_collision(Enemy* e, Player* pl,
 
         if (hypotf(pl->exp.pos.x - e->pos.x,  
             pl->exp.pos.y - e->pos.y) 
-            < SELF_RADIUS[e->id] + exp_get_radius(&pl->exp)) {
+            < e->radius + exp_get_radius(&pl->exp)) {
 
             enemy_kill(e, pl->stats, coins, coinLen, false,
                 msgs, msgLen);
@@ -343,7 +381,7 @@ void enemy_player_collision(Enemy* e, Player* pl,
     // Check if inside a collision area
     if (hypotf(pl->pos.x - e->pos.x,  
         pl->pos.y - pl->spr.height/2 - e->pos.y) 
-        < SELF_RADIUS[e->id] + PL_RADIUS) {
+        < e->radius + PL_RADIUS) {
 
         pl_kill(pl, 1);
     }
