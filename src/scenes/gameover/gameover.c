@@ -1,6 +1,11 @@
 #include "gameover.h"
 
+#include "../../util.h"
+
 #include <engine/eventmanager.h>
+
+// Constants & macros
+#define SCORE_STRING_SIZE 8
 
 // Bitmaps
 static Bitmap* bmpGameOver;
@@ -17,7 +22,7 @@ static int score;
 // Draw game over text
 static void draw_game_over_text(Graphics* g) {
 
-    const int POS_Y = 32;
+    const int POS_Y = 16;
     const float SCALE_PLUS = 1.0f;
 
     int midx = g->csize.x / 2;
@@ -44,6 +49,27 @@ static void draw_game_over_text(Graphics* g) {
             0, 0, bmpGameOver->width, bmpGameOver->height,
             midx - sx/2, midy - sy/2, sx, sy, false);
     }
+}
+
+
+// Draw info text
+static void draw_info_text(Graphics* g) {
+
+    const int POS_Y = 112;
+    const int MOVE_Y = 192-POS_Y;
+    const int SCORE_OFF = 8;
+
+    int y = (int)(POS_Y + MOVE_Y*scaleMul);
+
+    char scoreStr [6 +1];
+    get_score_string(scoreStr, score, 6);
+
+    // Draw score
+    g_draw_text(g, bmpFont, "SCORE", 
+        g->csize.x/2, y, -1, 0, true);
+
+    g_draw_text(g, bmpNumbersBig, scoreStr, 
+        g->csize.x/2, y + SCORE_OFF, -5, 0, true);
 }
 
 
@@ -110,6 +136,8 @@ static void gover_draw(Graphics* g) {
     
     // Draw Game Over! text
     draw_game_over_text(g);
+    // Draw info text
+    draw_info_text(g);
 }
 
 
@@ -135,7 +163,8 @@ Scene gover_get_scene() {
         gover_on_load,
         gover_update,
         gover_draw,
-        gover_dispose
+        gover_dispose,
+        gover_on_change
     };
 
     return s;
