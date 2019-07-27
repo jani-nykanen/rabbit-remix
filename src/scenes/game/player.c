@@ -134,7 +134,7 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
         0, 0, 1, 2
     };
     const int COIN_MIN[] = {
-        2, 3, 4, 5
+        2, 3, 4, 6
     };
     const int COIN_MAX[] = {
         3, 5, 6, 8
@@ -208,7 +208,7 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
             // Spawn some coins
             pl_create_coins(pl, coins, coinLen, 
                 COIN_MIN[level], COIN_MAX[level],
-                GEM_MAX[level], level == 3,
+                GEM_MAX[level], level >= 2,
                 globalSpeed);
 
             // Create explosion and die
@@ -343,12 +343,12 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
 
     const float BULLET_RADIUS = 12;
     const float BIG_RADIUS = 32;
-    const float LOAD_INITIAL = -60.0f;
+    const float LOAD_INITIAL = -30.0f;
     const float LOAD_BASE_WAIT = 30.0f;
     const float SPEED_MOD = 0.25f;
     const float SPEED_NORMAL = 5.0f;
     const float SPEED_BIG = 3.0f;
-    const float SHOOT_ANIM_TIME = 60.0f;
+    const float SHOOT_ANIM_TIME = 30.0f;
 
     const float BULLET_X_OFF = 16;
     const float BULLET_Y_OFF = -21;

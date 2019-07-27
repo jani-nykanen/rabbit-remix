@@ -32,7 +32,7 @@ static void enemy_create_coins(Enemy* e,
     const float SPEED_VARY_Y_UP = -3.0f;
     const float SPEED_VARY_Y_DOWN = 1.0f;
     const float Y_OFF = 0.0f;
-    const int GEM_PROB = 25;
+    const int GEM_PROB = 15;
     const float GEM_SPEED_Y = 0.0f;
 
     int i;
@@ -62,8 +62,8 @@ static void enemy_create_coins(Enemy* e,
         coin_activate(c, pos, speed, 0, false);
     }
 
-    // Might create a gem, if not stomped
-    if (!stomp && rand() % 100 < GEM_PROB) {
+    // Might create a gem
+    if (rand() % 100 < GEM_PROB * (stomp ? 2 : 1)) {
 
         c = coin_get_next(coins, len);
         if (c == NULL) return;

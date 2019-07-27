@@ -32,9 +32,6 @@ static void coin_float(Coin* c, float globalSpeed, float tm) {
 
     // Move
     c->pos.x -= globalSpeed * tm;
-
-    if (c->pos.x + c->spr.width/2 < 0)
-        c->exist = false;
 }
 
 
@@ -104,6 +101,13 @@ void coin_update(Coin* c, float globalSpeed, float tm) {
         return;
     }
 
+    // Kill if outside the screen
+    if (c->pos.x + c->spr.width/2 < 0) {
+        
+        c->exist = false;
+        return;
+    }
+
     // Animate
     spr_animate(&c->spr, c->type, 
         0, 3, ANIM_SPEED, tm);
@@ -158,12 +162,6 @@ void coin_update(Coin* c, float globalSpeed, float tm) {
 
         c->speed.y *= -COLLISION_MUL;
     }
-
-    // Loop
-    if (c->pos.x < 0)
-        c->pos.x += 256;
-    else if(c->pos.x > 256)
-        c->pos.x -= 256;
 }
 
 
@@ -232,16 +230,16 @@ void coin_draw(Coin* c, Graphics* g) {
 
     if (!c->exist) return;
 
-    int i;
+    // int i;
 
     int sx, sy;
     float t;
     int skip;
 
-    int begin = !c->floating ? -1 : 0;
-    int end = !c->floating ? 1 : 0;
+    //int begin = !c->floating ? -1 : 0;
+    //int end = !c->floating ? 1 : 0;
 
-    for (i = begin; i <= end; ++ i) {
+    //for (i = begin; i <= end; ++ i) {
 
         if (c->dying) {
 
@@ -255,7 +253,7 @@ void coin_draw(Coin* c, Graphics* g) {
 
             // Draw scaled sprite
             spr_draw_scaled(&c->spr, g, bmpCoin, 
-                (int)roundf(c->pos.x)-sx/2 + i*g->csize.x,
+                (int)roundf(c->pos.x)-sx/2, // i*g->csize.x,
                 (int)roundf(c->pos.y)-c->spr.height/2 - sy/2,
                 sx, sy,
                 false);
@@ -266,11 +264,11 @@ void coin_draw(Coin* c, Graphics* g) {
 
             // Draw sprite
             spr_draw(&c->spr, g, bmpCoin, 
-                (int)roundf(c->pos.x)-c->spr.width/2 + i*g->csize.x,
+                (int)roundf(c->pos.x)-c->spr.width/2, // i*g->csize.x,
                 (int)roundf(c->pos.y)-c->spr.height,
                 false);
         }
-    }
+    //}
 }   
 
 

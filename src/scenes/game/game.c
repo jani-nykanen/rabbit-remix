@@ -118,6 +118,10 @@ static float globalSpeedTarget;
 static int phase;
 // Phase timer
 static float phaseTimer;
+// "End phase", i.e. how many
+// phases have been passed since reaching
+// the maximum default phase
+static int endPhase;
 
 // Is paused
 static int paused;
@@ -452,14 +456,17 @@ static void update_phase(float tm) {
 
     const float SPEED_INCREASE = 0.25f;
 
+    int target = PHASE_LENGTH[phase] * 60 * (endPhase +1);
     phaseTimer += 1.0f * tm;
-    if (phaseTimer >= PHASE_LENGTH[phase] * 60) {
+    if (phaseTimer >= target) {
 
-        phaseTimer -= PHASE_LENGTH[phase] * 60;
+        phaseTimer -= target;
         globalSpeedTarget += SPEED_INCREASE;
 
         if (phase < MAX_PHASE)
             ++ phase;
+        else 
+            ++ endPhase;
     }
 }
 
@@ -537,6 +544,7 @@ static int game_on_load(AssetManager* a) {
         + (rand() % (ITEM_WAIT_MAX-ITEM_WAIT_MIN));
     lifeCounter = LIFE_WAIT_MIN[phase]
             + (rand() % (LIFE_WAIT_MAX[phase]-LIFE_WAIT_MIN[phase]));
+    endPhase = 0;
 
     // Create starter mushrooms
     create_starter_mushrooms();
