@@ -56,7 +56,7 @@ static void update_score_string(Stats* s) {
 Stats create_default_stats() {
 
     const int MAX_LIVES = 5;
-    const int DEF_LIVES = 1; // 3;
+    const int DEF_LIVES = 3;
 
     Stats s;
 

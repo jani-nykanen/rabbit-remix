@@ -1,6 +1,7 @@
 #include "gameover.h"
 
 #include "../../util.h"
+#include "../../menu.h"
 
 #include <engine/eventmanager.h>
 
@@ -18,12 +19,15 @@ static float scaleMul;
 // Score
 static int score;
 
+// Menu
+static Menu menu;
+
 
 // Draw game over text
 static void draw_game_over_text(Graphics* g) {
 
     const int POS_Y = 16;
-    const float SCALE_PLUS = 1.0f;
+    const float SCALE_PLUS = 0.5f;
 
     int midx = g->csize.x / 2;
     int midy = POS_Y + bmpGameOver->height/2;
@@ -58,6 +62,8 @@ static void draw_info_text(Graphics* g) {
     const int POS_Y = 112;
     const int MOVE_Y = 192-POS_Y;
     const int SCORE_OFF = 8;
+    const int MENU_X = 72;
+    const int MENU_OFF = 28;
 
     int y = (int)(POS_Y + MOVE_Y*scaleMul);
 
@@ -67,9 +73,12 @@ static void draw_info_text(Graphics* g) {
     // Draw score
     g_draw_text(g, bmpFont, "SCORE", 
         g->csize.x/2, y, -1, 0, true);
-
     g_draw_text(g, bmpNumbersBig, scoreStr, 
         g->csize.x/2, y + SCORE_OFF, -5, 0, true);
+
+    // Draw menu
+    menu_draw(&menu, g, MENU_X,
+        y + SCORE_OFF + MENU_OFF);
 }
 
 
@@ -81,9 +90,16 @@ static void change_back(void* e) {
 }
 
 
+// Button callbacks
+static void cb_play_again(EventManager* evMan) {
+
+    tr_activate(evMan->tr, FadeIn, EffectFade, 1.0f,
+            change_back, 0);
+}
+
+
 // Initialize
 static int gover_init(void* e) {
-
 
     return 0;
 }
@@ -100,6 +116,12 @@ static int gover_on_load(AssetManager* a) {
     // Set defaults
     scaleMul = 0.0f;
     score = 0;
+
+    // Create menu
+    menu = create_menu();
+    menu_add_button(&menu, NULL, "SUBMIT SCORE");
+    menu_add_button(&menu, cb_play_again, "PLAY AGAIN");
+    menu_add_button(&menu, NULL, "QUIT");
 }
 
 
@@ -111,6 +133,7 @@ static void gover_update(void* e, float tm) {
     if (evMan->tr->active) {
 
         scaleMul = tr_get_scaled_time(evMan->tr);
+
         return;
     }
     else {
@@ -118,13 +141,8 @@ static void gover_update(void* e, float tm) {
         scaleMul = 0.0f;
     }
 
-    // Wait for enter or jump button
-    if (pad_get_button_state(evMan->vpad, "fire1") == StatePressed ||
-        pad_get_button_state(evMan->vpad, "start") == StatePressed) {
-
-        tr_activate(evMan->tr, FadeIn, EffectFade, 1.0f,
-            change_back, 0);
-    }
+    // Update menu
+    menu_update(&menu, evMan);
 }
 
 
@@ -152,6 +170,7 @@ static void gover_dispose() {
 static void gover_on_change(void* param) {
 
     score = (int)(size_t)param;
+    menu.cpos = 0;
 }
 
 

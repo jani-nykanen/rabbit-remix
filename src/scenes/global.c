@@ -1,5 +1,7 @@
 #include "global.h"
 
+#include "../menu.h"
+
 #include <engine/eventmanager.h>
 
 
@@ -17,7 +19,8 @@ static int global_init(void* e) {
 // On load
 static int global_on_load(AssetManager* a) { 
 
-    // ...
+    //Initialize global stuff
+    init_global_menus(a);
 }
 
 
