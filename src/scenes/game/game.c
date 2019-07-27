@@ -1026,7 +1026,7 @@ static void game_draw_prep_screen(Graphics* g) {
     int midx = g->csize.x / 2;
     int midy = g->csize.y / 2;
 
-    int dx = midx - 6*18 / 2;
+    int dx = midx - 5*18 / 2;
     int dy = midy - 12;
 
     int alpha = 0;
@@ -1061,7 +1061,7 @@ static void game_draw_prep_screen(Graphics* g) {
     // Draw "GO!"
     else if(prepPhase == 1) {
 
-        dx = midx - 3*18 / 2;
+        dx = midx - 2*18 / 2;
         dy = midy-12;
 
         if (prepTimer <= GO_FADE)
