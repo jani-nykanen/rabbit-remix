@@ -16,6 +16,7 @@
 #include "body.h"
 #include "stats.h"
 #include "explosion.h"
+#include "message.h"
 
 // Maximum dust count
 #define DUST_COUNT 16
@@ -93,8 +94,10 @@ Player create_player(int x, int y, Stats* stats,
     void (*ev)(EventManager* evMan));
 
 // Update player
-void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm,
-    void* coins, int coinLen);
+void pl_update(Player* pl, EventManager* evMan, 
+    float globalSpeed, float tm,
+    void* coins, int coinLen,
+    Message* msgs, int msgLen);
 
 // Shake
 void pl_shake(Player* pl, Graphics* g);

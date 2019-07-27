@@ -119,7 +119,8 @@ static void pl_create_explosion(Player* pl) {
 
 // Control
 static void pl_control(Player* pl, EventManager* evMan, float tm,
-    Coin* coins, int coinLen, float globalSpeed) {
+    Coin* coins, int coinLen, float globalSpeed,
+    Message* msgs, int msgLen) {
 
     const float MOVE_TARGET = 1.5f;
     const float FLAP_SPEED = 0.5f;
@@ -138,6 +139,9 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
     };
     const int COIN_MAX[] = {
         3, 5, 6, 8
+    };
+    const int EXP_BONUS[] = {
+        0, 1000, 2500, 5000
     };
 
     // Set target speed
@@ -200,6 +204,7 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
 
     // Self-destruct
     int level = pl->stats->powerLevel;
+    int points;
     if (pad_get_button_state(evMan->vpad, "fire3") == StateDown) {
 
         pl->selfDestructTimer += SELF_DESTRUCT_SPEED * tm;
@@ -214,6 +219,15 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
             // Create explosion and die
             pl_create_explosion(pl);
             pl_kill(pl, 1);
+
+            // Compute points
+            points = EXP_BONUS[level];
+            points += (points/10) * (pl->stats->coins);
+            stats_add_points(pl->stats, points);
+
+            // Create message
+            msg_create_score_message(msgs, msgLen, points,
+                vec2(pl->pos.x, pl->pos.y-pl->spr.height/2));
         }
     }
     else {
@@ -599,8 +613,10 @@ Player create_player(int x, int y, Stats* stats,
 
 
 // Update player
-void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm,
-    void* coins, int coinLen) {
+void pl_update(Player* pl, EventManager* evMan, 
+    float globalSpeed, float tm,
+    void* coins, int coinLen,
+    Message* msgs, int msgLen) {
 
     const float ARROW_WAVE_SPEED = 0.15f;
 
@@ -641,7 +657,8 @@ void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm,
 
     // Do stuff
     pl_control(pl, evMan, tm, 
-        (Coin*)coins, coinLen, globalSpeed);
+        (Coin*)coins, coinLen, globalSpeed,
+        msgs, msgLen);
     // Might happen if self-destructing
     if (pl->dying) return;
 

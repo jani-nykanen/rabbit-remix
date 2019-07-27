@@ -682,6 +682,28 @@ void g_draw_bitmap_region(Graphics* g, Bitmap* bmp,
     dx += g->translation.x;
     dy += g->translation.y;
 
+    // Clip the source rectangle
+    // TODO: Separate function for this...?
+    if (sx < 0) {
+
+        sw += sx;
+        sx = 0;
+    }
+    if (sx + sw > bmp->width) {
+
+        sw -= (sx+sw) - (bmp->width);
+    }
+    if (sy < 0) {
+
+        sh += sy;
+        sy = 0;
+    }
+    if (sy + sh > bmp->height) {
+
+        sh -= (sy+sh) - (bmp->height);
+    }
+    if (sw == 0 || sh == 0) return;
+
     // Clip
     if(!clip(g, &sx, &sy, &sw, &sh, &dx, &dy, flip))
         return;

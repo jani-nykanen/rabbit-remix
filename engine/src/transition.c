@@ -1,5 +1,7 @@
 #include "transition.h"
 
+#include "eventmanager.h"
+
 #include <stdlib.h>
 
 // Initial time
@@ -19,7 +21,7 @@ Transition create_transition_object() {
 // Activate
 void tr_activate(Transition* tr, 
     Mode mode, Effect e,
-    float speed, void (*cb)(void), uint8 c) {
+    float speed, void (*cb)(void* e), uint8 c) {
 
     tr->timer = TR_INITIAL_TIME;
     tr->speed = speed;
@@ -41,7 +43,7 @@ void tr_activate(Transition* tr,
 
 
 // Update transition
-void tr_update(Transition* tr, float tm) {
+void tr_update(Transition* tr, void* e, float tm) {
 
     if (!tr->active) return;
 
@@ -53,7 +55,7 @@ void tr_update(Transition* tr, float tm) {
 
             if (tr->callback != NULL) {
 
-                tr->callback();
+                tr->callback(e);
             }
 
             tr->timer += TR_INITIAL_TIME;
@@ -116,4 +118,17 @@ void tr_draw(Transition* tr, Graphics* g) {
         break;
     }
     
+}
+
+
+// Get timer value in [0,1]
+float tr_get_scaled_time(Transition* tr) {
+
+    float t = 1.0f / TR_INITIAL_TIME * tr->timer;
+    if (tr->mode == FadeIn) {
+
+        t = 1.0f - t;
+    }
+
+    return t;
 }

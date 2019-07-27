@@ -137,7 +137,7 @@ static void core_update(Core* c, uint32 delta) {
     input_update(&c->input);
 
     // Update transition
-    tr_update(&c->tr, tm);
+    tr_update(&c->tr, (void*)&c->evMan, tm);
 }
 
 

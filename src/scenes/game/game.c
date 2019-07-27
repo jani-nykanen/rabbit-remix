@@ -474,12 +474,21 @@ static void update_phase(float tm) {
 }
 
 
+// Change scene to game over
+static void go_game_over(void* e) {
+
+    ev_change_scene((EventManager*)e, 
+        "gameover", (void*)(size_t)stats.score);
+}
+
+
 // Defined ahead
 static void game_reset();
 // Trigger game over
 static void trigger_game_over(EventManager* evMan) {
 
-    tr_activate(evMan->tr, FadeIn, EffectZoom, 1.0f, game_reset, 0);
+    tr_activate(evMan->tr, 
+        FadeIn, EffectZoom, 1.0f, go_game_over, 0);
 }
 
 
@@ -613,7 +622,8 @@ static void game_update(void* e, float tm) {
 
     // Update player
     pl_update(&player, evMan, speed, tm,    
-        (void*)coins, COIN_COUNT);
+        (void*)coins, COIN_COUNT,
+        messages, MSG_COUNT);
 
     // Update enemy generator
     update_enemy_generator(speed, tm);
@@ -1012,6 +1022,16 @@ static void game_dispose() {
 }
 
 
+// On change
+static void game_on_change(void* param) {
+
+    if (param == NULL) {
+
+        game_reset();
+    }
+}
+
+
 // Get the game scene
 Scene game_get_scene() {
 
@@ -1020,7 +1040,8 @@ Scene game_get_scene() {
         game_on_load,
         game_update,
         game_draw,
-        game_dispose
+        game_dispose,
+        game_on_change
     };
 
     return s;

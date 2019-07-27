@@ -8,6 +8,7 @@
 
 #include "scenes/global.h"
 #include "scenes/game/game.h"
+#include "scenes/gameover/gameover.h"
 
 
 // Main function
@@ -26,6 +27,8 @@ int main(int argc, char** argv) {
     // Add scenes
     scenes_add(&c->sceneMan, "global", 
         global_get_scene(), false, true);
+    scenes_add(&c->sceneMan, "gameover", 
+        gover_get_scene(), false, false);
     scenes_add(&c->sceneMan, "game", 
         game_get_scene(), true, false);
 

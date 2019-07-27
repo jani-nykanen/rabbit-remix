@@ -39,7 +39,7 @@ typedef struct {
     bool active;
     bool bufferCopied;
 
-    void (*callback)(void);
+    void (*callback)(void* e);
 
 } Transition;
 
@@ -50,12 +50,14 @@ Transition create_transition_object();
 // Activate
 void tr_activate(Transition* tr, 
     Mode mode, Effect e,
-    float speed, void (*cb)(void), uint8 c);
+    float speed, void (*cb)(void* e), uint8 c);
 
 // Update transition
-void tr_update(Transition* tr, float tm);
+void tr_update(Transition* tr, void* e, float tm);
 // Draw transition
 void tr_draw(Transition* tr, Graphics* g);
 
+// Get timer value in [0,1]
+float tr_get_scaled_time(Transition* tr);
 
 #endif // __TRANSITION__
