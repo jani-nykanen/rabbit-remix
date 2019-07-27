@@ -30,6 +30,8 @@ static const int ITEM_WAIT_MIN = 2;
 static const int ITEM_WAIT_MAX = 6;
 static const int MAX_PHASE = 4;
 static const float INITIAL_MUSHROOM_WAIT = 60.0f;
+static const float GO_MSG_TIME = 120.0f;
+static const float READY_FADE_TIME = 30.0f;
 
 // Probabilities & other phase-specific things
 static const int LIFE_WAIT_MIN[] = {
@@ -87,6 +89,7 @@ static const float PHASE_LENGTH[] = {
 static Bitmap* bmpFont;
 static Bitmap* bmpHUD;
 static Bitmap* bmpNumbersBig;
+static Bitmap* bmpPrepare;
 
 // Components
 static Stage stage;
@@ -132,6 +135,12 @@ static int endPhase;
 static int paused;
 // Skip drawing
 static bool skipDrawing;
+
+// Preparation phase & timer
+static int prepPhase;
+static float prepTimer;
+static float prepWave;
+static bool prepWait;
 
 
 // Get index by probability
@@ -549,6 +558,10 @@ static void game_reset() {
             + (rand() % (LIFE_WAIT_MAX[phase]-LIFE_WAIT_MIN[phase]));
     endPhase = 0;
     skipDrawing = false;
+    prepPhase = 0;
+    prepTimer = READY_FADE_TIME;
+    prepWave = 0.0f;
+    prepWait = true;
 
     // Create starter mushrooms
     create_starter_mushrooms();
@@ -574,6 +587,7 @@ static int game_on_load(AssetManager* a) {
     bmpFont = (Bitmap*)assets_get(a, "font");
     bmpHUD = (Bitmap*)assets_get(a, "hud");
     bmpNumbersBig = (Bitmap*)assets_get(a, "numbersBig");
+    bmpPrepare = (Bitmap*)assets_get(a, "prepare");
 
     // Initialize global components
     init_global_stage(a);
@@ -590,6 +604,45 @@ static int game_on_load(AssetManager* a) {
 }
 
 
+// Update "Ready?" screen
+static void game_update_preparation(EventManager* evMan, float tm) {
+
+    const float WAVE_SPEED = 0.1f;
+
+    prepWait = evMan->tr->active;
+
+    if (prepPhase > 1 || evMan->tr->active) 
+        return;
+
+    if (prepPhase == 0) {
+
+        // Update timer
+        if (prepTimer > 0.0f) {
+
+            prepTimer -= 1.0f * tm;
+        }
+
+        // Update wave
+        prepWave += WAVE_SPEED * tm;
+        prepWave = fmodf(prepWave, M_PI * 2.0f);
+
+        // Check if first jump is done
+        if (player.firstJump) {
+
+            ++ prepPhase;
+            prepTimer = GO_MSG_TIME;
+        }
+    }
+    else if (prepPhase == 1) {
+
+        if ( (prepTimer -= 1.0f * tm) <= 0.0f ) {
+
+            ++ prepPhase;
+        }
+    }
+}
+
+
 // Update
 static void game_update(void* e, float tm) {
 
@@ -600,7 +653,11 @@ static void game_update(void* e, float tm) {
 
     EventManager* evMan = (EventManager*)e;
 
-    skipDrawing = evMan->tr->active && evMan->tr->effect == EffectZoom;
+    // Update READY-GO screen
+    game_update_preparation(evMan, tm);
+
+    skipDrawing = evMan->tr->active 
+        && evMan->tr->effect == EffectZoom;
     if (evMan->tr->active) return;
 
     int i, j;
@@ -954,6 +1011,82 @@ static void game_draw_self_destruct(Graphics* g) {
 }
 
 
+// Draw preparation screen
+static void game_draw_prep_screen(Graphics* g) {
+
+    const float WAVE_JUMP = M_PI / 6.0f;
+    const float AMPLITUDE = 8.0f;
+    const float GO_FADE = 60.0f;
+
+    if (prepPhase > 1 || prepWait) 
+        return;
+
+    int i;
+
+    int midx = g->csize.x / 2;
+    int midy = g->csize.y / 2;
+
+    int dx = midx - 6*18 / 2;
+    int dy = midy - 12;
+
+    int alpha = 0;
+
+    // Waving text, "READY?"
+    if (prepPhase == 0) {
+
+        alpha = 14 - (int) roundf( prepTimer/READY_FADE_TIME * 14.0f);
+
+        for (i = 0; i < 6; ++ i) {
+
+            // Compute y
+            dy = (midy - 12) - (int)(sinf(prepWave + WAVE_JUMP*i) * AMPLITUDE);
+
+            if (prepTimer > 0)
+                g_set_pixel_function(g, PixelFunctionLighten, alpha, 0);
+            // White
+            g_draw_bitmap_region(g, bmpPrepare, i*18, 0,
+                18, 24,
+                dx, dy, false);
+
+            if (prepTimer > 0)
+                g_set_pixel_function(g, PixelFunctionDarken, alpha, 0);
+            // Black
+            g_draw_bitmap_region(g, bmpPrepare, i*18, 24,
+                18, 24,
+                dx, dy, false);
+
+            dx += 18;
+        }
+    }
+    // Draw "GO!"
+    else if(prepPhase == 1) {
+
+        dx = midx - 3*18 / 2;
+        dy = midy-12;
+
+        if (prepTimer <= GO_FADE)
+            alpha = (int) roundf( prepTimer/GO_FADE * 14.0f);
+
+
+        if (prepTimer <= GO_FADE)
+            g_set_pixel_function(g, PixelFunctionLighten, alpha, 0);
+        // White
+        g_draw_bitmap_region(g, bmpPrepare, 0, 48,
+                54, 24,
+                dx, dy, false);
+
+        if (prepTimer <= GO_FADE)
+            g_set_pixel_function(g, PixelFunctionDarken, alpha, 0);
+        // Black
+        g_draw_bitmap_region(g, bmpPrepare, 0, 72,
+                54, 24,
+                dx, dy, false);
+    }
+
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+}
+
+
 // Draw
 static void game_draw(Graphics* g) {
 
@@ -1032,6 +1165,9 @@ static void game_draw(Graphics* g) {
 
     // Draw self-destruct box
     game_draw_self_destruct(g);
+
+    // Draw preparation screen
+    game_draw_prep_screen(g);
 
 }
 

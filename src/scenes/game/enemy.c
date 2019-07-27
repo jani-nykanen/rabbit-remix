@@ -208,11 +208,10 @@ static void enemy_update_type2(Enemy* e,
     } 
 
     // Check bounds
-    if ( (e->phase == -1 && e->pos.y < UPPER_BOUND) ||
-         (e->phase == 1 && e->pos.y > LOWER_BOUND)) {
-
-        e->phase *= -1;
-    }
+    if (e->pos.y < UPPER_BOUND)
+        e->phase = 1;
+    else if (e->pos.y > LOWER_BOUND)
+        e->phase = -1;
 }
 
 

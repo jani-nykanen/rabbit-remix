@@ -145,8 +145,10 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
     };
 
     // Set target speed
-    pl->target.x = evMan->vpad->stick.x * MOVE_TARGET;
     pl->target.y = GRAVITY_TARGET;
+    if (!pl->firstJump)
+        return;
+    pl->target.x = evMan->vpad->stick.x * MOVE_TARGET;
     
     // Quick fall
     if (!pl->quickFall &&
@@ -497,7 +499,7 @@ static void pl_die(Player* pl, float globalSpeed,
     bool dead = exp_dead(&pl->exp);
     if (pl->exp.exist || dead) {
 
-        if (pl->stats->lives <= 0) {
+        if (dead && pl->stats->lives <= 0) {
 
             pl->eventGameOver(evMan);
             return;
@@ -576,7 +578,8 @@ Player create_player(int x, int y, Stats* stats,
     pl.dying = false;
     pl.stats = stats;
     pl.eventGameOver = ev;
-    
+    pl.firstJump = false;
+        
     // Create sprite
     pl.spr = create_sprite(48, 48);
 
@@ -873,6 +876,7 @@ bool pl_jump_collision(Player* pl, float x, float y, float w, float power) {
         pl->doubleJump = true;
         pl->djumpReleased = false;
         pl->extendJump = false;
+        pl->firstJump = true;
 
         pl->jumpTimer = power * mul;
         pl->quickFall = false;

@@ -75,6 +75,8 @@ typedef struct {
     float respawnTimer;
     // Gotta love this word
     float invincibilityTimer;
+    // Has jumped the first jump
+    bool firstJump;
 
     // Self-destruct timer ('cause why not)
     float selfDestructTimer;
