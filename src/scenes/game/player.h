@@ -82,11 +82,15 @@ typedef struct {
 
     // Stats
     Stats* stats;
+
+    // Game over event
+    void (*eventGameOver) (EventManager* evMan);
     
 } Player;
 
 // Create a player
-Player create_player(int x, int y, Stats* stats);
+Player create_player(int x, int y, Stats* stats,
+    void (*ev)(EventManager* evMan));
 
 // Update player
 void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm,

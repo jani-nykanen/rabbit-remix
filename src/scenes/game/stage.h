@@ -12,16 +12,11 @@
 // Sorry
 #define GROUND_COLLISION_HEIGHT 21
 
+// Init global stage content
+void init_global_stage(AssetManager* a);
+
 // Stage type
 typedef struct {
-
-    // Bitmaps
-    Bitmap* bmpFloor;
-    Bitmap* bmpFence;
-    Bitmap* bmpBush;
-    Bitmap* bmpHouses;
-    Bitmap* bmpClouds;
-    Bitmap* bmpSky;
 
     // Positions
     float fencePos;
@@ -33,7 +28,7 @@ typedef struct {
 } Stage;
 
 // Create stage
-Stage create_stage(AssetManager* a);
+Stage create_stage();
 
 // Update stage
 void stage_update(Stage* s, float globalSpeed, float tm);

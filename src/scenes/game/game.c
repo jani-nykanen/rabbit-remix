@@ -28,6 +28,7 @@ static const float MUSHROOM_GEN_TIME = 90.0f;
 static const int ITEM_WAIT_MIN = 2;
 static const int ITEM_WAIT_MAX = 6;
 static const int MAX_PHASE = 4;
+static const float INITIAL_MUSHROOM_WAIT = 60.0f;
 
 // Probabilities & other phase-specific things
 static const int LIFE_WAIT_MIN[] = {
@@ -125,6 +126,8 @@ static int endPhase;
 
 // Is paused
 static int paused;
+// Skip drawing
+static bool skipDrawing;
 
 
 // Get index by probability
@@ -471,38 +474,25 @@ static void update_phase(float tm) {
 }
 
 
-// Initialize
-static int game_init(void* e) {
+// Defined ahead
+static void game_reset();
+// Trigger game over
+static void trigger_game_over(EventManager* evMan) {
 
-    srand(time(NULL));
-
-    return 0;
+    tr_activate(evMan->tr, FadeIn, EffectZoom, 1.0f, game_reset, 0);
 }
 
 
-// On load
-static int game_on_load(AssetManager* a) { 
-
-    const float INITIAL_MUSHROOM_WAIT = 60.0f;
-
-    // Get bitmaps
-    bmpFont = (Bitmap*)assets_get(a, "font");
-    bmpHUD = (Bitmap*)assets_get(a, "hud");
-    bmpNumbersBig = (Bitmap*)assets_get(a, "numbersBig");
-
-    // Initialize global components
-    init_global_player(a);
-    init_global_mushrooms(a);
-    init_global_spikeballs(a);
-    init_global_coins(a);
-    init_global_enemies(a);
+// Reset
+static void game_reset() {
 
     // Create stats
     stats = create_default_stats();
 
     // Create components
-    stage = create_stage(a);
-    player = create_player(48, 48, &stats);
+    stage = create_stage();
+    player = create_player(48, 48, &stats, 
+        trigger_game_over);
 
     // Init arrays
     int i;
@@ -545,9 +535,40 @@ static int game_on_load(AssetManager* a) {
     lifeCounter = LIFE_WAIT_MIN[phase]
             + (rand() % (LIFE_WAIT_MAX[phase]-LIFE_WAIT_MIN[phase]));
     endPhase = 0;
+    skipDrawing = false;
 
     // Create starter mushrooms
     create_starter_mushrooms();
+}
+
+
+// Initialize
+static int game_init(void* e) {
+
+    srand(time(NULL));
+
+    return 0;
+}
+
+
+// On load
+static int game_on_load(AssetManager* a) { 
+
+    // Get bitmaps
+    bmpFont = (Bitmap*)assets_get(a, "font");
+    bmpHUD = (Bitmap*)assets_get(a, "hud");
+    bmpNumbersBig = (Bitmap*)assets_get(a, "numbersBig");
+
+    // Initialize global components
+    init_global_stage(a);
+    init_global_player(a);
+    init_global_mushrooms(a);
+    init_global_spikeballs(a);
+    init_global_coins(a);
+    init_global_enemies(a);
+
+    // (Re)set
+    game_reset();
 
     return 0;
 }
@@ -562,6 +583,8 @@ static void game_update(void* e, float tm) {
     const float PERSPECTIVE_SPEED_MUL = 1.1f;
 
     EventManager* evMan = (EventManager*)e;
+
+    skipDrawing = evMan->tr->active && evMan->tr->effect == EffectZoom;
     if (evMan->tr->active) return;
 
     int i, j;
@@ -913,7 +936,7 @@ static void game_draw(Graphics* g) {
     const int SHAKE_VARY = 4;
 
     g_move_to(g, 0, 0);    
-    g_clear_screen(g, 0b10110110);
+    if (skipDrawing) return;
 
     int i;
 

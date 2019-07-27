@@ -54,6 +54,11 @@ typedef struct {
     SDL_Texture* canvas;
     // Canvas pixels
     uint8* pdata;
+    // This buffer is used to copy the pixel data 
+    // to it and rendering it for fancy effects
+    uint8* pbuffer;
+    // ...and as a bitmap format
+    Bitmap bufferCopy;
 
     // Translation
     Point translation;
@@ -157,5 +162,14 @@ void g_set_uv_coords(Graphics* g,
 // Enable texturing (pass NULL texture to disable)
 void g_toggle_texturing(Graphics* g, Bitmap* tex);
 
+// Darken the screen
+void g_darken(Graphics* g, int level);
+
+// Copy current screen to the buffer
+void g_copy_to_buffer(Graphics* g);
+
+// Fill the screen with zoomed rotated bitmap
+void g_fill_zoomed_rotated(Graphics* g, Bitmap* bmp, 
+    float angle, float sx, float sy);
 
 #endif // __GRAPHICS__

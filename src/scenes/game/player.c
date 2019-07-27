@@ -466,7 +466,8 @@ static void pl_respawn(Player* pl) {
 
 
 // Die
-static void pl_die(Player* pl, float globalSpeed, float tm) {
+static void pl_die(Player* pl, float globalSpeed, 
+    float tm, EventManager* evMan) {
 
     const float DEATH_ANIM_SPEED[] = {
         7.0f, 4.0f
@@ -481,6 +482,12 @@ static void pl_die(Player* pl, float globalSpeed, float tm) {
     // Explosion, do not animate a thing
     bool dead = exp_dead(&pl->exp);
     if (pl->exp.exist || dead) {
+
+        if (pl->stats->lives <= 0) {
+
+            pl->eventGameOver(evMan);
+            return;
+        }
 
         if (dead) {
             
@@ -513,6 +520,12 @@ static void pl_die(Player* pl, float globalSpeed, float tm) {
                 }
             }
 
+            if (pl->stats->lives <= 0) {
+
+                pl->eventGameOver(evMan);
+                return;
+            }
+
             pl_respawn(pl);
             
         }
@@ -521,7 +534,8 @@ static void pl_die(Player* pl, float globalSpeed, float tm) {
 
 
 // Create a player
-Player create_player(int x, int y, Stats* stats) {
+Player create_player(int x, int y, Stats* stats,
+    void (*ev)(EventManager* evMan)) {
 
     Player pl;
 
@@ -547,6 +561,7 @@ Player create_player(int x, int y, Stats* stats) {
     pl.shootWait = 0.0f;
     pl.dying = false;
     pl.stats = stats;
+    pl.eventGameOver = ev;
     
     // Create sprite
     pl.spr = create_sprite(48, 48);
@@ -620,7 +635,7 @@ void pl_update(Player* pl, EventManager* evMan, float globalSpeed, float tm,
     // Die
     if (pl->dying) {
 
-        pl_die(pl, globalSpeed, tm);
+        pl_die(pl, globalSpeed, tm, evMan);
         return;
     }
 

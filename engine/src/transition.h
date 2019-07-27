@@ -19,15 +19,27 @@ enum {
 };
 typedef int Mode;
 
+// Effect
+enum {
+    EffectFade = 0,
+    EffectZoom = 1,
+};
+typedef int Effect;
+
 // Transition type
 typedef struct {
     
     Mode mode;
+    Effect effect;
+
     float timer;
     float speed;
-    bool active;
-    void (*callback)(void);
     uint8 fadeColor;
+
+    bool active;
+    bool bufferCopied;
+
+    void (*callback)(void);
 
 } Transition;
 
@@ -36,7 +48,8 @@ typedef struct {
 Transition create_transition_object();
 
 // Activate
-void tr_activate(Transition* tr, Mode mode, 
+void tr_activate(Transition* tr, 
+    Mode mode, Effect e,
     float speed, void (*cb)(void), uint8 c);
 
 // Update transition

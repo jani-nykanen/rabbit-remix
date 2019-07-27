@@ -459,6 +459,18 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
         ERR_MEM_ALLOC;
         return NULL;
     }
+    // Create canvas data buffer
+    g->pbuffer = (uint8*)malloc(sizeof(uint8)*g->csize.x*g->csize.y);
+    if (g->pbuffer == NULL) {
+
+        free(g->pdata);
+        free(g);
+        ERR_MEM_ALLOC;
+        return NULL;
+    }
+    g->bufferCopy.width = g->csize.x;
+    g->bufferCopy.height = g->csize.y;
+    g->bufferCopy.data = g->pbuffer;
 
     // Resize
     int w, h;
@@ -484,6 +496,7 @@ void dispose_graphics(Graphics* g) {
     SDL_DestroyRenderer(g->rend);
     SDL_DestroyTexture(g->canvas);
 
+    free(g->pbuffer);
     free(g->pdata);
     free(g);
 }
@@ -1118,4 +1131,72 @@ void g_toggle_texturing(Graphics* g, Bitmap* tex) {
     g->tex = tex;
     if (tex == NULL || tex->width <= 0 || tex->height <= 0)
         g->pfunc = pfunc_default;
+}
+
+
+// Darken the screen
+void g_darken(Graphics* g, int level) {
+
+    int x, y;
+    int offset;
+
+    for (y = 0; y < g->csize.y; ++ y) {
+
+        for (x = 0; x < g->csize.x; ++ x) {
+
+            offset = y * g->csize.x + x;
+            g->pdata[offset] 
+                = dpalette[ ditherArray[level] [ x % 2 == y % 2] ] [g->pdata[offset] ];
+        }
+    }
+}
+
+
+// Copy current screen to the buffer
+void g_copy_to_buffer(Graphics* g) {
+
+    memcpy(g->pbuffer, g->pdata, g->csize.x*g->csize.y);
+}
+
+
+// Fill the screen with zoomed rotated bitmap
+void g_fill_zoomed_rotated(Graphics* g, Bitmap* bmp,
+    float angle, float sx, float sy) {
+
+    int x, y;
+    int px, py;
+    int tx, ty;
+    int offset;
+
+    // Transition
+    Point tr = point(bmp->width/2, bmp->height/2);
+
+    // Compute sine & cosine
+    int s = (int) (sinf(angle) * FIXED_PREC);
+    int c = (int) (cosf(angle) * FIXED_PREC);
+
+    int scalex = (int) (sx * FIXED_PREC);
+    int scaley = (int) (sy * FIXED_PREC);
+
+    for (y = 0; y < g->csize.y; ++ y) {
+
+        for (x = 0; x < g->csize.x; ++ x) {
+
+            px = (x-tr.x) * scalex / FIXED_PREC;
+            py = (y-tr.y) * scaley / FIXED_PREC;
+
+            // Compute transformed pixel position
+            tx = ( px * c - py * s) / FIXED_PREC;
+            ty = ( px * s + py * c) / FIXED_PREC;
+
+            tx -= tr.x;
+            ty -= tr.y;
+
+            tx = neg_mod(tx, bmp->width);
+            ty = neg_mod(ty, bmp->height);
+
+            offset = y * g->csize.x + x;
+            g->pdata[offset] = bmp->data[ty*bmp->width + tx];
+        }
+    }
 }

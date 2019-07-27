@@ -6,7 +6,10 @@
 // Initialize
 static int global_init(void* e) {
 
-    // ...
+    EventManager* evMan = (EventManager*)e;
+
+    tr_activate(evMan->tr, FadeOut, EffectFade, 2.0f, NULL, 0);
+    
     return 0;
 }
 

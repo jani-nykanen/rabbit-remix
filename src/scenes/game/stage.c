@@ -2,6 +2,27 @@
 
 #include <math.h>
 
+// Global bitmaps
+static Bitmap* bmpFloor;
+static Bitmap* bmpFence;
+static Bitmap* bmpBush;
+static Bitmap* bmpHouses;
+static Bitmap* bmpClouds;
+static Bitmap* bmpSky;
+
+
+// Init global stage content
+void init_global_stage(AssetManager* a) {
+
+    // Get bitmaps
+    bmpFloor = (Bitmap*)assets_get(a, "floor");
+    bmpFence = (Bitmap*)assets_get(a, "fence");
+    bmpBush = (Bitmap*)assets_get(a, "bush");
+    bmpHouses = (Bitmap*)assets_get(a, "houses");
+    bmpSky = (Bitmap*)assets_get(a, "sky");
+    bmpClouds = (Bitmap*)assets_get(a, "clouds");
+}
+
 
 // Draw a scrolling element
 static void draw_scrolling_element(Graphics* g, Bitmap* bmp, 
@@ -30,18 +51,10 @@ static void update_scrolling_element(
 
 
 // Create stage
-Stage create_stage(AssetManager* a) {
+Stage create_stage() {
 
     Stage s;
 
-    // Get bitmaps
-    s.bmpFloor = (Bitmap*)assets_get(a, "floor");
-    s.bmpFence = (Bitmap*)assets_get(a, "fence");
-    s.bmpBush = (Bitmap*)assets_get(a, "bush");
-    s.bmpHouses = (Bitmap*)assets_get(a, "houses");
-    s.bmpSky = (Bitmap*)assets_get(a, "sky");
-    s.bmpClouds = (Bitmap*)assets_get(a, "clouds");
-    
     // Set initial values
     s.fencePos = 0.0f;
     s.housePos = 0.0f;
@@ -66,15 +79,15 @@ void stage_update(Stage* s, float globalSpeed,  float tm) {
     // Update positions
     //
     update_scrolling_element(&s->fencePos, 
-        FENCE_SPEED*globalSpeed, s->bmpFence->width, tm);
+        FENCE_SPEED*globalSpeed, bmpFence->width, tm);
     update_scrolling_element(&s->bushPos, 
-        BUSH_SPEED*globalSpeed, s->bmpBush->width, tm);
+        BUSH_SPEED*globalSpeed, bmpBush->width, tm);
     update_scrolling_element(&s->housePos, 
-        HOUSE_SPEED*globalSpeed, s->bmpHouses->width, tm);
+        HOUSE_SPEED*globalSpeed, bmpHouses->width, tm);
     update_scrolling_element(&s->cloudPos, 
-        CLOUD_SPEED*globalSpeed, s->bmpClouds->width, tm); 
+        CLOUD_SPEED*globalSpeed, bmpClouds->width, tm); 
     update_scrolling_element(&s->floorPos, 
-        FLOOR_SPEED*globalSpeed, s->bmpFloor->width, tm);      
+        FLOOR_SPEED*globalSpeed, bmpFloor->width, tm);      
 }
 
 
@@ -84,24 +97,24 @@ void stage_draw(Stage* s, Graphics* g) {
     const int GROUND_HEIGHT = 32;
     const int BUSH_Y = 88;
     const int HOUSE_Y = 36;
-    const int FENCE_Y = 192 - GROUND_HEIGHT - s->bmpFence->height;
+    const int FENCE_Y = 192 - GROUND_HEIGHT - bmpFence->height;
     const int CLOUD_Y = 16;
 
     int i, p;
 
     // Sky
-    g_draw_bitmap_fast(g, s->bmpSky, 0, 0);
+    g_draw_bitmap_fast(g, bmpSky, 0, 0);
 
     // Clouds
-    draw_scrolling_element(g, s->bmpClouds, s->cloudPos, CLOUD_Y);
+    draw_scrolling_element(g, bmpClouds, s->cloudPos, CLOUD_Y);
     // Houses
-    draw_scrolling_element(g, s->bmpHouses, s->housePos, HOUSE_Y);
+    draw_scrolling_element(g, bmpHouses, s->housePos, HOUSE_Y);
     // Bushes
-    draw_scrolling_element(g, s->bmpBush, s->bushPos, BUSH_Y);
+    draw_scrolling_element(g, bmpBush, s->bushPos, BUSH_Y);
     // Fence
-    draw_scrolling_element(g, s->bmpFence, s->fencePos, FENCE_Y);
+    draw_scrolling_element(g, bmpFence, s->fencePos, FENCE_Y);
 
     // Floor
-    g_draw_3D_floor(g, s->bmpFloor, 0, 192-GROUND_HEIGHT, 
+    g_draw_3D_floor(g, bmpFloor, 0, 192-GROUND_HEIGHT, 
         256, GROUND_HEIGHT, -s->floorPos, 64, 1728);
 }

@@ -17,15 +17,25 @@ Transition create_transition_object() {
 
 
 // Activate
-void tr_activate(Transition* tr, Mode mode, 
+void tr_activate(Transition* tr, 
+    Mode mode, Effect e,
     float speed, void (*cb)(void), uint8 c) {
 
     tr->timer = TR_INITIAL_TIME;
     tr->speed = speed;
     tr->mode = mode;
+    
+    // Zoom effect is only possible inwards
+    if (e == EffectZoom && mode == FadeOut) 
+        tr->effect = EffectFade;
+    else 
+        tr->effect = e;
+
     tr->callback = cb;
     tr->fadeColor = c;
+    
 
+    tr->bufferCopied = false;
     tr->active = true;
 }
 
@@ -48,6 +58,12 @@ void tr_update(Transition* tr, float tm) {
 
             tr->timer += TR_INITIAL_TIME;
             tr->mode = FadeOut;
+
+            // Zooming is possible only inwards
+            if (tr->effect == EffectZoom) {
+
+                tr->effect = EffectFade;
+            }
         }
         else {
 
@@ -61,14 +77,43 @@ void tr_update(Transition* tr, float tm) {
 // Draw transition
 void tr_draw(Transition* tr, Graphics* g) {
 
+    const float ANGLE_MAX = M_PI / 3.0f;
+    const float SCALE = 0.75f;
+
     if (!tr->active) return;
 
+    float t;
+    int dvalue;
+
+    // Copy buffer
+    if (tr->effect == EffectZoom && !tr->bufferCopied) {
+
+        g_copy_to_buffer(g);
+        tr->bufferCopied = true;
+    }
+
     // Compute fade value
-    float t = 1.0f / TR_INITIAL_TIME * tr->timer;
+    t = 1.0f / TR_INITIAL_TIME * tr->timer;
     if (tr->mode == FadeIn) {
 
         t = 1.0f - t;
     }
     
-    // TODO
+    switch (tr->effect)
+    {
+    case EffectZoom:
+
+        g_fill_zoomed_rotated(g, &g->bufferCopy, -t * ANGLE_MAX, 
+            1.0f-t*SCALE, 1.0f-t*SCALE);
+
+    case EffectFade:
+        
+        dvalue = (int)roundf(t * 14.0f);
+        g_darken(g, dvalue);
+        break;
+
+    default:
+        break;
+    }
+    
 }
