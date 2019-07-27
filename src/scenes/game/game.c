@@ -15,6 +15,7 @@
 #include "stats.h"
 #include "message.h"
 #include "enemy.h"
+#include "pausemenu.h"
 
 // Constants that are actually macros, d'oh!
 #define MUSHROOM_COUNT 8
@@ -96,6 +97,9 @@ static Coin coins [COIN_COUNT];
 static Message messages [MSG_COUNT];
 static Enemy enemies [ENEMY_COUNT];
 static Stats stats;
+
+// Pause menu
+static PauseMenu pause;
 
 // Mushroom timer & stuff
 static float mushroomTimer;
@@ -556,6 +560,9 @@ static int game_init(void* e) {
 
     srand(time(NULL));
 
+    // Create pause menu
+    pause = create_pause_menu();
+
     return 0;
 }
 
@@ -598,13 +605,20 @@ static void game_update(void* e, float tm) {
 
     int i, j;
 
+    // Update pause menu
+    if (pause.active) {
+
+        pause_update(&pause, evMan);
+        return;
+    }
+
     // Pause
     if (pad_get_button_state(evMan->vpad, "start") == StatePressed) {
 
-        paused = !paused;
+        pause_activate(&pause);
+        return;
     }
-    if (paused) return; 
-
+    
     // Update phase
     update_phase(tm);
 
@@ -947,6 +961,13 @@ static void game_draw(Graphics* g) {
 
     g_move_to(g, 0, 0);    
     if (skipDrawing) return;
+
+    // Draw pause
+    if (pause.active) {
+
+        pause_draw(&pause, g);
+        return;
+    }
 
     int i;
 

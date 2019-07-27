@@ -15,6 +15,7 @@ static Bitmap* bmpNumbersBig;
 
 // Scale multiplier
 static float scaleMul;
+static bool fadingOut;
 
 // Score
 static int score;
@@ -26,7 +27,7 @@ static Menu menu;
 // Draw game over text
 static void draw_game_over_text(Graphics* g) {
 
-    const int POS_Y = 16;
+    const int POS_Y = 8;
     const float SCALE_PLUS = 0.5f;
 
     int midx = g->csize.x / 2;
@@ -34,6 +35,8 @@ static void draw_game_over_text(Graphics* g) {
 
     int sx = bmpGameOver->width;
     int sy = bmpGameOver->height;
+
+    float t;
 
     if (scaleMul <= 0.0f) {
 
@@ -46,8 +49,13 @@ static void draw_game_over_text(Graphics* g) {
     }
     else {
 
-        sx = (int)(sx * (1.0f+scaleMul*SCALE_PLUS));
-        sy = (int)(sy * (1.0f+scaleMul*SCALE_PLUS));
+        if (fadingOut)
+            t = (1.0f+scaleMul*SCALE_PLUS);
+        else
+            t = (1.0f-scaleMul*SCALE_PLUS);
+
+        sx = (int)(sx * t);
+        sy = (int)(sy * t);
 
         g_draw_scaled_bitmap_region(g, bmpGameOver,
             0, 0, bmpGameOver->width, bmpGameOver->height,
@@ -59,26 +67,23 @@ static void draw_game_over_text(Graphics* g) {
 // Draw info text
 static void draw_info_text(Graphics* g) {
 
-    const int POS_Y = 112;
-    const int MOVE_Y = 192-POS_Y;
+    const int POS_Y = 120;
     const int SCORE_OFF = 8;
     const int MENU_X = 72;
-    const int MENU_OFF = 28;
-
-    int y = (int)(POS_Y + MOVE_Y*scaleMul);
+    const int MENU_OFF = 20;
 
     char scoreStr [6 +1];
     get_score_string(scoreStr, score, 6);
 
     // Draw score
     g_draw_text(g, bmpFont, "SCORE", 
-        g->csize.x/2, y, -1, 0, true);
+        g->csize.x/2, POS_Y, -1, 0, true);
     g_draw_text(g, bmpNumbersBig, scoreStr, 
-        g->csize.x/2, y + SCORE_OFF, -5, 0, true);
+        g->csize.x/2, POS_Y + SCORE_OFF, -5, 0, true);
 
     // Draw menu
     menu_draw(&menu, g, MENU_X,
-        y + SCORE_OFF + MENU_OFF);
+        POS_Y + SCORE_OFF + MENU_OFF);
 }
 
 
@@ -116,6 +121,7 @@ static int gover_on_load(AssetManager* a) {
     // Set defaults
     scaleMul = 0.0f;
     score = 0;
+    fadingOut = false;
 
     // Create menu
     menu = create_menu();
@@ -132,6 +138,7 @@ static void gover_update(void* e, float tm) {
 
     if (evMan->tr->active) {
 
+        fadingOut = evMan->tr->mode == FadeOut;
         scaleMul = tr_get_scaled_time(evMan->tr);
 
         return;
