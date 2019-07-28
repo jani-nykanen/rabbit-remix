@@ -7,9 +7,10 @@
 // Maximum value for darkness & light effects
 #define MAX_PALETTE_MOD 8
 
-// Global darkness & light palettes
-static uint8 dpalette [MAX_PALETTE_MOD] [256];
-static uint8 lpalette [MAX_PALETTE_MOD] [256];
+// Global darkness & light palettes (aaaand red)
+static uint8** dpalette;
+static uint8** lpalette;
+static uint8** redPalette;
 // Dithering array
 static uint8 ditherArray [MAX_PALETTE_MOD*2] [2];
 
@@ -249,10 +250,67 @@ static uint8 get_lightened_color(uint8 col, int amount)
 }
 
 
+// Get red...dened? color index
+static uint8 get_red_color(uint8 col, int amount)
+{
+     uint8 r,g,b;
+
+    r = col >> 5;
+    g = col << 3;
+    g = g >> 5;
+    b = col << 6;
+    b = b >> 6; 
+
+    int i = 0;
+    for (; i < amount; ++ i)
+    {   
+        if (r < 7) 
+            ++ r;
+        if (g > 0) 
+            -- g;
+        
+        if (i % 2 == 1) {
+
+            if (b > 0) 
+                -- b;
+        }
+    }
+
+    r = r << 5;
+    g = g << 2;
+
+    return r | g | b;
+}
+
+
+
 // Generate darkness & light palettes
-static void get_palette_mods() {
+static int gen_palette_mods() {
 
     int i, j;
+
+    // Allocate memory
+    dpalette = (uint8**)malloc(sizeof(uint8**) * MAX_PALETTE_MOD);
+    lpalette = (uint8**)malloc(sizeof(uint8**) * MAX_PALETTE_MOD);
+    redPalette = (uint8**)malloc(sizeof(uint8**) * MAX_PALETTE_MOD);
+    if (dpalette == NULL || lpalette == NULL || redPalette == NULL) {
+
+        ERR_MEM_ALLOC;
+        return 1;
+    }
+
+    for (i = 0; i < MAX_PALETTE_MOD; ++ i) {
+
+        dpalette[i] = (uint8*)malloc(sizeof(uint8) * 256);
+        lpalette[i] = (uint8*)malloc(sizeof(uint8) * 256);
+        redPalette[i] = (uint8*)malloc(sizeof(uint8) * 256);
+
+        if (dpalette[i] == NULL || lpalette[i] == NULL || redPalette[i] == NULL) {
+
+            ERR_MEM_ALLOC;
+            return 1;
+        }
+    }
 
     for(i = 0; i < MAX_PALETTE_MOD; ++ i)
     {
@@ -260,8 +318,11 @@ static void get_palette_mods() {
         {
             dpalette[i][j] = get_darkened_color(j, i);
             lpalette[i][j] = get_lightened_color(j, i);
+            redPalette[i][j] = get_red_color(j, i);
         }
     }
+
+    return 0;
 }
 
 
@@ -401,10 +462,30 @@ static void draw_triangle_half(Graphics * g,
 int init_graphics_global() {
 
     // Initialize global arrays
-    get_palette_mods();
+    if( gen_palette_mods() == 1) {
+
+        return 1;
+    }
     gen_dither_array();
 
     return 0;
+}
+
+
+// Destroy global graphics
+void destroy_global_graphics() {
+
+    int i = 0;
+    for (i = 0; i < MAX_PALETTE_MOD; ++ i) {
+
+        free(dpalette[i]);
+        free(lpalette[i]);
+        free(redPalette[i]);
+    }
+
+    free(dpalette);
+    free(lpalette);
+    free(redPalette);
 }
 
 
@@ -483,6 +564,7 @@ Graphics* create_graphics(SDL_Window* window, Config* conf) {
     g->pfunc = pfunc_default;
     g->pparam1 = 0;
     g->tex = NULL;
+    g->darray = dpalette;
 
     return g;
 }
@@ -1168,8 +1250,30 @@ void g_darken(Graphics* g, int level) {
 
             offset = y * g->csize.x + x;
             g->pdata[offset] 
-                = dpalette[ ditherArray[level] [ x % 2 == y % 2] ] [g->pdata[offset] ];
+                = g->darray[ ditherArray[level] [ x % 2 == y % 2] ] [g->pdata[offset] ];
         }
+    }
+}
+
+
+// Set darkness tint color
+// (I know right)
+void g_set_darkness_color(Graphics* g, uint8 col) {
+
+    switch (col)
+    {
+    case ColorBlack:
+        g->darray = dpalette;
+        break;
+    case ColorRed:
+        g->darray = redPalette;
+        break;
+    case ColorWhite:
+        g->darray = lpalette;
+        break;
+    
+    default:
+        break;
     }
 }
 

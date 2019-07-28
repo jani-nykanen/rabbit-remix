@@ -32,6 +32,7 @@ static const int MAX_PHASE = 4;
 static const float INITIAL_MUSHROOM_WAIT = 60.0f;
 static const float GO_MSG_TIME = 120.0f;
 static const float READY_FADE_TIME = 30.0f;
+static const float GUIDE_TIME = 240.0f;
 
 // Probabilities & other phase-specific things
 static const int LIFE_WAIT_MIN[] = {
@@ -90,6 +91,7 @@ static Bitmap* bmpFont;
 static Bitmap* bmpHUD;
 static Bitmap* bmpNumbersBig;
 static Bitmap* bmpPrepare;
+static Bitmap* bmpGuide;
 
 // Components
 static Stage stage;
@@ -130,6 +132,8 @@ static float phaseTimer;
 // phases have been passed since reaching
 // the maximum default phase
 static int endPhase;
+// Guide timer
+static float guideTimer;
 
 // Is paused
 static int paused;
@@ -501,7 +505,7 @@ static void game_reset();
 static void trigger_game_over(EventManager* evMan) {
 
     tr_activate(evMan->tr, 
-        FadeIn, EffectZoom, 1.0f, go_game_over, 0);
+        FadeIn, EffectZoom, 1.0f, go_game_over, ColorRed);
 }
 
 
@@ -562,6 +566,7 @@ static void game_reset() {
     prepTimer = READY_FADE_TIME;
     prepWave = 0.0f;
     prepWait = true;
+    guideTimer = GUIDE_TIME;
 
     // Create starter mushrooms
     create_starter_mushrooms();
@@ -588,6 +593,7 @@ static int game_on_load(AssetManager* a) {
     bmpHUD = (Bitmap*)assets_get(a, "hud");
     bmpNumbersBig = (Bitmap*)assets_get(a, "numbersBig");
     bmpPrepare = (Bitmap*)assets_get(a, "prepare");
+    bmpGuide = (Bitmap*)assets_get(a, "guide");
 
     // Initialize global components
     init_global_stage(a);
@@ -653,8 +659,11 @@ static void game_update(void* e, float tm) {
 
     EventManager* evMan = (EventManager*)e;
 
-    // Update READY-GO screen
-    game_update_preparation(evMan, tm);
+    if (!pause.active) {
+
+        // Update READY-GO screen
+        game_update_preparation(evMan, tm);
+    }
 
     skipDrawing = evMan->tr->active 
         && evMan->tr->effect == EffectZoom;
@@ -674,6 +683,12 @@ static void game_update(void* e, float tm) {
 
         pause_activate(&pause);
         return;
+    }
+
+    // Update guide timer
+    if (guideTimer > 0.0f) {
+
+        guideTimer -= 1.0f * tm;
     }
     
     // Update phase
@@ -1087,6 +1102,57 @@ static void game_draw_prep_screen(Graphics* g) {
 }
 
 
+// Draw guide
+void game_draw_guide(Graphics* g, bool force) {
+
+    const int LEFT = 0;
+    const int RIGHT = g->csize.x - 48;
+    const int TOP = 24;
+    const int YOFF = 4;
+
+    const int BOX_X = 2;
+    const int BOX_WIDTH = 44;
+    const int BOX_Y = TOP - 2;
+    const int BOX_HEIGHT = 156;
+    const int BOX_ALPHA = 3;
+
+    const float MOVE_OUT = 60.0f;
+
+    if (guideTimer <= 0.0f && !force) return;
+
+    int x = 0;
+    if (guideTimer < MOVE_OUT && !force) {
+
+        x = 48 - (int)roundf(guideTimer/MOVE_OUT * 48);
+    }
+
+    // Draw boxes
+    g_set_pixel_function(g, PixelFunctionLighten, BOX_ALPHA, 0);
+    g_fill_rect(g, -x + BOX_X, BOX_Y, BOX_WIDTH, BOX_HEIGHT, 255);
+    g_fill_rect(g, 
+        x + g->csize.x - BOX_WIDTH - BOX_X, 
+        BOX_Y, BOX_WIDTH, BOX_HEIGHT, 255);
+    g_set_pixel_function(g, PixelFunctionDefault, 0, 0);
+
+    // Draw guide icons
+    int i;
+    for (i = 0; i < 3; ++ i) {
+
+        // Left
+        g_draw_bitmap_region(g, bmpGuide,
+            i*48, 0, 48, 48,
+            -x + LEFT, TOP + (48+YOFF)*i,
+            false);
+
+        // Right
+        g_draw_bitmap_region(g, bmpGuide,
+           (i+3)*48, 0, 48, 48,
+            x + RIGHT, TOP + (48+YOFF)*i,
+            false);
+    }
+}
+
+
 // Draw
 static void game_draw(Graphics* g) {
 
@@ -1166,6 +1232,8 @@ static void game_draw(Graphics* g) {
     // Draw self-destruct box
     game_draw_self_destruct(g);
 
+    // Draw guide
+    game_draw_guide(g, false);
     // Draw preparation screen
     game_draw_prep_screen(g);
 

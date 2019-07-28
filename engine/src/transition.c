@@ -110,6 +110,7 @@ void tr_draw(Transition* tr, Graphics* g) {
 
     case EffectFade:
         
+        g_set_darkness_color(g, tr->fadeColor);
         dvalue = (int)roundf(t * 14.0f);
         g_darken(g, dvalue);
         break;

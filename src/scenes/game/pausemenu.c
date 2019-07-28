@@ -1,5 +1,7 @@
 #include "pausemenu.h"
 
+#include "game.h"
+
 #include <stdlib.h>
 
 // A reference to self
@@ -100,8 +102,12 @@ void pause_draw(PauseMenu* pm, Graphics* g) {
     // Darken
     g_darken(g, DVALUE_BG);
 
-    // Draw menu    
     int x = g->csize.x/2 + XOFF;
     int y = g->csize.y/2 + YOFF;
+
+    // Draw menu    
     menu_draw(&pm->menu, g, x, y);
+
+    // Draw guide
+    game_draw_guide(g, true);
 }

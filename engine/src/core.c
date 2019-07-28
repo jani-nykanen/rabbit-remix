@@ -328,12 +328,18 @@ static void core_loop(Core* c) {
 // Destroy
 static void core_destroy(Core* c) {
 
+    // Destroy global data
+    destroy_global_graphics();
+
     // Destroy components
     assets_dispose(c->assets);
     dispose_graphics(c->g);
 
     // Dispose scenes
     scenes_dispose(&c->sceneMan);
+
+    // Destroy window
+    SDL_DestroyWindow(c->window);
 }
 
 

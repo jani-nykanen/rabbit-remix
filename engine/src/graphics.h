@@ -18,6 +18,18 @@
 // Initialize global graphics content
 int init_graphics_global();
 
+// Destroy global graphics
+void destroy_global_graphics();
+
+
+// Colors
+enum {
+
+    ColorBlack = 0,
+    ColorRed = 0b11100000,
+    ColorWhite = 255,
+};
+
 
 // Pixel function types
 enum {
@@ -65,6 +77,8 @@ typedef struct {
 
     // Darkness value
     int dvalue;
+    // Darkness array
+    uint8** darray;
 
     // Pixel function & param
     void (*pfunc) (void* g, int offset, uint8 col);
@@ -164,6 +178,10 @@ void g_toggle_texturing(Graphics* g, Bitmap* tex);
 
 // Darken the screen
 void g_darken(Graphics* g, int level);
+
+// Set darkness tint color
+// (I know right)
+void g_set_darkness_color(Graphics* g, uint8 col);
 
 // Copy current screen to the buffer
 void g_copy_to_buffer(Graphics* g);
