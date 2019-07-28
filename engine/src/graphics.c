@@ -4,6 +4,8 @@
 #include "err.h"
 #include "mathext.h"
 
+#include <math.h>
+
 // Maximum value for darkness & light effects
 #define MAX_PALETTE_MOD 8
 

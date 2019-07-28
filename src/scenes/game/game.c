@@ -6,6 +6,8 @@
 
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
+#include <stdio.h>
 
 #include "stage.h"
 #include "player.h"

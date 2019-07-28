@@ -2,6 +2,8 @@
 
 #include <engine/mathext.h>
 
+#include <math.h>
+
 // Time
 static const float DUST_TIME = 60.0f;
 

@@ -3,6 +3,7 @@
 #include "eventmanager.h"
 
 #include <stdlib.h>
+#include <math.h>
 
 // Initial time
 static const float TR_INITIAL_TIME = 60.0f;

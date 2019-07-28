@@ -10,6 +10,9 @@
 #include "scenes/game/game.h"
 #include "scenes/gameover/gameover.h"
 
+#include <math.h>
+#include <stdio.h>
+
 
 // Main function
 int main(int argc, char** argv) {

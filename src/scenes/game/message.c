@@ -1,6 +1,7 @@
 #include "message.h"
 
 #include <math.h>
+#include <stdio.h>
 
 // Constants
 static const float MSG_TIME[] = {

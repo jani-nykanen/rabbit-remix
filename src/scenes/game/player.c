@@ -2,6 +2,8 @@
 
 #include <engine/mathext.h>
 
+#include <math.h>
+
 #include "stage.h"
 #include "coin.h"
 

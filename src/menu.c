@@ -2,6 +2,8 @@
 
 #include <engine/mathext.h>
 
+#include <stdio.h>
+
 // Global bitmaps
 static Bitmap* bmpFont;
 

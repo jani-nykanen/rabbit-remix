@@ -1,6 +1,8 @@
 #include "body.h"
 
 
+#include <math.h>
+
 // Create a body
 Body create_body() {
 
