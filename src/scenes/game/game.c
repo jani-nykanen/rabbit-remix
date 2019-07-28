@@ -136,6 +136,8 @@ static float phaseTimer;
 static int endPhase;
 // Guide timer
 static float guideTimer;
+// Guide type
+static int guideType;
 
 // Is paused
 static int paused;
@@ -569,6 +571,7 @@ static void game_reset() {
     prepWave = 0.0f;
     prepWait = true;
     guideTimer = GUIDE_TIME;
+    guideType = 0;
 
     // Create starter mushrooms
     create_starter_mushrooms();
@@ -660,6 +663,8 @@ static void game_update(void* e, float tm) {
     const float PERSPECTIVE_SPEED_MUL = 1.1f;
 
     EventManager* evMan = (EventManager*)e;
+    
+    guideType = evMan->input->activity;
 
     if (!pause.active) {
 
@@ -1123,6 +1128,7 @@ void game_draw_guide(Graphics* g, bool force) {
     if (guideTimer <= 0.0f && !force) return;
 
     int x = 0;
+    int sy = guideType * 48;
     if (guideTimer < MOVE_OUT && !force) {
 
         x = 48 - (int)roundf(guideTimer/MOVE_OUT * 48);
@@ -1142,13 +1148,13 @@ void game_draw_guide(Graphics* g, bool force) {
 
         // Left
         g_draw_bitmap_region(g, bmpGuide,
-            i*48, 0, 48, 48,
+            i*48, sy, 48, 48,
             -x + LEFT, TOP + (48+YOFF)*i,
             false);
 
         // Right
         g_draw_bitmap_region(g, bmpGuide,
-           (i+3)*48, 0, 48, 48,
+           (i+3)*48, sy, 48, 48,
             x + RIGHT, TOP + (48+YOFF)*i,
             false);
     }

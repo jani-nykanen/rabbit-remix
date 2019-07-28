@@ -1,5 +1,7 @@
 #include "input.h"
 
+#include <math.h>
+
 
 // State array event
 static void event_state_array(int arr[], int len, int index, int state) {
@@ -53,6 +55,7 @@ Input create_input_manager() {
     }
 
     input.joystick = vec2(0, 0);
+    input.activity = ActivityKeyboard;
 
     // Check joystick
     input.joyactive = SDL_JoystickOpen(0) != NULL;
@@ -66,11 +69,15 @@ void event_key_down(Input* input, int key) {
 
     event_state_array(input->keyStates, 
         KEY_ARRAY_SIZE, key, StatePressed);
+
+    input->activity = ActivityKeyboard;
 }
 void event_key_up(Input* input, int key){
 
     event_state_array(input->keyStates, 
         KEY_ARRAY_SIZE, key, StateReleased);
+
+    input->activity = ActivityKeyboard;
 }
 
 
@@ -81,6 +88,8 @@ void event_joy_down(Input* input, int joy) {
 
     event_state_array(input->joyStates,
         JOY_ARRAY_SIZE, joy, StatePressed);
+
+    input->activity = ActivityJoystick;
 }
 void event_joy_up(Input* input, int joy) {
 
@@ -88,11 +97,15 @@ void event_joy_up(Input* input, int joy) {
 
     event_state_array(input->joyStates,
         JOY_ARRAY_SIZE, joy, StateReleased);
+
+    input->activity = ActivityJoystick;
 }
 
 
 // Joystick stick event
 void event_joy_move(Input* input, float value, int axis) {
+
+    const float EPS = 0.1f;
 
     if (!input->joyactive) return;
 
@@ -100,12 +113,23 @@ void event_joy_move(Input* input, float value, int axis) {
         input->joystick.x = value;
     else
         input->joystick.y = value;
+
+    if (hypotf(input->joystick.x, input->joystick.y) > EPS)
+        input->activity = ActivityJoystick;
 }
 void event_joy_move_axes(Input* input, float x, float y) {
 
+    const float EPS = 0.1f;
+
     if (!input->joyactive) return;
+
     input->joystick.x = x;
     input->joystick.y = y;
+
+    input->activity = ActivityJoystick;
+
+    if (hypotf(input->joystick.x, input->joystick.y) > EPS)
+        input->activity = ActivityJoystick;
 }
 
 

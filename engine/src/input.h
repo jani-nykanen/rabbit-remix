@@ -29,6 +29,14 @@ enum {
 };
 typedef int State;
 
+// Input activity type
+enum {
+
+    ActivityKeyboard = 0,
+    ActivityJoystick = 1,
+};
+typedef int Activity;
+
 // Input manager
 typedef struct {
 
@@ -40,6 +48,9 @@ typedef struct {
     Vector2 joystick;
     // Is joystick active
     bool joyactive;
+
+    // Latest activity
+    Activity activity;
 
 } InputManager;
 typedef InputManager Input; // Laziness
