@@ -143,7 +143,7 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
         3, 5, 6, 8
     };
     const int EXP_BONUS[] = {
-        0, 1000, 2500, 5000
+        0, 1000, 2000, 3000
     };
 
     // Set target speed
