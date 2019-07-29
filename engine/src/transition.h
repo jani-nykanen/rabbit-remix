@@ -23,6 +23,7 @@ typedef int Mode;
 enum {
     EffectFade = 0,
     EffectZoom = 1,
+    EffectCircle = 2,
 };
 typedef int Effect;
 

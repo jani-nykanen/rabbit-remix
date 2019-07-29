@@ -931,6 +931,55 @@ void g_draw_bitmap_region_fast(Graphics* g, Bitmap* bmp,
 }
 
 
+// Draw a waving bitmap
+void g_draw_waving_bitmap(Graphics* g, Bitmap* bmp,
+    int dx, int dy,
+    float wave, int period, float amplitude) {
+
+    //
+    // TODO: Proper clipping
+    //
+
+    int sx = 0;
+    int sy = 0;
+    int sw = bmp->width;
+    int sh = bmp->height;
+
+    // Clip
+    if(!clip(g, &sx, &sy, &sw, &sh, &dx, &dy, false))
+        return;
+    
+    // Draw pixels
+    int offset = g->csize.x*dy + dx;
+    int jump;
+    int boff = bmp->width*sy + sx;
+    uint8 pixel;
+    int x, y;
+    for(y = 0; y < sh; ++ y) {
+
+        for(x = 0; x < sw; ++ x) {
+
+            pixel = bmp->data[boff];
+            // Check if not alpha pixel
+            // (i.e not transparent)
+            if (pixel != ALPHA) {
+
+                jump = (int)(sinf( 
+                    (M_PI * 2.0f)/period * (y % period) + wave) * 
+                    amplitude);
+    
+                g->pfunc(g, offset + jump, pixel);
+            }
+
+            ++ boff;
+            ++ offset;
+        }
+        boff += bmp->width - sw;
+        offset += g->csize.x-sw;
+    }
+}
+
+
 // Draw scaled text
 void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
     int dx, int dy, int xoff, int yoff, 

@@ -93,6 +93,11 @@ static void change_back(void* e) {
     ev_change_scene((EventManager*)e, 
         "game", NULL);
 }
+// Go to the title screen
+static void go_to_title(void* e) {
+
+    ev_change_scene((EventManager*)e, "title", NULL);
+}
 
 
 // Button callbacks
@@ -100,6 +105,11 @@ static void cb_play_again(EventManager* evMan) {
 
     tr_activate(evMan->tr, FadeIn, EffectFade, 1.0f,
             change_back, 0);
+}
+static void cb_quit(EventManager* evMan) {
+
+    tr_activate(evMan->tr, FadeIn, EffectFade, 2.0f,
+            go_to_title, 0);
 }
 
 
@@ -127,7 +137,7 @@ static int gover_on_load(AssetManager* a) {
     menu = create_menu();
     menu_add_button(&menu, NULL, "SUBMIT SCORE");
     menu_add_button(&menu, cb_play_again, "PLAY AGAIN");
-    menu_add_button(&menu, NULL, "QUIT");
+    menu_add_button(&menu, cb_quit, "QUIT");
 }
 
 

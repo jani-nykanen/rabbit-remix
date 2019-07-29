@@ -8,7 +8,7 @@
 
 #include <engine/scene.h>
 
-// Get the global scene
+// Get the game over scene
 Scene gover_get_scene();
 
 #endif // __GAME_OVER__

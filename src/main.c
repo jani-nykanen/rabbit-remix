@@ -9,6 +9,7 @@
 #include "scenes/global.h"
 #include "scenes/game/game.h"
 #include "scenes/gameover/gameover.h"
+#include "scenes/title/title.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -33,7 +34,9 @@ int main(int argc, char** argv) {
     scenes_add(&c->sceneMan, "gameover", 
         gover_get_scene(), false, false);
     scenes_add(&c->sceneMan, "game", 
-        game_get_scene(), true, false);
+        game_get_scene(), false, false);
+    scenes_add(&c->sceneMan, "title", 
+        title_get_scene(), true, false);
 
     // Run
     core_run(c);

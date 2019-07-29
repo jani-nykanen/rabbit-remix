@@ -8,10 +8,11 @@
 static PauseMenu* self;
 
 
-// Terminate
-static void terminate(void* e) {
+// Go to the title screen
+static void go_to_title(void* e) {
 
-    ev_terminate((EventManager*)e);
+    self->active = false;
+    ev_change_scene((EventManager*)e, "title", NULL);
 }
 // Restart
 static void restart(void* e) {
@@ -36,7 +37,7 @@ static void cb_restart(EventManager* evMan) {
 static void cb_quit(EventManager* evMan) {
 
     tr_activate(evMan->tr, FadeIn, EffectFade,
-        2.0f, terminate, 0);
+        2.0f, go_to_title, 0);
 }
 
 

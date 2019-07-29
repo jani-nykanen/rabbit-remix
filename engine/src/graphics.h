@@ -141,6 +141,11 @@ void g_draw_bitmap_region_fast(Graphics* g, Bitmap* bmp,
     int sx, int sy, int sw, int sh, 
     int dx, int dy);
 
+// Draw a waving bitmap
+void g_draw_waving_bitmap(Graphics* g, Bitmap* bmp,
+    int x, int y,
+    float wave, int period, float amplitude);
+
 // Draw scaled text
 void g_draw_text(Graphics* g, Bitmap* bmp, const char* text,
     int dx, int dy, int xoff, int yoff,

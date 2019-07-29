@@ -9,6 +9,13 @@
 static const float TR_INITIAL_TIME = 60.0f;
 
 
+// Draw circle transition
+static void draw_circle_transition(Graphics* g, float t, uint8 col) {
+
+    // TODO: This
+}
+
+
 // Create a transition object
 Transition create_transition_object() {
 
@@ -114,6 +121,10 @@ void tr_draw(Transition* tr, Graphics* g) {
         g_set_darkness_color(g, tr->fadeColor);
         dvalue = (int)roundf(t * 14.0f);
         g_darken(g, dvalue);
+        break;
+
+    case EffectCircle:
+        draw_circle_transition(g, t, tr->fadeColor);
         break;
 
     default:
