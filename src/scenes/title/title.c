@@ -27,6 +27,10 @@ static void go_to_game(void* e) {
 
     ev_change_scene((EventManager*)e, 
         "game", NULL);
+
+    Transition* tr = ((EventManager*)e)->tr;
+    tr->effect = EffectCircle;
+    tr->speed = 1.0f;
 }
 // Terminate
 static void terminate(void* e) {
@@ -38,7 +42,7 @@ static void terminate(void* e) {
 // Button callbacks
 static void cb_go_to_game(EventManager* evMan) {
 
-    tr_activate(evMan->tr, FadeIn, EffectZoom, 2.0f,
+    tr_activate(evMan->tr, FadeIn, EffectZoom, 1.0f,
             go_to_game, 0);
 }
 static void cb_terminate(EventManager* evMan) {

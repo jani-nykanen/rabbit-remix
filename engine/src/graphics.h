@@ -195,4 +195,8 @@ void g_copy_to_buffer(Graphics* g);
 void g_fill_zoomed_rotated(Graphics* g, Bitmap* bmp, 
     float angle, float sx, float sy);
 
+// Fill the screen with a color outside a circle area.
+// You know what I mean
+void g_fill_circle_outside(Graphics* g, int radius, uint8 col);
+
 #endif // __GRAPHICS__

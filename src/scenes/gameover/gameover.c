@@ -38,7 +38,7 @@ static void draw_game_over_text(Graphics* g) {
 
     float t;
 
-    if (scaleMul <= 0.0f) {
+    if (scaleMul <= 0.0f || !fadingOut) {
 
         // Draw Game Over! bitmap, no
         // scaling
@@ -49,10 +49,7 @@ static void draw_game_over_text(Graphics* g) {
     }
     else {
 
-        if (fadingOut)
-            t = (1.0f+scaleMul*SCALE_PLUS);
-        else
-            t = (1.0f-scaleMul*SCALE_PLUS);
+        t = (1.0f+scaleMul*SCALE_PLUS);
 
         sx = (int)(sx * t);
         sy = (int)(sy * t);
@@ -92,6 +89,10 @@ static void change_back(void* e) {
 
     ev_change_scene((EventManager*)e, 
         "game", NULL);
+
+    Transition* tr = ((EventManager*)e)->tr;
+    tr->effect = EffectCircle;
+    tr->speed = 1.0f;
 }
 // Go to the title screen
 static void go_to_title(void* e) {
@@ -103,7 +104,7 @@ static void go_to_title(void* e) {
 // Button callbacks
 static void cb_play_again(EventManager* evMan) {
 
-    tr_activate(evMan->tr, FadeIn, EffectFade, 1.0f,
+    tr_activate(evMan->tr, FadeIn, EffectFade, 2.0f,
             change_back, 0);
 }
 static void cb_quit(EventManager* evMan) {

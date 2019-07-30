@@ -1377,3 +1377,55 @@ void g_fill_zoomed_rotated(Graphics* g, Bitmap* bmp,
         }
     }
 }
+
+
+// Fill the screen with a color outside a circle area.
+// You know what I mean
+void g_fill_circle_outside(Graphics* g, 
+    int r, uint8 col) {
+
+    if (r <= 0) {
+
+        g_clear_screen(g, col);
+        return;
+    }
+    else if(r*r >= g->csize.x*g->csize.x + g->csize.y*g->csize.y)
+        return;
+
+    int x, y;
+    int dy;
+    int px1, px2;
+    for (y = 0; y < g->csize.y; ++ y) {
+
+        if ( abs(y - g->csize.y/2) >= r ) {
+
+            for (x = 0; x < g->csize.x; ++ x) {
+
+                g->pdata[y * g->csize.x + x] = col;
+            }
+
+            continue;
+        }
+
+        dy = y - g->csize.y/2;
+        px1 = g->csize.x/2 - (int) sqrt(r*r - dy*dy);
+        px2 = g->csize.x/2 + (int) sqrt(r*r - dy*dy);
+
+        if (px1 <= 0 || px2 >= g->csize.x) {
+
+            continue;
+        }
+
+        // Fill left
+        for (x = 0; x < px1; ++ x) {
+
+            g->pfunc(g, y * g->csize.x + x, col);
+        }
+
+        // Fill right
+        for (x = px2; x < g->csize.x; ++ x) {
+
+            g->pfunc(g, y * g->csize.x + x, col);
+        }
+    }
+}

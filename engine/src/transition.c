@@ -12,7 +12,10 @@ static const float TR_INITIAL_TIME = 60.0f;
 // Draw circle transition
 static void draw_circle_transition(Graphics* g, float t, uint8 col) {
 
-    // TODO: This
+    const int MAX_RADIUS = 160;
+
+    g_fill_circle_outside(g, 
+        (int)roundf((1.0f-t) * MAX_RADIUS), col);
 }
 
 
