@@ -174,9 +174,6 @@ void coin_player_collision(Coin* c, Player* pl) {
         pl->dying || pl->respawnTimer > 0.0f) 
         return;
 
-    // REMEMBER: Three times collision, for looping
-    // positions also
-
     float px = pl->pos.x;
     float py = pl->pos.y;
 

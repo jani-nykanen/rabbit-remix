@@ -20,6 +20,12 @@ static void restart(void* e) {
     self->active = false;
     ev_change_scene((EventManager*)e, "game", NULL);
 }
+// Change scene to settings
+static void go_to_settings(void* e) {
+
+    ev_change_scene((EventManager*)e, 
+        "settings", (void*)(size_t)true);
+}
 
 
 // Button callbacks
@@ -33,6 +39,11 @@ static void cb_restart(EventManager* evMan) {
 
     tr_activate(evMan->tr, FadeIn, EffectFade,
         2.0f, restart, 0);
+}
+static void cb_settings(EventManager* evMan) {
+
+    tr_activate(evMan->tr, FadeIn, EffectFade,
+        2.0f, go_to_settings, 0);
 }
 static void cb_quit(EventManager* evMan) {
 
@@ -54,7 +65,7 @@ PauseMenu create_pause_menu() {
     // Add buttons
     menu_add_button(&pm.menu, cb_resume, "RESUME");
     menu_add_button(&pm.menu, cb_restart, "RESTART");
-    menu_add_button(&pm.menu, NULL, "SETTINGS");
+    menu_add_button(&pm.menu, cb_settings, "SETTINGS");
     menu_add_button(&pm.menu, cb_quit, "QUIT");
     
     return pm;

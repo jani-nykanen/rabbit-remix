@@ -43,3 +43,17 @@ void ev_toggle_fullscreen(EventManager* evMan) {
 
     core_toggle_fullscreen((Core*)evMan->core);
 }
+
+
+// Get framerate
+int ev_get_framerate(EventManager* evMan) {
+
+    return ((Core*)evMan->core)->frameRate;
+}
+
+
+// Set framerate
+void ev_set_framerate(EventManager* evMan, int fps) {
+
+    ((Core*)evMan->core)->frameRate = fps;
+}

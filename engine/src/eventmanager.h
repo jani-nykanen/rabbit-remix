@@ -43,4 +43,10 @@ void ev_terminate(EventManager* evMan);
 // Toggle fullscreen
 void ev_toggle_fullscreen(EventManager* evMan);
 
+// Get framerate
+int ev_get_framerate(EventManager* evMan);
+
+// Set framerate
+void ev_set_framerate(EventManager* evMan, int fps);
+
 #endif // __EVENT_MANAGER__

@@ -40,6 +40,8 @@ typedef struct {
     // Boolean flags
     bool running;
     bool fullscreen;
+    // Framerate
+    int frameRate;
 
 } Core;
 

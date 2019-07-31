@@ -271,8 +271,8 @@ static void core_loop(Core* c) {
     const int COMPARED_FPS = 60;
 
     // Get framerate for the game logic
-    int fps = conf_get_param_int(&c->conf, "framerate", 60);
-    int frameWait = 1000 / fps;
+    c->frameRate = conf_get_param_int(&c->conf, "framerate", 60);
+    int frameWait = 1000 / c->frameRate;
 
     // Time
     int timeSum = 0;
@@ -282,6 +282,9 @@ static void core_loop(Core* c) {
     int updateCount = 0;
     bool redraw = false;
     while(c->running) {
+
+        // Framerate may be changed run time
+        frameWait = 1000 / c->frameRate;
 
         // Update events
         core_events(c);

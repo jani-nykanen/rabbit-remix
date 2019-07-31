@@ -496,7 +496,7 @@ static void update_phase(float tm) {
 
 
 // Change scene to game over
-static void go_game_over(void* e) {
+static void go_to_game_over(void* e) {
 
     ev_change_scene((EventManager*)e, 
         "gameover", (void*)(size_t)stats.score);
@@ -509,7 +509,7 @@ static void game_reset();
 static void trigger_game_over(EventManager* evMan) {
 
     tr_activate(evMan->tr, 
-        FadeIn, EffectZoom, 1.0f, go_game_over, ColorRed);
+        FadeIn, EffectZoom, 1.0f, go_to_game_over, ColorRed);
 }
 
 

@@ -5,6 +5,9 @@
 
 #include <engine/eventmanager.h>
 
+#include <math.h>
+#include <stdlib.h>
+
 // Constants & macros
 #define SCORE_STRING_SIZE 8
 
