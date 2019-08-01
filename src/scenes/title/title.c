@@ -10,6 +10,7 @@
 // Constants
 static const int MIDDLE_X_OFF = 0;
 static const int MIDDLE_Y_OFF = 72;
+static const float ENTER_TIME = 60.0f;
 
 // Bitmaps
 static Bitmap* bmpFont;
@@ -20,6 +21,11 @@ static Menu menu;
 
 // Spiral angle
 static float spiralAngle;
+
+// Phase
+static int phase;
+// Enter timer
+static float enterTimer;
 
 
 // Go to the game scene
@@ -87,6 +93,7 @@ static int title_on_load(AssetManager* a) {
 
     // Set defaults
     spiralAngle = 0.0f;
+    enterTimer = ENTER_TIME;
 }
 
 
@@ -99,8 +106,23 @@ static void title_update(void* e, float tm) {
 
     if (evMan->tr->active) return;
 
-    // Update menu
-    menu_update(&menu, evMan);
+    if (phase == 0) {
+
+        if (pad_get_button_state(evMan->vpad, "start") == StatePressed ||
+            pad_get_button_state(evMan->vpad, "fire1") == StatePressed) {
+
+            ++ phase;
+        }
+
+        // Update enter timer
+        enterTimer += 1.0f * tm;
+        enterTimer = fmodf(enterTimer, ENTER_TIME);
+    }
+    else {
+
+        // Update menu
+        menu_update(&menu, evMan);
+    }
 
     // Update spiral
     spiralAngle += SPIRAL_SPEED * tm;
@@ -148,6 +170,7 @@ static void title_draw(Graphics* g) {
     const int MENU_X = 72;
     const int MENU_OFF = 20;
     const int COPYRIGHT_OFF = -10;
+    const int ENTER_Y = POS_Y + MENU_OFF + 24;
 
     const float WAVE_MUL = 2.0f;
     const float PERIOD = 64;
@@ -166,9 +189,23 @@ static void title_draw(Graphics* g) {
         spiralAngle * WAVE_MUL,
         PERIOD, AMPLITUDE);
 
-    // Draw menu
-    menu_draw(&menu, g, MENU_X,
-        POS_Y + MENU_OFF);
+    if (phase == 0) {
+
+        if (enterTimer <= ENTER_TIME / 2.0f) {
+
+            // Draw "Press enter" text
+            g_draw_text(g, bmpFont,
+                "PRESS ENTER OR \7\10",
+                g->csize.x/2, ENTER_Y,
+                0, 0, true);
+        }
+    }
+    else {
+
+        // Draw menu
+        menu_draw(&menu, g, MENU_X,
+            POS_Y + MENU_OFF);
+    }
 
     // Draw copyright
     g_draw_text(g, bmpFont, "\4 2019 JANI NYK\5NEN",
