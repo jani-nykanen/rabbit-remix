@@ -686,7 +686,8 @@ static void game_update(void* e, float tm) {
     }
 
     // Pause
-    if (pad_get_button_state(evMan->vpad, "start") == StatePressed) {
+    if (pad_get_button_state(evMan->vpad, "start") == StatePressed ||
+        pad_get_button_state(evMan->vpad, "cancel") == StatePressed) {
 
         pause_activate(&pause);
         return;

@@ -12,6 +12,7 @@
 #include "scenemanager.h"
 #include "assets.h"
 #include "transition.h"
+#include "audioplayer.h"
 
 // Event manager type
 typedef struct {
@@ -22,6 +23,7 @@ typedef struct {
     SceneManager* sceneMan;
     AssetManager* assets;
     Transition* tr;
+    AudioPlayer* audio;
 
 } EventManager;
 
@@ -30,7 +32,7 @@ EventManager create_event_manager(
     void* core,
     Input* input, Gamepad* vpad,
     SceneManager* sceneMan, AssetManager* assets,
-    Transition* tr
+    Transition* tr, AudioPlayer* audio
 );
 
 // Change the scene

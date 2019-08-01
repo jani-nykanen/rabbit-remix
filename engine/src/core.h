@@ -14,6 +14,7 @@
 #include "config.h"
 #include "assets.h"
 #include "transition.h"
+#include "audioplayer.h"
 
 #include <SDL2/SDL.h>
 
@@ -33,6 +34,7 @@ typedef struct {
     Graphics* g;
     AssetManager* assets;
     Transition tr;
+    AudioPlayer audio;
 
     // Configuration
     Config conf;

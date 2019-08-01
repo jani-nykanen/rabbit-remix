@@ -90,6 +90,12 @@ void pause_update(PauseMenu* pm, EventManager* evMan) {
 
     // Update menu
     menu_update(&pm->menu, evMan);
+
+    // Disable if esc pressed
+    if (pad_get_button_state(evMan->vpad, "cancel") == StatePressed) {
+
+        pm->active = false;
+    }
 }
 
 

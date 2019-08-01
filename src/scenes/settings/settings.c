@@ -9,17 +9,24 @@
 // Bitmaps
 static Bitmap* bmpFont;
 static Bitmap* bmpSettings;
+static Bitmap* bmpCog;
 
 // Was the previous scene the game scene
 static bool prevSceneGame;
 
 // Wave timer
 static float waveTimer;
+// Cog angle
+static float cogAngle;
 
 // Cursor position
 static int cpos;
 // Framerate
 static int frameRate;
+
+// Audio volumes
+static int musicVol;
+static int sfxVol;
 
 
 // Change back to game
@@ -54,10 +61,47 @@ static int settings_on_load(AssetManager* a) {
     // Get bitmaps
     bmpFont = (Bitmap*)assets_get(a, "font");
     bmpSettings = (Bitmap*)assets_get(a, "settings");
+    bmpCog = (Bitmap*)assets_get(a, "cog");
 
     // Set initials
     waveTimer = 0.0f;
+    cogAngle = 0.0f;
     cpos = 4;
+    musicVol = 0;
+    sfxVol = 0;
+}
+
+
+// Update volumes
+static void update_volumes(EventManager* evMan) {
+
+    const float EPS = 0.1f;
+    const int AUDIO_JUMP = 10;
+
+    if (cpos > 1) return;
+
+    AudioPlayer* audio = evMan->audio;
+
+    float delta = evMan->vpad->delta.x;
+    float stick = evMan->vpad->stick.x;
+
+    int dir;
+
+    if (fabsf(stick) > EPS && delta/stick > 0.0f) {
+
+        dir = stick > 0.0f ? 1 : -1;
+
+        if (cpos == 0) {
+
+            audio_change_sfx_volume(audio, 
+                audio->sfxVolume + dir * AUDIO_JUMP);
+        }
+        else {
+
+            audio_change_music_volume(audio, 
+                audio->musicVolume + dir * AUDIO_JUMP);
+        }
+    }
 }
 
 
@@ -65,18 +109,24 @@ static int settings_on_load(AssetManager* a) {
 static void settings_update(void* e, float tm) {
 
     const float WAVE_SPEED = 0.1f;
+    const float COG_SPEED = 0.05f;
     const float EPS = 0.1f;
 
     EventManager* evMan = (EventManager*)e;
+    AudioPlayer* audio = evMan->audio;
 
     // Get stuff
     frameRate = ev_get_framerate(evMan);
+    sfxVol = audio->sfxVolume;
+    musicVol = audio->musicVolume;
 
     if (evMan->tr->active) return;
 
-    // Update waves
+    // Update waves & cog angle
     waveTimer += WAVE_SPEED * tm;
+    cogAngle += COG_SPEED * tm;
     waveTimer = fmodf(waveTimer, M_PI * 2);
+    cogAngle = fmodf(cogAngle, M_PI * 2);
 
     // Check vertical movement
     float stickDelta = evMan->vpad->delta.y;
@@ -121,6 +171,39 @@ static void settings_update(void* e, float tm) {
             break;
         }
     }
+
+    // Update volumes
+    update_volumes(evMan);
+}
+
+
+// Draw a cog
+static void draw_cog(Graphics* g, int x, int y, 
+    float angle, float r) {
+
+    float step = M_PI*2.0f / 4.0f;
+
+    int x1 = x + (int)(cosf(angle) * r);
+    int y1 = y + (int)(sinf(angle) * r);
+
+    int x2 = x + (int)(cosf(angle + step) * r);
+    int y2 = y + (int)(sinf(angle + step) * r);
+
+    int x3 = x + (int)(cosf(angle + 2*step) * r);
+    int y3 = y + (int)(sinf(angle + 2*step) * r);
+
+    int x4 = x + (int)(cosf(angle + 3*step) * r);
+    int y4 = y + (int)(sinf(angle + 3*step) * r);
+
+    g_toggle_texturing(g, bmpCog);
+
+    g_set_uv_coords(g, 0, 0, 1, 0, 1, 1);
+    g_draw_triangle(g, x1, y1, x2, y2, x3, y3, 0);
+
+    g_set_uv_coords(g, 1, 1, 0, 1, 0, 0);
+    g_draw_triangle(g, x3, y3, x4, y4, x1, y1, 0);
+
+    g_toggle_texturing(g, NULL);
 }
 
 
@@ -177,11 +260,13 @@ static void draw_menu(Graphics* g) {
     char buf[32];
 
     // SFX
-    g_draw_text(g, bmpFont, "SFX VOLUME:   100", 
+    snprintf(buf, 32, "SFX VOLUME:   %d", sfxVol);
+    g_draw_text(g, bmpFont, buf, 
         POS_X, START_Y, 0, 0, false);
 
     // Music
-    g_draw_text(g, bmpFont, "MUSIC VOLUME: 100", 
+    snprintf(buf, 32, "MUSIC VOLUME: %d", musicVol);
+    g_draw_text(g, bmpFont, buf, 
         POS_X, START_Y + Y_OFF, 0, 0, false);
 
     // Toggle fullscreen
@@ -205,14 +290,27 @@ static void draw_menu(Graphics* g) {
 }
 
 
+// Draw cogs
+static void draw_cogs(Graphics* g) {
+
+    const float RADIUS = 48;
+
+    draw_cog(g, 0, 0, cogAngle, RADIUS);
+    draw_cog(g, g->csize.x, 0, -cogAngle, RADIUS);
+    draw_cog(g, g->csize.x, g->csize.y, -cogAngle, RADIUS);
+    draw_cog(g, 0, g->csize.y, cogAngle, RADIUS);
+}
+
+
 // Draw
 static void settings_draw(Graphics* g) {
         
     g_clear_screen(g, 0b01010011);
 
+    // Draw cogs
+    draw_cogs(g);
     // Draw title
     draw_title(g);
-
     // Draw menu
     draw_menu(g);
 }

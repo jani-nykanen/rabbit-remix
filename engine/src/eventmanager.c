@@ -8,7 +8,7 @@ EventManager create_event_manager(
     void* core,
     Input* input, Gamepad* vpad,
     SceneManager* sceneMan, AssetManager* assets,
-    Transition* tr) {
+    Transition* tr, AudioPlayer* audio) {
 
     EventManager evMan;
 
@@ -18,6 +18,7 @@ EventManager create_event_manager(
     evMan.sceneMan = sceneMan;
     evMan.assets = assets;
     evMan.tr = tr;
+    evMan.audio = audio;
 
     return evMan;
 }

@@ -75,9 +75,10 @@ static int core_init(Core* c) {
     c->vpad = create_gamepad(&c->input);
     c->assets = create_asset_manager();
     c->tr = create_transition_object();
+    c->audio = create_audio_player(&c->conf);
     c->evMan = create_event_manager((void*)c,
         &c->input, &c->vpad, &c->sceneMan,
-        c->assets, &c->tr);
+        c->assets, &c->tr, &c->audio);
     if (c->assets == NULL) {
 
         return -1;
