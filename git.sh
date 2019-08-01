@@ -7,3 +7,4 @@ git add keys.conf
 git add makefile
 git add git.sh
 git add assets
+git add leaderboard
