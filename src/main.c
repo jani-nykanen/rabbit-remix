@@ -11,6 +11,7 @@
 #include "scenes/gameover/gameover.h"
 #include "scenes/title/title.h"
 #include "scenes/settings/settings.h"
+#include "scenes/leaderboard/leaderboard.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -37,7 +38,9 @@ int main(int argc, char** argv) {
     scenes_add(&c->sceneMan, "game", 
         game_get_scene(), false, false);
     scenes_add(&c->sceneMan, "settings", 
-        settings_get_scene(), false, false);  
+        settings_get_scene(), false, false); 
+    scenes_add(&c->sceneMan, "leaderboard", 
+        lboard_get_scene(), false, false);    
     scenes_add(&c->sceneMan, "title", 
         title_get_scene(), true, false);
 

@@ -57,6 +57,10 @@ static void cb_go_to_game(EventManager* evMan) {
     tr_activate(evMan->tr, FadeIn, EffectZoom, 1.0f,
             go_to_game, 0);
 }
+static void cb_go_to_leaderboard(EventManager* evMan) {
+
+    ev_change_scene(evMan, "leaderboard", NULL);
+}
 static void cb_go_to_settings(EventManager* evMan) {
 
     tr_activate(evMan->tr, FadeIn, EffectFade, 2.0f,
@@ -87,7 +91,7 @@ static int title_on_load(AssetManager* a) {
     // Create menu
     menu = create_menu();
     menu_add_button(&menu, cb_go_to_game, "START GAME");
-    menu_add_button(&menu, NULL, "LEADERBOARD");
+    menu_add_button(&menu, cb_go_to_leaderboard, "LEADERBOARD");
     menu_add_button(&menu, cb_go_to_settings, "SETTINGS");
     menu_add_button(&menu, cb_terminate, "QUIT");
 

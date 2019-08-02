@@ -34,4 +34,7 @@ Leaderboard create_leaderboard();
 // Fetch scores
 int lb_fetch_scores(Leaderboard* lb);
 
+// Add a score
+int lb_add_score(Leaderboard* lb, char* name, int count);
+
 #endif // __LEADERBOARD__

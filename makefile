@@ -11,7 +11,7 @@
 SRC := $(wildcard src/*.c src/*/*.c src/*/*/*.c)
 OBJ := $(patsubst %.c, %.o, $(SRC))
 
-LD_FLAGS :=  lib/libengine.a -lSDL2 -lm -I ./include
+LD_FLAGS :=  lib/libengine.a lib/libleaderboard.a -lSDL2 -lm -I ./include
 CC_FLAGS :=  -Iinclude -Wall # -O3
 
 all: game clean
@@ -45,6 +45,15 @@ libengine.a: $(ENGINE_OBJ)
 clean_engine:
 	find ./engine -type f -name '*.o' -delete
 
+
+install_engine: libengine.a
+	install -d ./lib/
+	install -m 644 libengine.a ./lib/
+	install -d ./include/engine/
+	install -m 644 $(wildcard engine/src/*.h) ./include/engine/
+	rm libengine.a
+	make clean_engine
+
 # ------------------------------------------------------- #
 
 #
@@ -62,6 +71,14 @@ libleaderboard.a: $(LB_OBJ)
 clean_lb:
 	find ./leaderboard -type f -name '*.o' -delete
 
+install_lb: libleaderboard.a
+	install -d ./lib/
+	install -m 644 libleaderboard.a ./lib/
+	install -d ./include/leaderboard/
+	install -m 644 $(wildcard leaderboard/src/*.h) ./include/leaderboard/
+	rm libleaderboard.a
+	make clean_lb
+
 
 # ------------------------------------------------------- #
 
@@ -69,18 +86,9 @@ clean_lb:
 # Other
 #
 
-install: libengine.a libleaderboard.a
-	install -d ./lib/
-	install -m 644 libengine.a ./lib/
-	install -m 644 libleaderboard.a ./lib/
-	install -d ./include/engine/
-	install -d ./include/leaderboard/
-	install -m 644 $(wildcard engine/src/*.h) ./include/engine/
-	install -m 644 $(wildcard leaderboard/src/*.h) ./include/leaderboard/
-	rm libengine.a
-	rm libleaderboard.a
-	make clean_engine
-	make clean_lb
+install:
+	make install_lb
+	make install_engine
 
 clean_all:
 	make clean
