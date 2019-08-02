@@ -4,6 +4,7 @@
 #include "../../menu.h"
 
 #include <engine/eventmanager.h>
+#include <leaderboard/leaderboard.h>
 
 #include <math.h>
 #include <stdlib.h>
@@ -22,9 +23,56 @@ static bool fadingOut;
 
 // Score
 static int score;
+// Score entry
+static Entry scoreEntry;
 
 // Menu
 static Menu menu;
+
+// Name input
+static char nameInput [LB_NAME_LENGTH];
+static int charPointer;
+// Is name box active
+static bool nameBoxActive;
+
+
+// Draw name box
+static void draw_name_box(Graphics* g) {
+
+    const uint8 BOX_COLOR[] = {
+        255, 0, 83
+    };
+    const int BOX_OUTLINES = 3;
+    const int BOX_W = 144;
+    const int BOX_H = 32;
+    const int TITLE_Y_OFF = 4;
+    const int NAME_OFF = 12;
+
+    int x = g->csize.x/2 - BOX_W/2;
+    int y = g->csize.y/2 - BOX_H/2;
+    int i;
+
+    // Draw box
+    for (i = 0; i < BOX_OUTLINES; ++ i) {
+
+        g_fill_rect(g, 
+            x - (BOX_OUTLINES-1 -i), 
+            y - (BOX_OUTLINES-1 -i), 
+            BOX_W + (BOX_OUTLINES-1 -i)*2, 
+            BOX_H + (BOX_OUTLINES-1 -i)*2, 
+            BOX_COLOR[i]);
+    }
+
+    // Draw title
+    g_draw_text(g, bmpFont, "ENTER YOUR NAME:", 
+        g->csize.x/2, y + TITLE_Y_OFF, 0, 0, true);
+
+    // Draw name
+    g_draw_text(g, bmpFont, nameInput, 
+        g->csize.x/2, 
+        y + TITLE_Y_OFF + NAME_OFF, 
+        0, 0, true);
+}
 
 
 // Draw game over text
@@ -105,6 +153,12 @@ static void go_to_title(void* e) {
 
 
 // Button callbacks
+static void cb_submit_score(EventManager* evMan) {
+
+    // ev_change_scene(evMan, "leaderboard", (void*)&scoreEntry);
+
+    nameBoxActive = true;
+}
 static void cb_play_again(EventManager* evMan) {
 
     tr_activate(evMan->tr, FadeIn, EffectFade, 2.0f,
@@ -136,10 +190,13 @@ static int gover_on_load(AssetManager* a) {
     scaleMul = 0.0f;
     score = 0;
     fadingOut = false;
+    nameBoxActive = false;
+    nameInput[0] = '\0';
+    charPointer = 0;
 
     // Create menu
     menu = create_menu();
-    menu_add_button(&menu, NULL, "SUBMIT SCORE");
+    menu_add_button(&menu, cb_submit_score, "SUBMIT SCORE");
     menu_add_button(&menu, cb_play_again, "PLAY AGAIN");
     menu_add_button(&menu, cb_quit, "QUIT");
 }
@@ -149,6 +206,8 @@ static int gover_on_load(AssetManager* a) {
 static void gover_update(void* e, float tm) {
 
     EventManager* evMan = (EventManager*)e;
+
+    int i;
 
     if (evMan->tr->active) {
 
@@ -162,8 +221,58 @@ static void gover_update(void* e, float tm) {
         scaleMul = 0.0f;
     }
 
-    // Update menu
-    menu_update(&menu, evMan);
+    // Update name box, if active
+    if (nameBoxActive) {
+
+        // Wait for characters
+        if (charPointer < LB_NAME_LENGTH -1) {
+
+            for (i = (int)SDL_SCANCODE_A; i <= (int)SDL_SCANCODE_0; ++ i) {
+
+                if (input_get_key_state(evMan->input, i) == StatePressed) {
+
+                    if (i == (int)SDL_SCANCODE_0) {
+
+                        nameInput[charPointer ++] = '0';
+                    }
+                    else if (i >= (int)SDL_SCANCODE_1) {
+
+                        nameInput[charPointer ++] = '1' + (i - (int)SDL_SCANCODE_1);
+                    }
+                    else {
+
+                        nameInput[charPointer ++] = 'A' + (i - (int)SDL_SCANCODE_A);
+                    }
+                    break;
+                }
+            }
+        }
+        
+        // Backspace
+        if (charPointer > 0 && 
+            input_get_key_state(evMan->input, (int)SDL_SCANCODE_BACKSPACE) 
+            == StatePressed) {
+            
+            nameInput[-- charPointer] = '\0';
+        }
+
+        // Start & escape
+        if (pad_get_button_state(evMan->vpad, "start") 
+            == StatePressed) {
+
+            ev_change_scene(evMan, "leaderboard", (void*)&scoreEntry);
+        }
+        else if (pad_get_button_state(evMan->vpad, "cancel") 
+            == StatePressed) {
+
+            nameBoxActive = false;
+        }
+    }
+    else {
+
+        // Update menu
+        menu_update(&menu, evMan);
+    }
 }
 
 
@@ -177,6 +286,12 @@ static void gover_draw(Graphics* g) {
     draw_game_over_text(g);
     // Draw info text
     draw_info_text(g);
+
+    // Draw name box
+    if (nameBoxActive) {
+
+        draw_name_box(g);
+    }
 }
 
 

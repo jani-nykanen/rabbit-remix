@@ -7,7 +7,7 @@
 #ifndef __LEADERBOARD__
 #define __LEADERBOARD__
 
-#define LB_NAME_LENGTH 16
+#define LB_NAME_LENGTH 11
 #define LB_ENTRY_MAX 10
 
 // Entry type

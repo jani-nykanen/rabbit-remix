@@ -82,6 +82,8 @@ void tr_update(Transition* tr, void* e, float tm) {
 
             tr->active = false;
             tr->timer = 0.0f;
+
+            tr->fadeColor = 0;
         }
     }
 }
@@ -118,7 +120,6 @@ void tr_draw(Transition* tr, Graphics* g) {
 
         g_fill_zoomed_rotated(g, &g->bufferCopy, -t * ANGLE_MAX, 
             1.0f-t*SCALE, 1.0f-t*SCALE);
-
     case EffectFade:
         
         g_set_darkness_color(g, tr->fadeColor);

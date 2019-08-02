@@ -25,6 +25,9 @@ static bool dataFetched;
 static int status;
 static bool ready;
 
+// Connecting animation timer
+static float connectAnimTime;
+
 
 // Fetch data thread
 static int thread_fetch_data(void* ptr) {
@@ -53,7 +56,7 @@ static void go_back(void* e) {
 
     ev_change_scene((EventManager*)e, 
         prevSceneTitle ? "title" : "game", 
-        (void*)(size_t)1);
+        NULL);
 }
 
 
@@ -80,11 +83,14 @@ static int lboard_on_load(AssetManager* a) {
     prevSceneTitle = false;
     bufferCopied = false;
     dataFetched = false;
+    connectAnimTime = 0.0f;
 }
 
 
 // Update
 static void lboard_update(void* e, float tm) {
+
+    const float CONNECT_ANIM_SPEED = 1.0f / 15.0f;
 
     EventManager* evMan = (EventManager*)e;
 
@@ -93,6 +99,11 @@ static void lboard_update(void* e, float tm) {
     // Finished?
     if (!ready) {
 
+        // Update animation timer
+        connectAnimTime += CONNECT_ANIM_SPEED * tm;
+        connectAnimTime = fmodf(connectAnimTime, 4.0f);
+
+        // Check if ready
         if (SDL_LockMutex(mutex) == 0) {
 
             ready = dataFetched;
@@ -101,9 +112,9 @@ static void lboard_update(void* e, float tm) {
     }
 
     // Wait for enter or fire1 or escape
-    if (pad_get_button_state(evMan->vpad, "fire1")  == StatePressed ||
-        pad_get_button_state(evMan->vpad, "cancel") == StatePressed ||
-        pad_get_button_state(evMan->vpad, "start")  == StatePressed) {
+    if ((ready && (pad_get_button_state(evMan->vpad, "fire1")  == StatePressed ||
+        pad_get_button_state(evMan->vpad, "start") == StatePressed)) ||
+        pad_get_button_state(evMan->vpad, "cancel")  == StatePressed) {
 
         if (prevSceneTitle) {
 
@@ -139,6 +150,13 @@ static void lboard_draw(Graphics* g) {
     };
     const int BOX_OUTLINES = 3;
 
+    const char* CONNECT_STR[] = {
+        "CONNECTING   ",
+        "CONNECTING.  ",
+        "CONNECTING.. ",
+        "CONNECTING...",
+    };
+
     int i;
     char buf [LB_NAME_LENGTH +3];
 
@@ -149,6 +167,7 @@ static void lboard_draw(Graphics* g) {
         bufferCopied = true;
     }
     g_draw_bitmap(g, &g->bufferCopy, 0, 0, false);
+    g_set_darkness_color(g, 0);
     g_darken(g, DVALUE);
 
     // Draw box
@@ -197,7 +216,7 @@ static void lboard_draw(Graphics* g) {
     }
     else {
 
-        g_draw_text(g, bmpFont, "CONNECTING...", 
+        g_draw_text(g, bmpFont, CONNECT_STR[(int)connectAnimTime], 
             g->csize.x/2, g->csize.y/2 - 4, 0, 0, true);
     }
 }
