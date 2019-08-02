@@ -17,6 +17,8 @@ static bool bufferCopied;
 
 // Leaderboard data
 static Leaderboard lb;
+// Is leaderboard enabled
+static bool enabled;
 
 // Threading stuff
 static SDL_Thread* thread;
@@ -32,7 +34,15 @@ static float connectAnimTime;
 // Fetch data thread
 static int thread_fetch_data(void* ptr) {
 
-    status = lb_fetch_scores(&lb);
+    Entry* e = (Entry*)ptr;
+
+    if (ptr != NULL) {
+
+        status = lb_add_score(&lb, e->name, e->score);
+    }
+    else
+        status = lb_fetch_scores(&lb);
+
     dataFetched = true;
 
     return 0;
@@ -41,6 +51,13 @@ static int thread_fetch_data(void* ptr) {
 
 // Fetch data
 static void fetch_data(Entry* entry) {
+
+    if (!enabled) {
+
+        ready = true;
+        status = 1;
+        return;
+    }
 
     ready = false;
     dataFetched = false;
@@ -62,6 +79,13 @@ static void go_back(void* e) {
 
 // Initialize
 static int lboard_init(void* e) {
+
+    // Initialize CURL
+    enabled = init_global_leaderboard() == 0;
+    if (!enabled) {
+
+        printf("Leaderboard disabled.\n");
+    }
 
     // Create leaderboard
     lb = create_leaderboard();
@@ -225,7 +249,7 @@ static void lboard_draw(Graphics* g) {
 // Dispose
 static void lboard_dispose() {
 
-    // ...
+
 }
 
 

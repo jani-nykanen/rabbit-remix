@@ -10,6 +10,9 @@
 #define LB_NAME_LENGTH 11
 #define LB_ENTRY_MAX 10
 
+// Initialize global leaderboard stuff
+int init_global_leaderboard();
+
 // Entry type
 typedef struct {
 
@@ -35,6 +38,6 @@ Leaderboard create_leaderboard();
 int lb_fetch_scores(Leaderboard* lb);
 
 // Add a score
-int lb_add_score(Leaderboard* lb, char* name, int count);
+int lb_add_score(Leaderboard* lb, char* name, int score);
 
 #endif // __LEADERBOARD__

@@ -257,9 +257,11 @@ static void gover_update(void* e, float tm) {
         }
 
         // Start & escape
-        if (pad_get_button_state(evMan->vpad, "start") 
-            == StatePressed) {
+        if (charPointer > 0 &&
+            pad_get_button_state(evMan->vpad, "start") == StatePressed) {
 
+            snprintf(scoreEntry.name, LB_NAME_LENGTH, "%s", nameInput);
+            scoreEntry.score = score;
             ev_change_scene(evMan, "leaderboard", (void*)&scoreEntry);
         }
         else if (pad_get_button_state(evMan->vpad, "cancel") 
@@ -307,6 +309,7 @@ static void gover_on_change(void* param) {
 
     score = (int)(size_t)param;
     menu.cpos = 0;
+    nameBoxActive = false;
 }
 
 
