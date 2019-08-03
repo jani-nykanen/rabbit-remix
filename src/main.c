@@ -12,6 +12,7 @@
 #include "scenes/title/title.h"
 #include "scenes/settings/settings.h"
 #include "scenes/leaderboard/leaderboard.h"
+#include "scenes/intro/intro.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -42,7 +43,9 @@ int main(int argc, char** argv) {
     scenes_add(&c->sceneMan, "leaderboard", 
         lboard_get_scene(), false, false);    
     scenes_add(&c->sceneMan, "title", 
-        title_get_scene(), true, false);
+        title_get_scene(), false, false);
+    scenes_add(&c->sceneMan, "intro", 
+        intro_get_scene(), true, false);    
 
     // Run
     core_run(c);
