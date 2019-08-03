@@ -11,6 +11,15 @@
 static Bitmap* bmpBunny;
 static Bitmap* bmpBlast;
 static Bitmap* bmpArrow;
+// ...and samples
+static Sample* sShoot;
+static Sample* sShootBig;
+static Sample* sFlap;
+static Sample* sJump;
+static Sample* sCharge;
+static Sample* sDieHit;
+static Sample* sDieFloor;
+static Sample* sExplode;
 
 // Constants
 static const float JUMP_REACT_MIN_TIME = 1.0f;
@@ -23,9 +32,20 @@ static const float RESPAWN_TIME = 30.0f;
 // Init global data
 void init_global_player(AssetManager* a) {
 
+    // Get bitmaps
     bmpBunny = (Bitmap*)assets_get(a, "bunny");
     bmpBlast = (Bitmap*)assets_get(a, "blast");
     bmpArrow = (Bitmap*)assets_get(a, "arrow");
+
+    // Get samples
+    sShoot = (Sample*)assets_get(a, "shoot");
+    sShootBig = (Sample*)assets_get(a, "shootBig");
+    sFlap = (Sample*)assets_get(a, "flap");
+    sJump = (Sample*)assets_get(a, "jump");
+    sCharge = (Sample*)assets_get(a, "charge");
+    sDieHit = (Sample*)assets_get(a, "dieHit");
+    sDieFloor = (Sample*)assets_get(a, "dieFloor");
+    sExplode = (Sample*)assets_get(a, "explode");
 }
 
 
@@ -185,6 +205,8 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
         pl->doubleJump = false;
 
         pl->jumpSpeedMul = 1.0f;
+
+        audio_play_sample(evMan->audio, sJump, 0.70f, 0);
     }
 
     // Stop jumping
@@ -232,6 +254,8 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
             // Create message
             msg_create_score_message(msgs, msgLen, points,
                 vec2(pl->pos.x, pl->pos.y-pl->spr.height/2));
+
+            audio_play_sample(evMan->audio, sExplode, 0.60f, 0);
         }
     }
     else {
@@ -279,7 +303,7 @@ static void pl_move(Player* pl, EventManager* evMan, float tm) {
 
 
 // Animate
-static void pl_animate(Player* pl, float tm) {
+static void pl_animate(Player* pl, EventManager* evMan, float tm) {
 
     const float EPS = 0.5f;
     const float FLIP_SPEED = 4.0f; 
@@ -287,6 +311,8 @@ static void pl_animate(Player* pl, float tm) {
 
     int frame = 0;
     int row = 0;
+    int oframe = pl->spr.frame;
+    int orow = pl->spr.row;
 
     bool drawGun = pl->shootWait > 0.0f;
 
@@ -300,6 +326,12 @@ static void pl_animate(Player* pl, float tm) {
 
         row = drawGun ? 4 : 3;
         spr_animate(&pl->spr, row, 0, 3, FLAP_SPEED, tm);
+
+        if (orow == pl->spr.row && oframe != pl->spr.frame && 
+            pl->spr.frame == 0) {
+
+            audio_play_sample(evMan->audio, sFlap, 0.50f, 0);
+        }
     }
     else {
 
@@ -417,6 +449,9 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
 
             pl->shootWait = SHOOT_ANIM_TIME;
             pl->blastTime = BLAST_TIME;
+
+            audio_play_sample(evMan->audio, makeBig ? sShootBig : sShoot,
+                0.70f, 0);
         }
     }
 
@@ -427,10 +462,17 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
     }
 
     // Update load timer
+    float oldTime = pl->loadTimer;
     if (pl->loading) {
 
         pl->loadTimer += 1.0f * tm;
-        if (pl->loadTimer > 0.0f) {
+        if (pl->loadTimer >= 0.0f) {
+
+            if (oldTime < 0.0f) {
+
+                audio_play_sample(evMan->audio, sCharge,
+                0.70f, 0);
+            }
 
             pl->loadTimer = fmodf(pl->loadTimer, LOAD_BASE_WAIT);
         }
@@ -478,6 +520,7 @@ static void pl_respawn(Player* pl) {
     pl->djumpReleased = false;
     pl->jumpTimer = 0.0f;
     pl->selfDestructTimer = 0.0f;
+    pl->deathPlayed = false;
 
     pl->pos = pl->startPos;
 }
@@ -513,6 +556,15 @@ static void pl_die(Player* pl, float globalSpeed,
         }
 
         return;
+    }
+
+    // Play death
+    if (!pl->deathPlayed) {
+
+        audio_play_sample(evMan->audio, type == 0 ?
+            sDieFloor : sDieHit, 0.70f, 0);
+
+        pl->deathPlayed = true;
     }
 
     if (type == 0)
@@ -668,7 +720,7 @@ void pl_update(Player* pl, EventManager* evMan,
     if (pl->dying) return;
 
     pl_move(pl, evMan, tm);
-    pl_animate(pl, tm);
+    pl_animate(pl, evMan, tm);
 
     // Update arrow wave
     pl->arrowWave += ARROW_WAVE_SPEED * tm;
