@@ -247,7 +247,7 @@ static void lboard_draw(Graphics* g) {
 
 
 // Dispose
-static void lboard_dispose() {
+static void lboard_dispose(void* e) {
 
 
 }

@@ -39,6 +39,13 @@ void ev_terminate(EventManager* evMan) {
 }
 
 
+// Get fullscreen state
+bool ev_get_fullscreen_state(EventManager* evMan) {
+
+    return ((Core*)evMan->core)->fullscreen;
+}
+
+
 // Toggle fullscreen
 void ev_toggle_fullscreen(EventManager* evMan) {
 

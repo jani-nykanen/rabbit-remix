@@ -298,7 +298,7 @@ static void gover_draw(Graphics* g) {
 
 
 // Dispose
-static void gover_dispose() {
+static void gover_dispose(void* e) {
 
     // ...
 }

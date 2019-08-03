@@ -50,12 +50,16 @@ static void intro_update(void* e, float tm) {
     EventManager* evMan = (EventManager*)e;
 
     introTimer -= 1.0f * tm;
-    if (evMan->tr->active == false &&
-        introTimer <= 30.0f) {
+    if (evMan->tr->active == false && (
+        introTimer <= 30.0f || 
+        pad_get_button_state(evMan->vpad, "fire1") == StatePressed ||
+        pad_get_button_state(evMan->vpad, "start") == StatePressed ||
+        pad_get_button_state(evMan->vpad, "cancel") == StatePressed)) {
 
         tr_activate(evMan->tr, FadeIn, EffectFade,
             2.0f, cb_go_to_title, 0);
     }
+
 }
 
 

@@ -42,6 +42,9 @@ void ev_change_scene(EventManager* evMan,
 // Terminate
 void ev_terminate(EventManager* evMan);
 
+// Get fullscreen state
+bool ev_get_fullscreen_state(EventManager* evMan);
+
 // Toggle fullscreen
 void ev_toggle_fullscreen(EventManager* evMan);
 

@@ -50,6 +50,6 @@ void scenes_update_active(SceneManager* sman, void* evMan, float tm);
 // Draw active scenes
 void scenes_draw_active(SceneManager* sman, Graphics* g);
 // Dispose scenes
-void scenes_dispose(SceneManager* sman);
+void scenes_dispose(SceneManager* sman, void* evMan);
 
 #endif // __SCENE_MANAGER__

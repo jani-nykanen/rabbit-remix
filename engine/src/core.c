@@ -1,6 +1,7 @@
 #include "core.h"
 
 #include "err.h"
+#include "mathext.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -93,6 +94,9 @@ static int core_init(Core* c) {
             return -1;
         }
     }
+
+    // Get framerate
+    c->frameRate = max_int32_2(30, conf_get_param_int(&c->conf, "framerate", 30));
 
     // Initialize scenes
     if (scenes_init(&c->sceneMan, (void*)&c->evMan) == -1) {
@@ -272,7 +276,6 @@ static void core_loop(Core* c) {
     const int COMPARED_FPS = 60;
 
     // Get framerate for the game logic
-    c->frameRate = conf_get_param_int(&c->conf, "framerate", 60);
     int frameWait = 1000 / c->frameRate;
 
     // Time
@@ -340,7 +343,7 @@ static void core_destroy(Core* c) {
     dispose_graphics(c->g);
 
     // Dispose scenes
-    scenes_dispose(&c->sceneMan);
+    scenes_dispose(&c->sceneMan, (void*)&c->evMan);
 
     // Destroy window
     SDL_DestroyWindow(c->window);

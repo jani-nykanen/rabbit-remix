@@ -17,7 +17,7 @@ typedef struct {
     int (*onLoad)(AssetManager*);
     void (*update)(void*, float);
     void (*draw)(Graphics*);
-    void (*dispose)();
+    void (*dispose)(void*);
     void (*onChange)(void*);
 
 } Scene;

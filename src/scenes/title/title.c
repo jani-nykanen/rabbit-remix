@@ -128,6 +128,12 @@ static void title_update(void* e, float tm) {
         menu_update(&menu, evMan);
     }
 
+    // Quit, if esc pressed
+    if (pad_get_button_state(evMan->vpad, "cancel") == StatePressed) {
+
+        cb_terminate(evMan);
+    }
+
     // Update spiral
     spiralAngle += SPIRAL_SPEED * tm;
     spiralAngle = fmodf(spiralAngle, 2 * M_PI);
@@ -220,7 +226,7 @@ static void title_draw(Graphics* g) {
 
 
 // Dispose
-static void title_dispose() {
+static void title_dispose(void* e) {
 
     // ...
 }

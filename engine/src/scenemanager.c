@@ -132,14 +132,14 @@ void scenes_draw_active(SceneManager* sman, Graphics* g) {
 
 
 // Dispose scenes
-void scenes_dispose(SceneManager* sman)  {
+void scenes_dispose(SceneManager* sman, void* evMan)  {
 
     int i = 0;
     for(; i < sman->sceneCount; ++ i) {
 
         if (sman->scenes[i].dispose != NULL) {
 
-            sman->scenes[i].dispose();
+            sman->scenes[i].dispose(evMan);
         }
     }
 }

@@ -1250,7 +1250,7 @@ static void game_draw(Graphics* g) {
 
 
 // Dispose
-static void game_dispose() {
+static void game_dispose(void* e) {
 
     // ...
 }

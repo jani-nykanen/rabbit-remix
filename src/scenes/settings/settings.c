@@ -2,9 +2,14 @@
 
 #include <engine/mathext.h>
 #include <engine/eventmanager.h>
+#include <engine/config.h>
+#include <engine/err.h>
 
 #include <math.h>
 #include <stdlib.h>
+
+// Constants
+static const char* SETTINGS_FILENAME = "settings.conf";
 
 // Bitmaps
 static Bitmap* bmpFont;
@@ -48,8 +53,85 @@ static void go_back(void* e) {
 }
 
 
+// Write
+static int write_settings(const char* fname, EventManager* evMan) {
+
+    FILE* f = fopen(fname, "w");
+    if (f == NULL) {
+
+        printf("Failed to create a settings file. Omitting...\n");
+        return 1;
+    }
+
+    char buf[32];
+
+    // SFX volume
+    snprintf(buf, 32, "sfx_volume %d\n", evMan->audio->sfxVolume);
+    fwrite(buf, strlen(buf), 1, f);
+
+    // Music volume
+    snprintf(buf, 32, "music_volume %d\n", evMan->audio->musicVolume);
+    fwrite(buf, strlen(buf), 1, f);
+
+    // Framerate
+    snprintf(buf, 32, "framerate %d\n", ev_get_framerate(evMan));
+    fwrite(buf, strlen(buf), 1, f);
+
+    // Fullscreen
+    snprintf(buf, 32, "fullscreen %d\n", 
+        (int) ev_get_fullscreen_state(evMan));
+    fwrite(buf, strlen(buf), 1, f);
+
+    fclose(f);
+
+    return 0;
+}
+
+
+// Parse settings
+static int parse_settings(const char* fname, EventManager* evMan) {
+
+    // Check if file exists
+    FILE* f = fopen(fname, "r");
+    if (f == NULL) {
+
+        printf("Settings file could not be found, creating one.\n");
+        write_settings(fname, evMan);
+        return 0;
+    }
+    fclose(f);
+
+    // Parse config
+    Config conf = create_config();  
+    if (conf_parse_text_file(&conf, fname) == -1) {
+
+        printf("Error parsing settings: %s.\nUsing defaults.\n", 
+            get_error());
+
+        return 1;
+    }
+
+    // Get info
+    if (conf_get_param_int(&conf, "fullscreen", 0) == 1) {
+
+        ev_toggle_fullscreen(evMan);
+    }
+    ev_set_framerate(evMan, max_int32_2(30, 
+        conf_get_param_int(&conf, "framerate", 30)) );
+    audio_change_sfx_volume(evMan->audio, 
+         conf_get_param_int(&conf, "sfx_volume", 70));
+    audio_change_music_volume(evMan->audio, 
+         conf_get_param_int(&conf, "music_volume", 70));
+
+    return 0;
+}
+
+
 // Initialize
 static int settings_init(void* e) {
+
+    // Parse settings
+    parse_settings(SETTINGS_FILENAME, (EventManager*)e);
 
     return 0;
 }
@@ -317,9 +399,9 @@ static void settings_draw(Graphics* g) {
 
 
 // Dispose
-static void settings_dispose() {
+static void settings_dispose(void* e) {
 
-    // ...
+    write_settings(SETTINGS_FILENAME, (EventManager*)e);
 }
 
 
