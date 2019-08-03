@@ -36,5 +36,5 @@ void audio_play_sample(AudioPlayer* a, Sample* s, float vol, int loops) {
     if (a->sfxVolume <= 0) return;
 
     float v = (a->sfxVolume / 100.0f) * vol;
-    sample_play(s, vol, loops);
+    sample_play(s, v, loops);
 }

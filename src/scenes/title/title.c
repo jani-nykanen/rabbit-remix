@@ -15,6 +15,9 @@ static const float ENTER_TIME = 60.0f;
 // Bitmaps
 static Bitmap* bmpFont;
 static Bitmap* bmpLogo;
+// Samples
+static Sample* sStart;
+static Sample* sReject;
 
 // Menu
 static Menu menu;
@@ -88,6 +91,10 @@ static int title_on_load(AssetManager* a) {
     bmpFont = (Bitmap*)assets_get(a, "font");
     bmpLogo = (Bitmap*)assets_get(a, "logo");
 
+    // Get samples
+    sStart = (Sample*)assets_get(a, "start");
+    sReject = (Sample*)assets_get(a, "reject");
+
     // Create menu
     menu = create_menu();
     menu_add_button(&menu, cb_go_to_game, "START GAME");
@@ -116,6 +123,8 @@ static void title_update(void* e, float tm) {
             pad_get_button_state(evMan->vpad, "fire1") == StatePressed) {
 
             ++ phase;
+
+            audio_play_sample(evMan->audio, sStart, 0.70f, 0);
         }
 
         // Update enter timer
@@ -130,6 +139,8 @@ static void title_update(void* e, float tm) {
 
     // Quit, if esc pressed
     if (pad_get_button_state(evMan->vpad, "cancel") == StatePressed) {
+
+        audio_play_sample(evMan->audio, sReject, 0.70f, 0);
 
         cb_terminate(evMan);
     }

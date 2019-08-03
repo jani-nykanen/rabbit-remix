@@ -9,6 +9,9 @@
 
 // Bitmaps
 static Bitmap* bmpFont;
+// Samples
+static Sample* sAccept;
+static Sample* sReject;
 
 // Was the previous scene the title scene
 static bool prevSceneTitle;
@@ -102,6 +105,9 @@ static int lboard_on_load(AssetManager* a) {
 
     // Get bitmaps
     bmpFont = (Bitmap*)assets_get(a, "font");
+    // Get samples
+    sAccept = (Sample*)assets_get(a, "choose");
+    sReject = (Sample*)assets_get(a, "reject");
 
     // Set initials
     prevSceneTitle = false;
@@ -149,6 +155,8 @@ static void lboard_update(void* e, float tm) {
             tr_activate(evMan->tr, FadeIn, EffectCircle, 2.0f,
                 go_back, 0);
         }
+
+        audio_play_sample(evMan->audio, ready ? sAccept : sReject, 0.70f, 0);
 
         if (thread != NULL)
             SDL_DetachThread(thread);

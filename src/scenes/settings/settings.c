@@ -16,6 +16,11 @@ static Bitmap* bmpFont;
 static Bitmap* bmpSettings;
 static Bitmap* bmpCog;
 
+// Samples
+static Sample* sReject;
+static Sample* sChoose;
+static Sample* sSelect;
+
 // Was the previous scene the game scene
 static bool prevSceneGame;
 
@@ -145,6 +150,11 @@ static int settings_on_load(AssetManager* a) {
     bmpSettings = (Bitmap*)assets_get(a, "settings");
     bmpCog = (Bitmap*)assets_get(a, "cog");
 
+    // Get samples
+    sChoose = (Sample*)assets_get(a, "choose");
+    sSelect = (Sample*)assets_get(a, "select");
+    sReject = (Sample*)assets_get(a, "reject");
+
     // Set initials
     waveTimer = 0.0f;
     cogAngle = 0.0f;
@@ -160,7 +170,7 @@ static void update_volumes(EventManager* evMan) {
     const float EPS = 0.1f;
     const int AUDIO_JUMP = 10;
 
-    if (cpos > 1) return;
+    if (cpos == 2 || cpos == 4) return;
 
     AudioPlayer* audio = evMan->audio;
 
@@ -178,10 +188,19 @@ static void update_volumes(EventManager* evMan) {
             audio_change_sfx_volume(audio, 
                 audio->sfxVolume + dir * AUDIO_JUMP);
         }
-        else {
+        else if (cpos == 1) {
 
             audio_change_music_volume(audio, 
                 audio->musicVolume + dir * AUDIO_JUMP);
+        }
+        else if (cpos == 3) {
+
+            ev_set_framerate(evMan, frameRate != 60 ? 60 : 30);
+        }
+
+        if (cpos != 2) {
+
+            audio_play_sample(audio, sSelect, 0.70f, 0);
         }
     }
 }
@@ -203,6 +222,8 @@ static void settings_update(void* e, float tm) {
     musicVol = audio->musicVolume;
 
     if (evMan->tr->active) return;
+
+    int opos = cpos;
 
     // Update waves & cog angle
     waveTimer += WAVE_SPEED * tm;
@@ -235,23 +256,40 @@ static void settings_update(void* e, float tm) {
         // Full screen
         case 2:
             ev_toggle_fullscreen(evMan);
+            audio_play_sample(audio, sChoose, 0.70f, 0);
             break;
 
         // Change frame rate
         case 3:
 
             ev_set_framerate(evMan, frameRate != 60 ? 60 : 30);
+            audio_play_sample(audio, sChoose, 0.70f, 0);
             break;
 
         // Back
         case 4:
             tr_activate(evMan->tr, FadeIn, EffectFade, 2.0f,
                 go_back, 0);
+            audio_play_sample(audio, sChoose, 0.70f, 0);
             break;
         
         default:
             break;
         }
+    }
+
+    // Cursor moved
+    if (opos != cpos) {
+
+        audio_play_sample(audio, sSelect, 0.70f, 0);
+    }
+
+    // Check escape
+    if (pad_get_button_state(evMan->vpad, "cancel") == StatePressed) {
+
+        audio_play_sample(audio, sReject, 0.70f, 0);
+        tr_activate(evMan->tr, FadeIn, EffectFade, 2.0f,
+                go_back, 0);
     }
 
     // Update volumes

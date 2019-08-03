@@ -128,9 +128,11 @@ void assets_dispose(AssetManager* a) {
             break;
 
         case TypeSample:
-            
-            // TODO: Might cause crashes
-            sample_destroy((Sample*)a->assetPointers[i]);
+
+            // Might cause crashes on Windows
+            #ifndef __MINGW32__
+                sample_destroy((Sample*)a->assetPointers[i]);
+            #endif // __MINGW32__
             break;    
         
         default:
