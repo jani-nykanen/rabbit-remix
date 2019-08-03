@@ -13,7 +13,13 @@
 
 // Server & key
 #define SERVER "https://game-leaderboards.000webhostapp.com/rabbit-remix"
-#define KEY "DUMMYKEY"
+
+#ifndef KEY
+    #define KEY DUMMYKEY
+#endif // KEY
+
+#define XSTR(x) #x
+#define STR(x) XSTR(x)
 
 // Return buffer size
 #define RET_BUFFER_SIZE 1024
@@ -229,7 +235,7 @@ int lb_fetch_scores(Leaderboard* lb) {
 int lb_add_score(Leaderboard* lb, char* name, int score) {
 
     char check [1024];
-    snprintf(check, 1024, "%s%d", KEY, score);
+    snprintf(check, 1024, "%s%d", STR(KEY), score);
     // printf("%s\n", check);
 
     unsigned char digest[1024];

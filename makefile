@@ -20,7 +20,7 @@ clean:
 	find ./src -type f -name '*.o' -delete
 
 %.o: %.c
-	$(CC) -c -o $@ $< -I./include
+	$(CC) -c -o $@ $< -I./include $(DEFINES)
 
 game: $(OBJ)
 	gcc $(CC_FLAGS) -o $@ $^ $(LD_FLAGS)
@@ -44,7 +44,6 @@ libengine.a: $(ENGINE_OBJ)
 
 clean_engine:
 	find ./engine -type f -name '*.o' -delete
-
 
 install_engine: libengine.a
 	install -d ./lib/
