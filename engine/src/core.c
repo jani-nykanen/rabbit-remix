@@ -20,7 +20,7 @@ static int core_init_SDL(Core* c) {
     }
 
     // Initialize audio
-    if (Mix_OpenAudio(22050, AUDIO_F32, 2, 512) != 0 ||
+    if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) != 0 ||
         Mix_Init(0) != 0) {
 
         err_throw_param_1("Failed to initialize audio: %s", Mix_GetError());

@@ -6,6 +6,8 @@
 
 // Bitmaps
 static Bitmap* bmpMushroom;
+// Samples
+static Sample* sHit;
 
 // Constants
 static const float BOUNCE_WAIT = 20.0f;
@@ -15,7 +17,11 @@ static const float DEATH_TIME = 30.0f;
 // Initialize global content
 void init_global_mushrooms(AssetManager* a) {
 
+    // Get bitmaps
     bmpMushroom = (Bitmap*)assets_get(a, "mushrooms");
+
+    // Get samples
+    sHit = (Sample*)assets_get(a, "hit");
 }
 
 
@@ -298,7 +304,8 @@ static void mush_create_coins(Mushroom* m,
 // Player collision
 void mush_player_collision(Mushroom* m, Player* pl,
     Coin* coins, int coinLen,
-    Message* messages, int msgLen) {
+    Message* messages, int msgLen,
+    EventManager* evMan) {
 
     const int BASE_SCORE = 100;
     const int GOLDEN_SCORE = 1000;
@@ -380,6 +387,8 @@ void mush_player_collision(Mushroom* m, Player* pl,
             score, vec2(pl->pos.x, m->pos.y-m->spr.height));
 
         ++ m->stompCount;
+
+        audio_play_sample(evMan->audio, sHit, 0.70f, 0);
     }
 }
 

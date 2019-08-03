@@ -729,7 +729,7 @@ static void game_update(void* e, float tm) {
         mush_update(&mushrooms[i], speed, tm);
         mush_player_collision(&mushrooms[i], &player,
             coins, COIN_COUNT,
-            messages, MSG_COUNT);
+            messages, MSG_COUNT, evMan);
     }
     // Update spikeballs
     for (i = 0; i < SPIKEBALL_COUNT; ++ i) {
@@ -765,8 +765,8 @@ static void game_update(void* e, float tm) {
     // Update coins
     for (i = 0; i < COIN_COUNT; ++ i) {
 
-        coin_update(&coins[i], speed, tm);
-        coin_player_collision(&coins[i], &player);
+        coin_update(&coins[i], speed, evMan, tm);
+        coin_player_collision(&coins[i], &player, evMan);
     }
     
     // Update messages

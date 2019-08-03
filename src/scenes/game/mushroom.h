@@ -68,7 +68,8 @@ void mush_update(Mushroom* m, float globalSpeed, float tm);
 // Player collision
 void mush_player_collision(Mushroom* m, Player* pl,
     Coin* coins, int coinLen,
-    Message* messages, int msgLen);
+    Message* messages, int msgLen,
+    EventManager* evMan);
 
 // Draw a mushroom
 void mush_draw(Mushroom* m, Graphics* g);

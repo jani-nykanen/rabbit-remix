@@ -47,10 +47,10 @@ void coin_activate(Coin* c, Vector2 pos, Vector2 speed,
     int type, bool floating);
 
 // Update a coin
-void coin_update(Coin* c, float globalSpeed, float tm);
+void coin_update(Coin* c, float globalSpeed, EventManager* evMan, float tm);
 
 // Coin-player collision
-void coin_player_collision(Coin* c, Player* pl);
+void coin_player_collision(Coin* c, Player* pl, EventManager* evMan);
 
 // Draw a coin
 void coin_draw(Coin* c, Graphics* g);

@@ -82,8 +82,11 @@ typedef struct {
     float selfDestructTimer;
     // Explosion
     Explosion exp;
+
     // Is death played
     bool deathPlayed;
+    // Is respawn played
+    bool respawnPlayed;
 
     // Stats
     Stats* stats;

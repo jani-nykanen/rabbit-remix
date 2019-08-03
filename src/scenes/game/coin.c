@@ -9,6 +9,10 @@ static const float DEATH_TIME = 15.0f;
 
 // Bitmaps
 static Bitmap* bmpCoin;
+// Sample
+static Sample* sCoin;
+static Sample* sGem;
+static Sample* sLife;
 
 
 // Init global
@@ -16,6 +20,11 @@ void init_global_coins(AssetManager* a) {
 
     // Get bitmaps
     bmpCoin = (Bitmap*)assets_get(a, "coin");
+
+    // Get samples
+    sCoin = (Sample*)assets_get(a, "scoin");
+    sGem = (Sample*)assets_get(a, "gem");
+    sLife = (Sample*)assets_get(a, "life");
 }
 
 
@@ -76,7 +85,7 @@ void coin_activate(Coin* c, Vector2 pos, Vector2 speed,
 
 
 // Update a coin
-void coin_update(Coin* c, float globalSpeed, float tm) {
+void coin_update(Coin* c, float globalSpeed, EventManager* evMan, float tm) {
 
     const float SPEED_LIMIT = 1.25f;
     const float COLLISION_MUL = 0.90f;
@@ -161,14 +170,20 @@ void coin_update(Coin* c, float globalSpeed, float tm) {
         }
 
         c->speed.y *= -COLLISION_MUL;
+
+        // audio_play_sample(evMan->audio, sHit, 0.70f, 0);
     }
 }
 
 
 // Coin-player collision
-void coin_player_collision(Coin* c, Player* pl) {
+void coin_player_collision(Coin* c, Player* pl, EventManager* evMan) {
 
     const float GUN_POWER_BONUS = 0.5f;
+
+    Sample* samples[] = {
+        sCoin, sGem, sLife
+    };
 
     if (c->wait > 0 || !c->exist || c->dying || 
         pl->dying || pl->respawnTimer > 0.0f) 
@@ -213,6 +228,8 @@ void coin_player_collision(Coin* c, Player* pl) {
                 // Add a life
                 stats_add_life(pl->stats);
             }
+
+            audio_play_sample(evMan->audio, samples[c->type], 0.80f, 0);
 
             break;
         }

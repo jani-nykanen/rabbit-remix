@@ -20,6 +20,8 @@ static Sample* sCharge;
 static Sample* sDieHit;
 static Sample* sDieFloor;
 static Sample* sExplode;
+static Sample* sDetonate;
+static Sample* sSpawn;
 
 // Constants
 static const float JUMP_REACT_MIN_TIME = 1.0f;
@@ -46,6 +48,8 @@ void init_global_player(AssetManager* a) {
     sDieHit = (Sample*)assets_get(a, "dieHit");
     sDieFloor = (Sample*)assets_get(a, "dieFloor");
     sExplode = (Sample*)assets_get(a, "explode");
+    sDetonate = (Sample*)assets_get(a, "detonate");
+    sSpawn = (Sample*)assets_get(a, "spawn");
 }
 
 
@@ -231,7 +235,11 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
     // Self-destruct
     int level = pl->stats->powerLevel;
     int points;
+    float oldTimer = pl->selfDestructTimer;
     if (pad_get_button_state(evMan->vpad, "fire3") == StateDown) {
+
+        if (oldTimer <= 0.0f)
+            audio_play_sample(evMan->audio, sDetonate, 0.50f, 0);
 
         pl->selfDestructTimer += SELF_DESTRUCT_SPEED * tm;
         if (pl->selfDestructTimer >= 1.0f) {
@@ -255,10 +263,15 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
             msg_create_score_message(msgs, msgLen, points,
                 vec2(pl->pos.x, pl->pos.y-pl->spr.height/2));
 
-            audio_play_sample(evMan->audio, sExplode, 0.60f, 0);
+            audio_play_sample(evMan->audio, sExplode, 0.70f, 0);
         }
     }
     else {
+
+        if (oldTimer > 0.0f) {
+
+            sample_stop(sDetonate);
+        }
 
         pl->selfDestructTimer = 0.0f;
     }
@@ -451,7 +464,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
             pl->blastTime = BLAST_TIME;
 
             audio_play_sample(evMan->audio, makeBig ? sShootBig : sShoot,
-                0.70f, 0);
+                makeBig ? 0.60f : 0.70f, 0);
         }
     }
 
@@ -521,6 +534,7 @@ static void pl_respawn(Player* pl) {
     pl->jumpTimer = 0.0f;
     pl->selfDestructTimer = 0.0f;
     pl->deathPlayed = false;
+    pl->respawnPlayed = false;
 
     pl->pos = pl->startPos;
 }
@@ -539,6 +553,13 @@ static void pl_die(Player* pl, float globalSpeed,
 
     int i;
     int type = pl->spr.row -5;
+
+    // Stop detonate sound
+    if (pl->selfDestructTimer > 0.0f) {
+
+        sample_stop(sDetonate);
+        pl->selfDestructTimer = 0.0f;
+    }
 
     // Explosion, do not animate a thing
     bool dead = exp_dead(&pl->exp);
@@ -676,6 +697,13 @@ void pl_update(Player* pl, EventManager* evMan,
     Message* msgs, int msgLen) {
 
     const float ARROW_WAVE_SPEED = 0.15f;
+
+    // Play respawn
+    if (!evMan->tr->active && !pl->respawnPlayed) {
+
+        audio_play_sample(evMan->audio, sSpawn, 0.70f, 0);
+        pl->respawnPlayed = true;
+    }
 
     // Update explosion
     exp_update(&pl->exp, tm);
@@ -953,7 +981,7 @@ void pl_kill(Player* pl, int type) {
     pl->spr.row = 5 + type;
     pl->spr.frame = 0;
     pl->spr.count = 0;
-    pl->selfDestructTimer = 0.0f;
+    // pl->selfDestructTimer = 0.0f;
     stats_reset_power(pl->stats);
 
     if (pl->stats->lives > 0)
