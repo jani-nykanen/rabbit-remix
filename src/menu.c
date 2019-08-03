@@ -6,6 +6,9 @@
 
 // Global bitmaps
 static Bitmap* bmpFont;
+// Global samples
+static Sample* sChoose;
+static Sample* sSelect;
 
 
 // Initialize global menu content
@@ -13,6 +16,10 @@ void init_global_menus(AssetManager* a) {
 
     // Get bitmaps
     bmpFont = (Bitmap*)assets_get(a, "font");
+
+    // Get samples
+    sChoose = (Sample*)assets_get(a, "choose");
+    sSelect = (Sample*)assets_get(a, "select");
 }
 
 
@@ -48,6 +55,8 @@ void menu_update(Menu* m, EventManager* evMan) {
     
     const float EPS = 0.1f;
 
+    int opos = m->cpos;
+
     // Check vertical movement
     float stickDelta = evMan->vpad->delta.y;
     float stickPos = evMan->vpad->stick.y;
@@ -62,6 +71,12 @@ void menu_update(Menu* m, EventManager* evMan) {
     }
     m->cpos = neg_mod(m->cpos, m->buttonCount);
 
+    // Place changed, play sound
+    if (m->cpos != opos) {
+
+        audio_play_sample(evMan->audio, sSelect, 0.70f, 0);
+    }
+
     // Check enter or fire1
     // Wait for enter or jump button
     if (pad_get_button_state(evMan->vpad, "fire1") == StatePressed ||
@@ -71,6 +86,8 @@ void menu_update(Menu* m, EventManager* evMan) {
 
             m->buttons[m->cpos].cb(evMan);
         }
+
+        audio_play_sample(evMan->audio, sChoose, 0.70f, 0);
     }
 }
 

@@ -11,7 +11,7 @@
 SRC := $(wildcard src/*.c src/*/*.c src/*/*/*.c)
 OBJ := $(patsubst %.c, %.o, $(SRC))
 
-LD_FLAGS :=  lib/libengine.a lib/libleaderboard.a -lSDL2 -lm -lcurl -lssl -lcrypto -I ./include 
+LD_FLAGS :=  lib/libengine.a lib/libleaderboard.a -lSDL2 -lSDL2_mixer -lm -lcurl -lssl -lcrypto -I ./include 
 CC_FLAGS :=  -Iinclude -Wall # -O3
 
 all: game clean

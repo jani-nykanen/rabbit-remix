@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <SDL2/SDL_mixer.h>
+
 
 // Initialize SDL
 static int core_init_SDL(Core* c) {
@@ -14,6 +16,14 @@ static int core_init_SDL(Core* c) {
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 
         err_throw_param_1("SDL2 ERROR: ", SDL_GetError());
+        return -1;
+    }
+
+    // Initialize audio
+    if (Mix_OpenAudio(22050, AUDIO_F32, 2, 512) != 0 ||
+        Mix_Init(0) != 0) {
+
+        err_throw_param_1("Failed to initialize audio: %s", Mix_GetError());
         return -1;
     }
 

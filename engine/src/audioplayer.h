@@ -7,6 +7,7 @@
 #define __AUDIO_PLAYER__
 
 #include "config.h"
+#include "sample.h"
 
 // Audio player type
 typedef struct {
@@ -23,5 +24,8 @@ AudioPlayer create_audio_player(Config* conf);
 void audio_change_sfx_volume(AudioPlayer* a, int vol);
 // Change music volume
 void audio_change_music_volume(AudioPlayer* a, int vol);
+
+// Play sample
+void audio_play_sample(AudioPlayer* a, Sample* s, float vol, int loops);
 
 #endif // __AUDIO_PLAYER__

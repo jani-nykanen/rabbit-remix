@@ -28,3 +28,13 @@ void audio_change_music_volume(AudioPlayer* a, int vol) {
 
     a->musicVolume = min_int32_2(100, max_int32_2(0, vol));
 }
+
+
+// Play sample
+void audio_play_sample(AudioPlayer* a, Sample* s, float vol, int loops) {
+
+    if (a->sfxVolume <= 0) return;
+
+    float v = (a->sfxVolume / 100.0f) * vol;
+    sample_play(s, vol, loops);
+}

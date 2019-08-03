@@ -4,6 +4,7 @@
 #include "bitmap.h"
 #include "tilemap.h"
 #include "wordreader.h"
+#include "sample.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -21,10 +22,26 @@ enum {
 };
 
 
-// Load a bitmap and add it to the
-// assets
-int assets_add_bitmap(AssetManager* a, const char* name, const char* path, 
-    bool dithering) {
+// Loading functions
+static void* cb_load_bitmap(const char* path, bool flag) {
+
+    return (void*) load_bitmap(path, flag);
+}
+static void* cb_load_tilemap(const char* path, bool flag) {
+
+    return (void*) load_tilemap(path);
+}
+static void* cb_load_sample(const char* path, bool flag) {
+
+    return (void*) load_sample(path);
+}
+
+
+// Generic loading function
+int assets_add_generic(AssetManager* a, 
+    void* (*lfunc) (const char*, bool),
+    const char* name, const char* path,
+    int type, bool flag) {
 
     if (a->assetCount == MAX_ASSET_COUNT) {
 
@@ -33,14 +50,14 @@ int assets_add_bitmap(AssetManager* a, const char* name, const char* path,
     }
 
     // Load
-    Bitmap* b = load_bitmap(path, dithering);
+    void* b = lfunc(path, flag);
     if (b == NULL) {
 
         return -1;
     }
 
     // Put to the storage
-    a->assetTypes[a->assetCount] = TypeBitmap;
+    a->assetTypes[a->assetCount] = type;
     snprintf(a->assetNames[a->assetCount], 
         MAX_ASSET_NAME_LENGTH, "%s", name);
     a->assetPointers[a->assetCount] = (void*)b;
@@ -50,32 +67,30 @@ int assets_add_bitmap(AssetManager* a, const char* name, const char* path,
 }
 
 
+// Load a bitmap and add it to the
+// assets
+int assets_add_bitmap(AssetManager* a, const char* name, const char* path, 
+    bool dithering) {
+
+    return assets_add_generic(a, cb_load_bitmap, name, path,
+        TypeBitmap, dithering);
+}
+
+
 // Load a tilemap and add it to the
 // assets
-// TODO: More generic method for this
 int assets_add_tilemap(AssetManager* a, const char* name, const char* path) {
 
-    if (a->assetCount == MAX_ASSET_COUNT) {
+    return assets_add_generic(a, cb_load_tilemap, name, path,
+        TypeTilemap, false);
+}
 
-        err_throw_no_param("Asset manager storage is full.");
-        return -1;
-    }
+// Load a tilemap and add it to the
+// assets
+int assets_add_sample(AssetManager* a, const char* name, const char* path) {
 
-    // Load
-    Tilemap* t = load_tilemap(path);
-    if (t == NULL) {
-
-        return -1;
-    }
-
-    // Put to the storage
-    a->assetTypes[a->assetCount] = TypeTilemap;
-    snprintf(a->assetNames[a->assetCount], 
-        MAX_ASSET_NAME_LENGTH, "%s", name);
-    a->assetPointers[a->assetCount] = (void*)t;
-    ++ a->assetCount;
-
-    return 0;
+    return assets_add_generic(a, cb_load_sample, name, path,
+        TypeSample, false);
 }
 
 
@@ -111,6 +126,12 @@ void assets_dispose(AssetManager* a) {
             
             destroy_tilemap((Tilemap*)a->assetPointers[i]);
             break;
+
+        case TypeSample:
+            
+            // TODO: Might cause crashes
+            sample_destroy((Sample*)a->assetPointers[i]);
+            break;    
         
         default:
             break;
@@ -151,6 +172,8 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
                 type = TypeBitmap;
             else if (strcmp(wr->word, "tilemap") == 0) 
                 type = TypeTilemap;
+            else if (strcmp(wr->word, "sample") == 0) 
+                type = TypeSample;    
 
             else if (strcmp(wr->word, "flag") == 0) 
                 type = TypeFlag;
@@ -176,6 +199,14 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
             // Tilemap
             case TypeTilemap:
                 if (assets_add_tilemap(a, name, wr->word) == -1) {
+
+                    return -1;
+                }
+                break;
+
+            // Sample
+            case TypeSample:
+                if (assets_add_sample(a, name, wr->word) == -1) {
 
                     return -1;
                 }

@@ -40,6 +40,10 @@ int assets_add_bitmap(AssetManager* a, const char* name, const char* path,
 // assets
 int assets_add_tilemap(AssetManager* a, const char* name, const char* path);
 
+// Load a sample and add it to the
+// assets
+int assets_add_sample(AssetManager* a, const char* name, const char* path);
+
 // Get an asset
 void* assets_get(AssetManager* a, const char* name);
 
