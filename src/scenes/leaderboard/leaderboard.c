@@ -6,6 +6,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 // Bitmaps
 static Bitmap* bmpFont;

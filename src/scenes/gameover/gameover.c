@@ -8,6 +8,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 // Constants & macros
 #define SCORE_STRING_SIZE 8

@@ -7,6 +7,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 // Constants
 static const char* SETTINGS_FILENAME = "settings.conf";
