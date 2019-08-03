@@ -465,7 +465,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
 
             audio_play_sample(evMan->audio, makeBig ? sShootBig : sShoot,
                 makeBig ? 0.60f : 0.70f, 0);
-        }
+        } 
     }
 
     // Update blast timer
@@ -507,7 +507,7 @@ static void pl_update_bullets(Player* pl, EventManager* evMan, float tm) {
     // Update bullets
     for (i = 0; i < BULLET_COUNT; ++ i) {
 
-        bullet_update(&pl->bullets[i], tm);
+        bullet_update(&pl->bullets[i], evMan, tm);
     }
 }
 

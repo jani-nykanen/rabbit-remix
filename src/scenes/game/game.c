@@ -95,6 +95,11 @@ static Bitmap* bmpNumbersBig;
 static Bitmap* bmpPrepare;
 static Bitmap* bmpGuide;
 
+// Samples
+static Sample* sStart;
+static Sample* sPause;
+static Sample* sGameover;
+
 // Components
 static Stage stage;
 static Player player;
@@ -508,6 +513,8 @@ static void game_reset();
 // Trigger game over
 static void trigger_game_over(EventManager* evMan) {
 
+    audio_play_sample(evMan->audio, sGameover, 0.70f, 0);
+
     tr_activate(evMan->tr, 
         FadeIn, EffectZoom, 1.0f, go_to_game_over, ColorRed);
 }
@@ -600,6 +607,11 @@ static int game_on_load(AssetManager* a) {
     bmpPrepare = (Bitmap*)assets_get(a, "prepare");
     bmpGuide = (Bitmap*)assets_get(a, "guide");
 
+    // Get samples
+    sStart = (Sample*)assets_get(a, "start");
+    sPause = (Sample*)assets_get(a, "pause");
+    sGameover = (Sample*)assets_get(a, "sGameover");
+
     // Initialize global components
     init_global_stage(a);
     init_global_player(a);
@@ -607,6 +619,7 @@ static int game_on_load(AssetManager* a) {
     init_global_spikeballs(a);
     init_global_coins(a);
     init_global_enemies(a);
+    init_global_bullets(a);
 
     // (Re)set
     game_reset();
@@ -642,6 +655,8 @@ static void game_update_preparation(EventManager* evMan, float tm) {
 
             ++ prepPhase;
             prepTimer = GO_MSG_TIME;
+
+            audio_play_sample(evMan->audio, sStart, 0.70f, 0);
         }
     }
     else if (prepPhase == 1) {
@@ -690,6 +705,9 @@ static void game_update(void* e, float tm) {
         pad_get_button_state(evMan->vpad, "cancel") == StatePressed) {
 
         pause_activate(&pause);
+
+        audio_play_sample(evMan->audio, sPause, 0.70f, 0);
+
         return;
     }
 
@@ -750,7 +768,7 @@ static void game_update(void* e, float tm) {
         enemy_update(&enemies[i], speed, tm);
         enemy_player_collision(&enemies[i], &player,
             coins, COIN_COUNT,
-            messages, MSG_COUNT);
+            messages, MSG_COUNT, evMan);
 
         // Bullet collision
         for (j = 0; j < ENEMY_COUNT; ++ j) {
@@ -758,7 +776,7 @@ static void game_update(void* e, float tm) {
             enemy_bullet_collision(&enemies[i], 
                 &player.bullets[j], &stats, 
                 coins, COIN_COUNT,
-                messages, MSG_COUNT);
+                messages, MSG_COUNT, evMan);
         }
     }
 

@@ -12,6 +12,9 @@ const float HURT_TIME = 30.0f;
 
 // Global bitmaps
 static Bitmap* bmpEnemy;
+// Global samples
+static Sample* sHurt;
+static Sample* sDie;
 
 
 // Initialize global enemy content
@@ -19,6 +22,9 @@ void init_global_enemies(AssetManager* a) {
 
     // Get bitmaps
     bmpEnemy = (Bitmap*)assets_get(a, "enemy");
+    // Get samples
+    sHurt = (Sample*)assets_get(a, "hurt");
+    sDie = (Sample*)assets_get(a, "die");
 }
 
 
@@ -418,7 +424,8 @@ void enemy_update(Enemy* e, float globalSpeed, float tm){
 void enemy_bullet_collision(
     Enemy* e, Bullet* b, Stats* s, 
     Coin* coins, int coinLen,
-    Message* msgs, int msgLen){
+    Message* msgs, int msgLen,
+    EventManager* evMan){
 
     if (!e->exist || !b->exist || b->dying || e->dying) 
         return;
@@ -440,6 +447,9 @@ void enemy_bullet_collision(
             e->hurtTimer = HURT_TIME;
             e->wave.x = fmodf(e->wave.x, M_PI);
         }
+
+        audio_play_sample(evMan->audio, e->dying ? sDie : sHurt, 
+            0.70f, 0);
     }
 }
 
@@ -447,7 +457,8 @@ void enemy_bullet_collision(
 // Player-enemy collision
 void enemy_player_collision(Enemy* e, Player* pl, 
     Coin* coins, int coinLen,
-    Message* msgs, int msgLen) {
+    Message* msgs, int msgLen,
+    EventManager* evMan) {
 
     const float STOMP_POWER = 5.0f;
     const float PL_RADIUS = 16.0f;
@@ -472,6 +483,8 @@ void enemy_player_collision(Enemy* e, Player* pl,
 
             enemy_kill(e, pl->stats, coins, coinLen, false,
                 msgs, msgLen);
+
+            audio_play_sample(evMan->audio, sDie, 0.70f, 0);
         }
 
         return;
@@ -503,6 +516,9 @@ void enemy_player_collision(Enemy* e, Player* pl,
                 e->speed.y = fabsf(e->speed.y);
             }
         }
+
+        audio_play_sample(evMan->audio, e->dying ? sDie : sHurt, 
+            0.70f, 0);
     }
 
 

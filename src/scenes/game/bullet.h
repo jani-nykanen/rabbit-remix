@@ -7,6 +7,11 @@
 #define __BULLET__
 
 #include <engine/graphics.h>
+#include <engine/assets.h>
+#include <engine/eventmanager.h>
+
+// Initialize global bullet content
+void init_global_bullets(AssetManager* a);
 
 // Bullet type
 typedef struct 
@@ -17,6 +22,7 @@ typedef struct
     bool exist;
     bool dying;
     bool isSpecial;
+    bool hitPlayed;
 
     float angle;
     float radius;
@@ -32,7 +38,7 @@ void bullet_activate(Bullet* b, Vector2 pos, Vector2 speed,
     float radius, bool spc);
 
 // Update a bullet
-void bullet_update(Bullet* b, float tm);
+void bullet_update(Bullet* b, EventManager* evMan, float tm);
 
 // Draw a bullet
 void bullet_draw(Bullet* b, Graphics* g);

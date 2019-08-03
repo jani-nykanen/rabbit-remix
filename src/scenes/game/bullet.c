@@ -2,8 +2,19 @@
 
 #include <math.h>
 
+// Samples
+static Sample* sBulletHit;
+
 // Death time
 static const float DEATH_TIME = 15.0f;
+
+
+// Initialize global bullet content
+void init_global_bullets(AssetManager* a) {
+
+    // Get samples
+    sBulletHit = (Sample*)assets_get(a, "bulletHit");
+}
 
 
 // Create bullet
@@ -16,7 +27,6 @@ Bullet create_bullet()  {
 }
 
 
-
 // Activate a bullet
 void bullet_activate(Bullet* b, Vector2 pos, Vector2 speed, 
     float radius, bool spc) {
@@ -26,13 +36,14 @@ void bullet_activate(Bullet* b, Vector2 pos, Vector2 speed,
     b->angle = 0.0f;
     b->radius = radius;
     b->isSpecial = spc;
+    b->hitPlayed = false;
 
     b->exist = true;
 }
 
 
 // Update a bullet
-void bullet_update(Bullet* b, float tm) {
+void bullet_update(Bullet* b, EventManager* evMan, float tm) {
 
     const float ROTATE_SPEED = 0.1f;
     const float ROTATE_COMPARE = 4.0f;
@@ -41,6 +52,12 @@ void bullet_update(Bullet* b, float tm) {
     if (!b->exist) return;
 
     if (b->dying) {
+
+        if (!b->hitPlayed) {
+
+            audio_play_sample(evMan->audio, sBulletHit, 0.70f, 0);
+            b->hitPlayed = true;
+        }
 
         if ((b->deathTimer -= 1.0f * tm) <= 0.0f) {
 

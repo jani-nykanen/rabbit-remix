@@ -56,12 +56,14 @@ void enemy_update(Enemy* e, float globalSpeed, float tm);
 void enemy_bullet_collision(
     Enemy* e, Bullet* b, Stats* s, 
     Coin* coins, int coinLen,
-    Message* msgs, int msgLen);
+    Message* msgs, int msgLen,
+    EventManager* evMan);
 
 // Player-enemy collision
 void enemy_player_collision(Enemy* e, Player* pl,
     Coin* coins, int coinLen,
-    Message* msgs, int msgLen);
+    Message* msgs, int msgLen,
+    EventManager* evMan);
 
 // Draw an enemy
 void enemy_draw(Enemy* e, Graphics* g);

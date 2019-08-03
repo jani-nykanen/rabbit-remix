@@ -8,6 +8,7 @@
 static Bitmap* bmpMushroom;
 // Samples
 static Sample* sHit;
+static Sample* sSpecial;
 
 // Constants
 static const float BOUNCE_WAIT = 20.0f;
@@ -22,6 +23,7 @@ void init_global_mushrooms(AssetManager* a) {
 
     // Get samples
     sHit = (Sample*)assets_get(a, "hit");
+    sSpecial = (Sample*)assets_get(a, "special");
 }
 
 
@@ -388,7 +390,8 @@ void mush_player_collision(Mushroom* m, Player* pl,
 
         ++ m->stompCount;
 
-        audio_play_sample(evMan->audio, sHit, 0.70f, 0);
+        audio_play_sample(evMan->audio, golden ? sSpecial : sHit, 
+            0.70f, 0);
     }
 }
 
