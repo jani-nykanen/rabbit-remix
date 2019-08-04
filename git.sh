@@ -11,3 +11,4 @@ git add leaderboard
 git add makefile_win32
 git add icon.ico
 git add icon.rc
+git add README.md
