@@ -238,8 +238,11 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
     float oldTimer = pl->selfDestructTimer;
     if (pad_get_button_state(evMan->vpad, "fire3") == StateDown) {
 
-        if (oldTimer <= 0.0f)
+        if (oldTimer <= 0.0f && !pl->dying) {
+
+            audio_stop_samples(evMan->audio);
             audio_play_sample(evMan->audio, sDetonate, 0.30f, 0);
+        }
 
         pl->selfDestructTimer += SELF_DESTRUCT_SPEED * tm;
         if (pl->selfDestructTimer >= 1.0f) {
@@ -263,7 +266,11 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
             msg_create_score_message(msgs, msgLen, points,
                 vec2(pl->pos.x, pl->pos.y-pl->spr.height/2));
 
-            audio_play_sample(evMan->audio, sExplode, 0.50f, 0);
+            if (pl->stats->lives > 0) {
+
+                audio_stop_samples(evMan->audio);
+                audio_play_sample(evMan->audio, sExplode, 0.50f, 0);
+            }
         }
     }
     else {
@@ -554,11 +561,14 @@ static void pl_die(Player* pl, float globalSpeed,
     int i;
     int type = pl->spr.row -5;
 
-    // Stop detonate sound
+
     if (pl->selfDestructTimer > 0.0f) {
 
-        sample_stop(sDetonate);
         pl->selfDestructTimer = 0.0f;
+        if (pl->exp.exist == false) {
+
+            sample_stop(sDetonate);
+        }
     }
 
     // Explosion, do not animate a thing

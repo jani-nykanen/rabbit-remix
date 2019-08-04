@@ -46,8 +46,12 @@ typedef struct {
     int frameRate;
 
     // Old window size & position
+    // (not needed now)
     Point oldWindowSize;
     Point oldWindowPos;
+
+    // Loading bitmap
+    Bitmap* bmpLoading;
 
 } Core;
 

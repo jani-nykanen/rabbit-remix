@@ -28,4 +28,7 @@ void audio_change_music_volume(AudioPlayer* a, int vol);
 // Play sample
 void audio_play_sample(AudioPlayer* a, Sample* s, float vol, int loops);
 
+// Stop all samples
+void audio_stop_samples(AudioPlayer* a);
+
 #endif // __AUDIO_PLAYER__

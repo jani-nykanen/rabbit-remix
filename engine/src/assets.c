@@ -240,6 +240,13 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
 }
 
 
+// Set an asset path
+void assets_set_path(AssetManager* a, char* path) {
+
+    snprintf(a->assetPath, ASSET_PATH_LENGTH, "%s", path);
+}
+
+
 // Create an asset manager
 AssetManager* create_asset_manager() {
 

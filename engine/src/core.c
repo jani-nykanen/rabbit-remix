@@ -8,6 +8,39 @@
 
 #include <SDL2/SDL_mixer.h>
 
+// Thread & mutex
+static SDL_Thread* thread;
+static SDL_mutex* mutex;
+
+// State
+static bool loaded;
+static bool ready;
+static int result;
+
+
+// Load files
+static int thread_load_assets(void* a) {
+
+    AssetManager* assets = (AssetManager*)a;
+
+    result = assets_parse_text_file(assets, assets->assetPath);
+    loaded = true;
+
+    return 0;
+}
+
+
+// Draw loading screen
+static void core_draw_loading(Core* c, Graphics* g) {
+
+    g_clear_screen(g, 0);
+
+    // Draw loading bitmap
+    g_draw_bitmap_fast(g, c->bmpLoading,
+        g->csize.x/2 - c->bmpLoading->width/2,
+        g->csize.y/2 - c->bmpLoading->height/2);
+}
+
 
 // Initialize SDL
 static int core_init_SDL(Core* c) {
@@ -119,21 +152,35 @@ static int core_init(Core* c) {
         return -1;
     }
 
+    // Load loading bitmap
+    c->bmpLoading = load_bitmap("loading.png", false);
+    if (c->bmpLoading == NULL) {
+
+        printf("Failed to load 'loading' bitmap: %s.\n Omitting...\n", 
+            get_error());
+    }
+
     // Load assets
-    // TODO: In another thread?
     char* assetPath = conf_get_param(&c->conf, "asset_path", NULL);
     if (assetPath != NULL) {
 
-        if (assets_parse_text_file(c->assets, assetPath) == -1) {
+        assets_set_path(c->assets, assetPath);
 
-            return -1;
-        }
+        ready = false;
+        loaded = false;
+
+        // Start a thread
+        thread = SDL_CreateThread(thread_load_assets, 
+            "thread_load", (void*)c->assets);
+
+        // Create a mutex
+        mutex = SDL_CreateMutex();
+            
     }
+    else {
 
-    // Call "on load"
-    if (scenes_on_load(&c->sceneMan, c->assets) == -1) {
-
-        return -1;
+        ready = true;
+        loaded = true;
     }
 
     c->running = true;
@@ -316,8 +363,33 @@ static void core_loop(Core* c) {
 
             redraw = true;
 
-            // Update frame
-            core_update(c, frameWait);
+
+            if (!ready) {
+
+                // Check if loaded
+                SDL_LockMutex(mutex);
+                if (loaded) {
+
+                    if (result != 0) {
+
+                        break;
+                    }
+
+                    ready = true;
+                    // Call "on load"
+                    if (scenes_on_load(&c->sceneMan, c->assets) == -1) {
+
+                        break;
+                    }
+                }
+                SDL_UnlockMutex(mutex);
+            }
+            else {
+
+                // Update frame
+                core_update(c, frameWait);
+
+            }
 
             // Make sure we won't be updating the frame
             // too many times
@@ -333,8 +405,19 @@ static void core_loop(Core* c) {
 
         if (redraw) {
 
-            // Draw
-            core_draw(c);
+            if (ready) {
+
+                // Draw
+                core_draw(c);
+            }
+            else {
+
+                // Draw loading screen
+                core_draw_loading(c, c->g);
+                // Update canvas
+                g_update_pixel_data(c->g);
+            }
+
             redraw = false;
         }
 

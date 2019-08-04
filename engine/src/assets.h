@@ -13,6 +13,7 @@
 
 #define MAX_ASSET_COUNT 256
 #define MAX_ASSET_NAME_LENGTH 32
+#define ASSET_PATH_LENGTH 128
 
 // Asset manager
 typedef struct  
@@ -25,6 +26,8 @@ typedef struct
     int assetTypes [MAX_ASSET_COUNT];
     // Asset pointers
     void* assetPointers [MAX_ASSET_COUNT];
+    // Asset path
+    char assetPath [ASSET_PATH_LENGTH];
     
     // Asset count
     int assetCount;
@@ -52,6 +55,9 @@ void assets_dispose(AssetManager* a);
 
 // Parse a text file
 int assets_parse_text_file(AssetManager* a, const char* path);
+
+// Set an asset path
+void assets_set_path(AssetManager* a, char* path);
 
 // Create an asset manager
 AssetManager* create_asset_manager();

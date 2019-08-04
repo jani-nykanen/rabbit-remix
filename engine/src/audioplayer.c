@@ -38,3 +38,10 @@ void audio_play_sample(AudioPlayer* a, Sample* s, float vol, int loops) {
     float v = (a->sfxVolume / 100.0f) * vol;
     sample_play(s, v, loops);
 }
+
+
+// Stop all samples
+void audio_stop_samples(AudioPlayer* a) {
+
+    Mix_HaltChannel(-1);
+}
