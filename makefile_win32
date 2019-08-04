@@ -1,0 +1,101 @@
+#
+# Makefile
+# (c) 2019 Jani Nykänen
+
+CROSS_COMPILE := /usr/x86_64-w64-mingw32/bin/
+CC := i686-w64-mingw32-gcc
+WINDRES := $(CROSS_COMPILE)windres
+AR := $(CROSS_COMPILE)ar
+STRIP := $(CROSS_COMPILE)strip
+
+# ------------------------------------------------------- #
+
+#
+# Game
+#
+
+SRC := $(wildcard src/*.c src/*/*.c src/*/*/*.c)
+OBJ := $(patsubst %.c, %.o, $(SRC))
+
+LD_FLAGS :=  lib/libengine.a lib/libleaderboard.a -lmingw32 -lSDL2main -lSDL2 -lSDL2_mixer -lm -lcurl -mwindows -I ./include 
+CC_FLAGS :=  -Iinclude -Wall # -O3
+
+all: game.exe clean
+
+clean:
+	find ./src -type f -name '*.o' -delete
+
+%.o: %.c
+	$(CC) -c -o $@ $< -I./include $(DEFINES)
+
+game.exe: $(OBJ)
+	i686-w64-mingw32-gcc $(CC_FLAGS) -o $@ $^ $(LD_FLAGS)
+
+run:
+	wine game.exe
+
+# ------------------------------------------------------- #
+
+#
+# Engine
+# 
+
+ENGINE_SRC := $(wildcard engine/src/*.c)
+ENGINE_OBJ := $(patsubst %.c, %.o, $(ENGINE_SRC))
+
+engine: libengine.a clean_engine
+
+libengine.a: $(ENGINE_OBJ)
+	ar rcs libengine.a $(ENGINE_OBJ)
+
+clean_engine:
+	find ./engine -type f -name '*.o' -delete
+
+install_engine: libengine.a
+	install -d ./lib/
+	install -m 644 libengine.a ./lib/
+	install -d ./include/engine/
+	install -m 644 $(wildcard engine/src/*.h) ./include/engine/
+	rm libengine.a
+	make clean_engine
+
+# ------------------------------------------------------- #
+
+#
+# Leaderboard
+#
+
+LB_SRC := $(wildcard leaderboard/src/*.c leaderboard/src/*/*.c)
+LB_OBJ := $(patsubst %.c, %.o, $(LB_SRC))
+
+leaderboard: libleaderboard.a clean_lb
+
+libleaderboard.a: $(LB_OBJ)
+	ar rcs libleaderboard.a $(LB_OBJ)
+
+clean_lb:
+	find ./leaderboard -type f -name '*.o' -delete
+
+install_lb: libleaderboard.a
+	install -d ./lib/
+	install -m 644 libleaderboard.a ./lib/
+	install -d ./include/leaderboard/
+	install -m 644 $(wildcard leaderboard/src/*.h) ./include/leaderboard/
+	rm libleaderboard.a
+	make clean_lb
+
+
+# ------------------------------------------------------- #
+
+#
+# Other
+#
+
+install:
+	make install_lb
+	make install_engine
+
+clean_all:
+	make clean
+	rm libengine.a
+	make clean_engine

@@ -8,3 +8,4 @@ git add makefile
 git add git.sh
 git add assets
 git add leaderboard
+git add makefile_win32
