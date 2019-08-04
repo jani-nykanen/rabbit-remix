@@ -1,6 +1,6 @@
 #include "leaderboard.h"
 
-#include <openssl/md5.h>
+#include "crypt.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,9 +36,6 @@ static char retBuffer[RET_BUFFER_SIZE];
 static char wbuffer[RET_BUFFER_SIZE +1];
 // Buffer pointer
 static size_t bufptr;
-
-// MD5 context
-static MD5_CTX md5;
 
 
 // Get next word
@@ -142,9 +139,6 @@ static int init_CURL(char* addr) {
     // Copy address
     snprintf(address, ADDR_LEN_MAX, "%s", addr);
 
-    // Also init MD5 here
-    MD5_Init(&md5);
-
     return 0;
 }
 
@@ -238,18 +232,9 @@ int lb_add_score(Leaderboard* lb, char* name, int score) {
     snprintf(check, 1024, "%s%d", STR(KEY), score);
     // printf("%s\n", check);
 
-    unsigned char digest[1024];
-    MD5_CTX context;
-
-    MD5_Init(&context);
-    MD5_Update(&context, check, strlen(check));
-    MD5_Final(digest, &context);
-
     // Turn to hex format
     char out[1024];
-    for(int i = 0; i < 16; ++i)
-        sprintf(&out[i*2], "%02x", (unsigned int)digest[i]);
-    // printf("%s\n", out);
+    md5(check, out, strlen(check));
 
     char send [1024];
     snprintf(send, 1024, "&mode=set&name=%s&score=%d&check=%s", name, score, out);

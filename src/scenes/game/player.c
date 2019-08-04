@@ -239,7 +239,7 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
     if (pad_get_button_state(evMan->vpad, "fire3") == StateDown) {
 
         if (oldTimer <= 0.0f)
-            audio_play_sample(evMan->audio, sDetonate, 0.50f, 0);
+            audio_play_sample(evMan->audio, sDetonate, 0.30f, 0);
 
         pl->selfDestructTimer += SELF_DESTRUCT_SPEED * tm;
         if (pl->selfDestructTimer >= 1.0f) {
@@ -263,7 +263,7 @@ static void pl_control(Player* pl, EventManager* evMan, float tm,
             msg_create_score_message(msgs, msgLen, points,
                 vec2(pl->pos.x, pl->pos.y-pl->spr.height/2));
 
-            audio_play_sample(evMan->audio, sExplode, 0.70f, 0);
+            audio_play_sample(evMan->audio, sExplode, 0.50f, 0);
         }
     }
     else {

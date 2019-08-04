@@ -11,7 +11,7 @@
 SRC := $(wildcard src/*.c src/*/*.c src/*/*/*.c)
 OBJ := $(patsubst %.c, %.o, $(SRC))
 
-LD_FLAGS :=  lib/libengine.a lib/libleaderboard.a -lSDL2 -lSDL2_mixer -lm -lcurl -lssl -lcrypto -I ./include 
+LD_FLAGS :=  lib/libengine.a lib/libleaderboard.a -lSDL2 -lSDL2_mixer -lm -lcurl -I ./include 
 CC_FLAGS :=  -Iinclude -Wall # -O3
 
 all: game clean
@@ -35,7 +35,7 @@ run:
 # 
 
 ENGINE_SRC := $(wildcard engine/src/*.c)
-ENGINE_OBJ := $(patsubst engine/src/%.c, engine/src/%.o, $(ENGINE_SRC))
+ENGINE_OBJ := $(patsubst %.c, %.o, $(ENGINE_SRC))
 
 engine: libengine.a clean_engine
 
@@ -59,7 +59,7 @@ install_engine: libengine.a
 # Leaderboard
 #
 
-LB_SRC := $(wildcard leaderboard/src/*.c)
+LB_SRC := $(wildcard leaderboard/src/*.c leaderboard/src/*/*.c)
 LB_OBJ := $(patsubst leaderboard/src/%.c, leaderboard/src/%.o, $(LB_SRC))
 
 leaderboard: libleaderboard.a clean_lb
