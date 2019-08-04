@@ -1,6 +1,6 @@
 ![](https://img.itch.zone/aW1nLzIzNTAwOTQuZ2lm/original/x5u%2FUs.gif)
 
-[Play on itch.io] (https://jani-nykanen.itch.io/rabbit-remix?secret=9XMsmLw0pr3Oat1uqNEdzNIV2gw)
+[Play on itch.io](https://jani-nykanen.itch.io/rabbit-remix?secret=9XMsmLw0pr3Oat1uqNEdzNIV2gw)
 
 ------
 
