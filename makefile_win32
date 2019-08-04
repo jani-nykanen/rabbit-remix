@@ -2,9 +2,9 @@
 # Makefile
 # (c) 2019 Jani Nykänen
 
-CROSS_COMPILE := /usr/x86_64-w64-mingw32/bin/
+CROSS_COMPILE := /usr/i686-w64-mingw32/bin/
 CC := i686-w64-mingw32-gcc
-WINDRES := $(CROSS_COMPILE)windres
+WINDRES := i686-w64-mingw32-windres
 AR := $(CROSS_COMPILE)ar
 STRIP := $(CROSS_COMPILE)strip
 
@@ -29,7 +29,8 @@ clean:
 	$(CC) -c -o $@ $< -I./include $(DEFINES)
 
 game.exe: $(OBJ)
-	i686-w64-mingw32-gcc $(CC_FLAGS) -o $@ $^ $(LD_FLAGS)
+	$(WINDRES) icon.rc -O coff -o icon.res
+	i686-w64-mingw32-gcc $(CC_FLAGS) -o $@ $^ icon.res $(LD_FLAGS)
 
 run:
 	wine game.exe

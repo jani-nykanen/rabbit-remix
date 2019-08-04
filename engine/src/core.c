@@ -369,7 +369,7 @@ static int core_loop(Core* c) {
                 SDL_LockMutex(mutex);
                 if (loaded) {
 
-                    if (result != 0) {
+                    if (result == -1) {
                         
                         SDL_UnlockMutex(mutex);
                         return -1;

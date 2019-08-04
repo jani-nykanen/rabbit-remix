@@ -237,6 +237,7 @@ int assets_parse_text_file(AssetManager* a, const char* path) {
     // Close
     dispose_word_reader(wr);
 
+    return 0;
 }
 
 
