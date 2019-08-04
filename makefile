@@ -35,7 +35,7 @@ run:
 # 
 
 ENGINE_SRC := $(wildcard engine/src/*.c)
-ENGINE_OBJ := $(patsubst %.c, %.o, $(ENGINE_SRC))
+ENGINE_OBJ := $(patsubst engine/src/%.c, engine/src/%.o, $(ENGINE_SRC))
 
 engine: libengine.a clean_engine
 
@@ -60,7 +60,7 @@ install_engine: libengine.a
 #
 
 LB_SRC := $(wildcard leaderboard/src/*.c leaderboard/src/*/*.c)
-LB_OBJ := $(patsubst leaderboard/src/%.c, leaderboard/src/%.o, $(LB_SRC))
+LB_OBJ := $(patsubst %.c, %.o, $(LB_SRC))
 
 leaderboard: libleaderboard.a clean_lb
 

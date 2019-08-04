@@ -12,7 +12,7 @@
 #include <curl/curl.h>
 
 // Server & key
-#define SERVER "https://game-leaderboards.000webhostapp.com/rabbit-remix"
+#define SERVER "http://game-leaderboards.000webhostapp.com/rabbit-remix"
 
 #ifndef KEY
     #define KEY DUMMYKEY
