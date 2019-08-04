@@ -329,7 +329,7 @@ static void core_events(Core* c) {
 
 
 // Main loop
-static void core_loop(Core* c) {
+static int core_loop(Core* c) {
 
     const int MAX_UPDATE_COUNT = 5;
     const int COMPARED_FPS = 60;
@@ -363,7 +363,6 @@ static void core_loop(Core* c) {
 
             redraw = true;
 
-
             if (!ready) {
 
                 // Check if loaded
@@ -371,15 +370,17 @@ static void core_loop(Core* c) {
                 if (loaded) {
 
                     if (result != 0) {
-
-                        break;
+                        
+                        SDL_UnlockMutex(mutex);
+                        return -1;
                     }
 
                     ready = true;
                     // Call "on load"
                     if (scenes_on_load(&c->sceneMan, c->assets) == -1) {
 
-                        break;
+                        SDL_UnlockMutex(mutex);
+                        return -1;
                     }
                 }
                 SDL_UnlockMutex(mutex);
@@ -424,6 +425,8 @@ static void core_loop(Core* c) {
         // Refresh frame (and draw the canvas)
         g_refresh(c->g);
     }
+
+    return 0;
 }
 
 
@@ -448,14 +451,16 @@ static void core_destroy(Core* c) {
 // Run
 void core_run(Core* c) {
 
-    // Initialize
-    if (core_init(c) == -1) {
+    // Initialize & start the main loop
+    char buf[1024];
+    if (core_init(c) == -1 ||
+        core_loop(c) == -1) {
 
-        printf("Fatal error: %s.\n", get_error());
+        snprintf(buf, 1024, "%s", get_error());
+        printf("Fatal error: %s.\n", buf);
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Fatal error",
+            buf, NULL);
     }
-
-    // Enter the main loop
-    core_loop(c);
 
     // Destroy
     core_destroy(c);
@@ -494,6 +499,11 @@ void core_toggle_fullscreen(Core* c) {
         c->fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
 
    //  #endif
+
+   // Just in case resize event fails
+   int w, h;
+   SDL_GetWindowSize(c->window, &w, &h);
+   g_resize(c->g, w, h);
 }
 
 
