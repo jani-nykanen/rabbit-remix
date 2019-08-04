@@ -45,6 +45,10 @@ typedef struct {
     // Framerate
     int frameRate;
 
+    // Old window size & position
+    Point oldWindowSize;
+    Point oldWindowPos;
+
 } Core;
 
 // Run

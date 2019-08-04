@@ -12,6 +12,9 @@
 // Initialize SDL
 static int core_init_SDL(Core* c) {
 
+    const int AUDIO_BUFFER_SIZE = 1024;
+    const int AUDIO_FREQ = 22050;
+
     // Initialize
     if (SDL_Init(SDL_INIT_EVERYTHING) == -1) {
 
@@ -20,7 +23,7 @@ static int core_init_SDL(Core* c) {
     }
 
     // Initialize audio
-    if (Mix_OpenAudio(22050, MIX_DEFAULT_FORMAT, 2, 1024) != 0 ||
+    if (Mix_OpenAudio(AUDIO_FREQ, MIX_DEFAULT_FORMAT, 2, AUDIO_BUFFER_SIZE) != 0 ||
         Mix_Init(0) != 0) {
 
         err_throw_param_1("Failed to initialize audio: %s", Mix_GetError());
@@ -44,6 +47,8 @@ static int core_init_SDL(Core* c) {
         err_throw_param_1("SDL2 ERROR: ", SDL_GetError());
         return -1;
     }
+    SDL_GetWindowSize(c->window, &c->oldWindowSize.x, &c->oldWindowSize.y);
+    SDL_GetWindowPosition(c->window, &c->oldWindowPos.x, &c->oldWindowPos.y);
 
     // Hide cursor
     SDL_ShowCursor(SDL_DISABLE);
@@ -199,14 +204,11 @@ static void core_events(Core* c) {
         case SDL_WINDOWEVENT:
             // Resize
             if (e.window.windowID == SDL_GetWindowID(c->window) 
-                && e.window.event == SDL_WINDOWEVENT_RESIZED) {
-                
-                   // Resize event for graphics
-                   g_resize(c->g, e.window.data1, e.window.data2);
+                && (e.window.event == SDL_WINDOWEVENT_RESIZED)) {
+                        
+                    g_resize(c->g, e.window.data1, e.window.data2);
             }
             break;
-
-        // TODO: JOYSTICK!
 
         // Joystick button pressed
         case SDL_JOYBUTTONDOWN:
@@ -381,8 +383,34 @@ void core_run(Core* c) {
 void core_toggle_fullscreen(Core* c) {
 
     c->fullscreen = !c->fullscreen;
+/* 
+    #ifdef __MINGW32__
+
+        SDL_DisplayMode dm;
+
+        if (c->fullscreen) {    
+
+            SDL_GetWindowSize(c->window, &c->oldWindowSize.x, &c->oldWindowSize.y);
+            SDL_GetWindowPosition(c->window, &c->oldWindowPos.x, &c->oldWindowPos.y);
+
+            SDL_GetCurrentDisplayMode(0, &dm);
+
+            SDL_SetWindowSize(c->window, dm.w, dm.h);
+            SDL_SetWindowFullscreen(c->window, SDL_WINDOW_FULLSCREEN);
+        }
+        else {
+            
+            SDL_SetWindowFullscreen(c->window, 0);
+            SDL_SetWindowSize(c->window, c->oldWindowSize.x, c->oldWindowSize.y);
+            SDL_SetWindowPosition(c->window, c->oldWindowPos.x, c->oldWindowPos.y);
+        }
+
+    #else
+*/
     SDL_SetWindowFullscreen(c->window,
         c->fullscreen ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0);
+
+   //  #endif
 }
 
 
